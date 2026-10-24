@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<ContentPage
+    x:Class="MusicPlayer.UI.Views.LyricsEditorPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:viewmodels="clr-namespace:MusicPlayer.UI.ViewModels"
+    x:DataType="viewmodels:LyricsEditorViewModel"
+    Title="Edit lyrics"
+    Shell.TabBarIsVisible="False"
+    Shell.NavBarIsVisible="False"
+    BackgroundColor="{AppThemeBinding Light={StaticResource AppBackgroundLight}, Dark={StaticResource AppBackgroundDark}}">
+
+    <Grid RowDefinitions="Auto,Auto,*,Auto" Padding="20,8,20,16" RowSpacing="12">
+
+        <!-- ===== Top bar ===== -->
+        <Grid x:Name="TopBar" Grid.Row="0" ColumnDefinitions="Auto,*,Auto" ColumnSpacing="8" Padding="0,0,0,2">
+            <Button
+                Grid.Column="0"
+                Text="Cancel"
+                FontFamily="InterMedium"
+                FontSize="14"
+                HeightRequest="40"
+                MinimumHeightRequest="40"
+                Padding="4,0"
+                BackgroundColor="Transparent"
+                TextColor="{AppThemeBinding Light={StaticResource MutedOnLight}, Dark={StaticResource MutedOnDark}}"
+                Command="{Binding CancelCommand}" />
+
+            <Label
+                Grid.Column="1"
+                Text="LYRICS"
+                Style="{StaticResource OverlineText}"
+                CharacterSpacing="2"
+                HorizontalTextAlignment="Center"
+                VerticalTextAlignment="Center" />
+
+            <Button
+                Grid.Column="2"
+                Text="Save"
+                FontFamily="InterSemiBold"
+                FontSize="13"
+                HeightRequest="36"
+                MinimumHeightRequest="36"
+                Padding="20,0"
+                CornerRadius="18"
+                BackgroundColor="{StaticResource Primary}"
+                TextColor="White"
+                Command="{Binding SaveCommand}" />
+        </Grid>
+
+        <!-- Track + hint -->
+        <VerticalStackLayout x:Name="TrackBlock" Grid.Row="1" Spacing="4">
+            <Label
+                Text="{Binding TrackTitle}"
+                FontFamily="InterSemiBold"
+                FontSize="15"
+                LineBreakMode="TailTruncation"
+                TextColor="{AppThemeBinding Light={StaticResource TextOnLight}, Dark={StaticResource TextOnDark}}" />
+            <Label
+                Text="Lines with [mm:ss.xx] timestamps stay synced; enhanced lines can use &lt;mm:ss.xx&gt;word timings."
+                Style="{StaticResource CaptionText}"
+                FontSize="11"
+                LineHeight="1.3" />
+        </VerticalStackLayout>
+
+        <Border
+            x:Name="EditorCard"
+            Grid.Row="2"
+            Style="{StaticResource FieldBorder}"
+            Padding="4"
+            HeightRequest="-1">
+            <Editor
+                Text="{Binding RawText}"
+                FontSize="13"
+                AutoSize="Disabled"
+                VerticalOptions="Fill"
+                Margin="8"
+                BackgroundColor="Transparent" />
+        </Border>
+
+        <Label
+            Grid.Row="3"
+            Text="{Binding StatusMessage}"
+            IsVisible="{Binding HasStatus}"
+            FontFamily="Inter"
+            FontSize="12"
+            TextColor="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource PrimaryDark}}" />
+    </Grid>
+</ContentPage>

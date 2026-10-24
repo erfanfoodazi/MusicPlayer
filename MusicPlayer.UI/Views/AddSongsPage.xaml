@@ -1,0 +1,292 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<ContentPage
+    x:Class="MusicPlayer.UI.Views.AddSongsPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:viewmodels="clr-namespace:MusicPlayer.UI.ViewModels"
+    xmlns:converters="clr-namespace:MusicPlayer.UI.Converters"
+    x:DataType="viewmodels:AddSongsViewModel"
+    Title="Add songs"
+    Shell.TabBarIsVisible="False"
+    Shell.NavBarIsVisible="False"
+    BackgroundColor="{AppThemeBinding Light={StaticResource AppBackgroundLight}, Dark={StaticResource AppBackgroundDark}}">
+
+    <ContentPage.Resources>
+        <converters:ArtworkToImageSourceConverter x:Key="ArtworkToImageSourceConverter" />
+        <converters:TimeSpanToStringConverter x:Key="TimeSpanToStringConverter" />
+    </ContentPage.Resources>
+
+    <Grid RowDefinitions="Auto,*">
+
+        <BoxView
+            Grid.Row="0"
+            HeightRequest="190"
+            VerticalOptions="Start"
+            InputTransparent="True"
+            Background="{StaticResource HeaderWash}" />
+
+        <Grid Grid.Row="0" RowDefinitions="Auto,Auto,Auto" Padding="18,8,18,10" RowSpacing="12">
+
+            <!-- Header -->
+            <Grid x:Name="HeaderBlock" Grid.Row="0" ColumnDefinitions="Auto,*,Auto" ColumnSpacing="6">
+                <Button
+                    Grid.Column="0"
+                    Text="&#xe5c4;"
+                    Style="{StaticResource IconButton}"
+                    FontSize="23"
+                    Clicked="OnBackClicked"
+                    SemanticProperties.Description="Close add songs" />
+
+                <VerticalStackLayout Grid.Column="1" Spacing="1" VerticalOptions="Center">
+                    <Label
+                        Text="ADD SONGS"
+                        Style="{StaticResource OverlineText}"
+                        CharacterSpacing="2.2"
+                        HorizontalTextAlignment="Center" />
+                    <Label
+                        Text="{Binding Playlist.Name}"
+                        Style="{StaticResource SectionTitleText}"
+                        FontSize="15"
+                        HorizontalTextAlignment="Center"
+                        LineBreakMode="TailTruncation" />
+                    <Label
+                        Text="{Binding Subtitle}"
+                        Style="{StaticResource MetaText}"
+                        FontSize="10.5"
+                        HorizontalTextAlignment="Center" />
+                </VerticalStackLayout>
+
+                <Button
+                    Grid.Column="2"
+                    Text="Select all"
+                    FontFamily="InterSemiBold"
+                    FontSize="11"
+                    HeightRequest="32"
+                    MinimumHeightRequest="32"
+                    Padding="12,0"
+                    CornerRadius="16"
+                    BackgroundColor="{AppThemeBinding Light={StaticResource AccentSoftLight}, Dark={StaticResource AccentSoftDark}}"
+                    TextColor="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource PrimaryDark}}"
+                    Command="{Binding SelectAllCommand}"
+                    SemanticProperties.Description="Select or clear all visible songs" />
+            </Grid>
+
+            <!-- Search -->
+            <Border x:Name="SearchBlock" Grid.Row="1" Style="{StaticResource SearchPillBorder}">
+                <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="8">
+                    <Label
+                        Grid.Column="0"
+                        Text="&#xe8b6;"
+                        Style="{StaticResource IconGlyph}"
+                        FontSize="19"
+                        TextColor="{AppThemeBinding Light={StaticResource FaintOnLight}, Dark={StaticResource FaintOnDark}}"
+                        VerticalOptions="Center"
+                        InputTransparent="True" />
+                    <Entry
+                        Grid.Column="1"
+                        Text="{Binding SearchText, Mode=TwoWay}"
+                        Placeholder="Find songs in your library"
+                        PlaceholderColor="{AppThemeBinding Light={StaticResource FaintOnLight}, Dark={StaticResource FaintOnDark}}"
+                        FontSize="14"
+                        BackgroundColor="Transparent"
+                        ClearButtonVisibility="Never"
+                        VerticalOptions="Center" />
+                    <Button
+                        Grid.Column="2"
+                        Text="&#xe5cd;"
+                        Style="{StaticResource IconButton}"
+                        FontSize="17"
+                        WidthRequest="28"
+                        HeightRequest="28"
+                        MinimumWidthRequest="28"
+                        MinimumHeightRequest="28"
+                        CornerRadius="14"
+                        TextColor="{AppThemeBinding Light={StaticResource MutedOnLight}, Dark={StaticResource MutedOnDark}}"
+                        IsVisible="{Binding HasSearchText}"
+                        Command="{Binding ClearSearchCommand}" />
+                </Grid>
+            </Border>
+
+            <!-- Count row -->
+            <Grid x:Name="ToolbarBlock" Grid.Row="2" ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                <Label
+                    Text="{Binding SelectedCount, StringFormat='{0} selected'}"
+                    Style="{StaticResource SectionLabelText}"
+                    VerticalOptions="Center" />
+                <Button
+                    Grid.Column="1"
+                    Text="Clear"
+                    FontFamily="InterSemiBold"
+                    FontSize="11"
+                    HeightRequest="30"
+                    MinimumHeightRequest="30"
+                    Padding="12,0"
+                    CornerRadius="15"
+                    BackgroundColor="Transparent"
+                    BorderWidth="1"
+                    BorderColor="{AppThemeBinding Light={StaticResource OutlineLight}, Dark={StaticResource OutlineDark}}"
+                    TextColor="{AppThemeBinding Light={StaticResource MutedOnLight}, Dark={StaticResource MutedOnDark}}"
+                    IsVisible="{Binding HasSelection}"
+                    Command="{Binding ClearSelectionCommand}" />
+            </Grid>
+        </Grid>
+
+        <!-- Song list -->
+        <CollectionView
+            x:Name="SongsList"
+            Grid.Row="1"
+            ItemsSource="{Binding Tracks}"
+            SelectionMode="None"
+            VerticalScrollBarVisibility="Never"
+            ItemSizingStrategy="MeasureFirstItem"
+            Margin="0,0,0,84">
+
+            <CollectionView.EmptyView>
+                <VerticalStackLayout Padding="36,40" Spacing="10" HorizontalOptions="Center" VerticalOptions="Center">
+                    <Border Style="{StaticResource IconTile}" WidthRequest="56" HeightRequest="56">
+                        <Label
+                            Text="&#xe405;"
+                            FontFamily="MaterialIcons"
+                            FontSize="25"
+                            TextColor="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource PrimaryDark}}"
+                            HorizontalOptions="Center"
+                            VerticalOptions="Center" />
+                    </Border>
+                    <Label
+                        Text="{Binding EmptyMessage}"
+                        Style="{StaticResource CaptionText}"
+                        HorizontalTextAlignment="Center"
+                        LineHeight="1.35" />
+                </VerticalStackLayout>
+            </CollectionView.EmptyView>
+
+            <CollectionView.ItemTemplate>
+                <DataTemplate x:DataType="viewmodels:SelectableTrack">
+                    <Grid
+                        ColumnDefinitions="Auto,Auto,*,Auto"
+                        ColumnSpacing="12"
+                        Padding="18,0"
+                        HeightRequest="62">
+                        <Grid.GestureRecognizers>
+                            <TapGestureRecognizer Tapped="OnSongTapped" />
+                        </Grid.GestureRecognizers>
+
+                        <Border
+                            x:Name="Check"
+                            Grid.Column="0"
+                            WidthRequest="24"
+                            HeightRequest="24"
+                            VerticalOptions="Center"
+                            StrokeThickness="1.5"
+                            Stroke="{AppThemeBinding Light={StaticResource OutlineLightStrong}, Dark={StaticResource OutlineDarkStrong}}"
+                            StrokeShape="RoundRectangle 12"
+                            BackgroundColor="Transparent">
+                            <Label
+                                Text="&#xe5ca;"
+                                FontFamily="MaterialIcons"
+                                FontSize="15"
+                                TextColor="White"
+                                HorizontalOptions="Center"
+                                VerticalOptions="Center"
+                                IsVisible="{Binding IsSelected}" />
+                            <Border.Triggers>
+                                <DataTrigger TargetType="Border" Binding="{Binding IsSelected}" Value="True">
+                                    <Setter Property="BackgroundColor" Value="{StaticResource Primary}" />
+                                    <Setter Property="StrokeThickness" Value="0" />
+                                </DataTrigger>
+                            </Border.Triggers>
+                        </Border>
+
+                        <Border
+                            Grid.Column="1"
+                            WidthRequest="40"
+                            HeightRequest="40"
+                            VerticalOptions="Center"
+                            StrokeThickness="0"
+                            StrokeShape="RoundRectangle 11"
+                            Background="{StaticResource ArtworkPlaceholderGradient}">
+                            <Grid>
+                                <Label
+                                    Text="&#xe405;"
+                                    FontFamily="MaterialIcons"
+                                    FontSize="17"
+                                    TextColor="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource PrimaryDark}}"
+                                    HorizontalOptions="Center"
+                                    VerticalOptions="Center" />
+                                <Image
+                                    Source="{Binding Track.ListArtworkPath, Converter={StaticResource ArtworkToImageSourceConverter}}"
+                                    Aspect="AspectFill" />
+                            </Grid>
+                        </Border>
+
+                        <VerticalStackLayout Grid.Column="2" VerticalOptions="Center" Spacing="1">
+                            <Label
+                                Text="{Binding Track.Name}"
+                                FontFamily="InterSemiBold"
+                                FontSize="14.5"
+                                CharacterSpacing="-0.1"
+                                LineBreakMode="TailTruncation"
+                                TextColor="{AppThemeBinding Light={StaticResource TextOnLight}, Dark={StaticResource TextOnDark}}" />
+                            <Label
+                                Text="{Binding Track.ArtistName}"
+                                FontFamily="Inter"
+                                FontSize="11.5"
+                                LineBreakMode="TailTruncation"
+                                TextColor="{AppThemeBinding Light={StaticResource MutedOnLight}, Dark={StaticResource MutedOnDark}}" />
+                        </VerticalStackLayout>
+
+                        <Label
+                            Grid.Column="3"
+                            Text="{Binding Track.Duration, Converter={StaticResource TimeSpanToStringConverter}}"
+                            FontFamily="Inter"
+                            FontSize="11"
+                            VerticalOptions="Center"
+                            TextColor="{AppThemeBinding Light={StaticResource FaintOnLight}, Dark={StaticResource FaintOnDark}}" />
+                    </Grid>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
+
+        <!-- Sticky add bar -->
+        <Border
+            Grid.Row="1"
+            VerticalOptions="End"
+            Padding="18,10,18,14"
+            StrokeThickness="0"
+            BackgroundColor="{AppThemeBinding Light={StaticResource SurfaceLight}, Dark={StaticResource SurfaceDark}}">
+            <Border.Shadow>
+                <Shadow Brush="#000000" Offset="0,-6" Radius="18" Opacity="0.24" />
+            </Border.Shadow>
+            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
+                <VerticalStackLayout Spacing="1" VerticalOptions="Center">
+                    <Label
+                        Text="{Binding AddButtonText}"
+                        Style="{StaticResource SectionTitleText}"
+                        FontSize="14" />
+                    <Label
+                        Text="{Binding StatusMessage}"
+                        Style="{StaticResource MetaText}"
+                        FontSize="10.5"
+                        IsVisible="{Binding HasStatus}"
+                        LineBreakMode="TailTruncation" />
+                </VerticalStackLayout>
+
+                <Button
+                    Grid.Column="1"
+                    Text="Add"
+                    Style="{StaticResource PrimaryPillButton}"
+                    WidthRequest="110"
+                    IsEnabled="{Binding CanAdd}"
+                    Command="{Binding AddCommand}" />
+            </Grid>
+        </Border>
+
+        <ActivityIndicator
+            Grid.Row="1"
+            IsRunning="{Binding IsBusy}"
+            IsVisible="{Binding IsBusy}"
+            VerticalOptions="Center"
+            HorizontalOptions="Center"
+            Color="{StaticResource Primary}" />
+    </Grid>
+</ContentPage>

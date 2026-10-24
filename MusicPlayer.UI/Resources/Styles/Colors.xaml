@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<?xaml-comp compile="true" ?>
+<ResourceDictionary 
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml">
+
+    <!-- Note: For Android please see also Platforms\Android\Resources\values\colors.xml -->
+
+    <!-- One accent. Violet, used for active state and the primary action only. -->
+    <Color x:Key="Primary">#6D5BF6</Color>
+    <Color x:Key="PrimaryDark">#B7A7FF</Color>
+    <Color x:Key="PrimaryDarkText">#0B0B0F</Color>
+    <Color x:Key="PrimaryDeep">#4B34C9</Color>
+    <Color x:Key="Secondary">#8B5CF6</Color>
+    <Color x:Key="SecondaryDarkText">#C4B5FD</Color>
+    <Color x:Key="Tertiary">#38BDF8</Color>
+
+    <Color x:Key="Accent">#6D5BF6</Color>
+    <Color x:Key="AccentAlt">#38BDF8</Color>
+    <Color x:Key="AccentPink">#F472B6</Color>
+    <Color x:Key="GradientStart">#6D5BF6</Color>
+    <Color x:Key="GradientMiddle">#8B5CF6</Color>
+    <Color x:Key="GradientEnd">#C084FC</Color>
+
+    <!-- Soft accent fill for icon tiles and selected chips. -->
+    <Color x:Key="AccentSoftDark">#1A1533</Color>
+    <Color x:Key="AccentSoftLight">#F0ECFF</Color>
+
+    <Color x:Key="White">White</Color>
+    <Color x:Key="Black">Black</Color>
+    <Color x:Key="Magenta">#F472B6</Color>
+    <Color x:Key="Red">#F87171</Color>
+    <Color x:Key="Danger">#F87171</Color>
+    <Color x:Key="DangerSoftDark">#2B171B</Color>
+    <Color x:Key="DangerSoftLight">#FEF1F2</Color>
+    <Color x:Key="Success">#4ADE80</Color>
+    <Color x:Key="SuccessSoftDark">#10241A</Color>
+    <Color x:Key="SuccessSoftLight">#E9FBF1</Color>
+    <Color x:Key="Warning">#FBBF24</Color>
+    <Color x:Key="MidnightBlue">#0A0A0F</Color>
+    <Color x:Key="OffBlack">#08080C</Color>
+
+    <!-- Surfaces & text. Deep neutral layers; the accent carries the identity. -->
+    <Color x:Key="AppBackgroundDark">#07070C</Color>
+    <Color x:Key="SurfaceDark">#0E0E15</Color>
+    <Color x:Key="SurfaceDarkAlt">#14141E</Color>
+    <Color x:Key="SurfaceDarkElevated">#1D1D2A</Color>
+    <Color x:Key="SurfaceDarkHighest">#262635</Color>
+    <Color x:Key="OutlineDark">#24242F</Color>
+    <Color x:Key="OutlineDarkStrong">#33333F</Color>
+    <Color x:Key="TextOnDark">#F6F6FB</Color>
+    <Color x:Key="MutedOnDark">#9C9CB2</Color>
+    <Color x:Key="FaintOnDark">#6E6E85</Color>
+
+    <Color x:Key="AppBackgroundLight">#F4F4F9</Color>
+    <Color x:Key="SurfaceLight">#FFFFFF</Color>
+    <Color x:Key="SurfaceLightAlt">#EDEDF5</Color>
+    <Color x:Key="SurfaceLightElevated">#FFFFFF</Color>
+    <Color x:Key="OutlineLight">#E4E4EF</Color>
+    <Color x:Key="OutlineLightStrong">#D5D5E4</Color>
+    <Color x:Key="TextOnLight">#0C0C12</Color>
+    <Color x:Key="MutedOnLight">#5E5E76</Color>
+    <Color x:Key="FaintOnLight">#8A8AA1</Color>
+
+    <!-- Transparent overlays used for glassy rows and artwork scrims. -->
+    <Color x:Key="GlassStrokeDark">#1FFFFFFF</Color>
+    <Color x:Key="GlassStrokeLight">#12000000</Color>
+    <Color x:Key="ArtworkScrim">#B3000000</Color>
+    <Color x:Key="Scrim">#CC000000</Color>
+
+    <!-- Legacy gray ramp, remapped to the neutral scale so older pages stay coherent. -->
+    <Color x:Key="Gray100">#F0F0F5</Color>
+    <Color x:Key="Gray200">#E1E1EA</Color>
+    <Color x:Key="Gray300">#B9B9CB</Color>
+    <Color x:Key="Gray400">#9494A9</Color>
+    <Color x:Key="Gray500">#6B6B80</Color>
+    <Color x:Key="Gray600">#46465A</Color>
+    <Color x:Key="Gray700">#2A2A38</Color>
+    <Color x:Key="Gray800">#191922</Color>
+    <Color x:Key="Gray900">#111118</Color>
+    <Color x:Key="Gray950">#08080C</Color>
+
+    <SolidColorBrush x:Key="PrimaryBrush" Color="{StaticResource Primary}"/>
+    <SolidColorBrush x:Key="SecondaryBrush" Color="{StaticResource Secondary}"/>
+    <SolidColorBrush x:Key="TertiaryBrush" Color="{StaticResource Tertiary}"/>
+    <SolidColorBrush x:Key="WhiteBrush" Color="{StaticResource White}"/>
+    <SolidColorBrush x:Key="BlackBrush" Color="{StaticResource Black}"/>
+
+    <SolidColorBrush x:Key="Gray100Brush" Color="{StaticResource Gray100}"/>
+    <SolidColorBrush x:Key="Gray200Brush" Color="{StaticResource Gray200}"/>
+    <SolidColorBrush x:Key="Gray300Brush" Color="{StaticResource Gray300}"/>
+    <SolidColorBrush x:Key="Gray400Brush" Color="{StaticResource Gray400}"/>
+    <SolidColorBrush x:Key="Gray500Brush" Color="{StaticResource Gray500}"/>
+    <SolidColorBrush x:Key="Gray600Brush" Color="{StaticResource Gray600}"/>
+    <SolidColorBrush x:Key="Gray800Brush" Color="{StaticResource Gray800}"/>
+    <SolidColorBrush x:Key="Gray900Brush" Color="{StaticResource Gray900}"/>
+    <SolidColorBrush x:Key="Gray950Brush" Color="{StaticResource Gray950}"/>
+</ResourceDictionary>

@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<Grid
+    x:Class="MusicPlayer.UI.Controls.AlbumItem"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:models="clr-namespace:Domain.Models;assembly=Domain"
+    xmlns:converters="clr-namespace:MusicPlayer.UI.Converters"
+    x:DataType="models:Album"
+    RowDefinitions="Auto,Auto,Auto"
+    BackgroundColor="Transparent">
+
+    <Grid.Resources>
+        <converters:ArtworkToImageSourceConverter x:Key="ArtworkToImageSourceConverter" />
+        <converters:StringIsNullOrEmptyConverter x:Key="StringIsNullOrEmptyConverter" />
+        <converters:AlbumMetaConverter x:Key="AlbumMetaConverter" />
+    </Grid.Resources>
+
+    <Grid.GestureRecognizers>
+        <TapGestureRecognizer Tapped="OnAlbumTapped" />
+    </Grid.GestureRecognizers>
+
+    <!-- Square sleeve. The code-behind sizes it to the grid cell so the tile keeps its
+         proportions on phones, tablets and desktop windows alike. -->
+    <Border
+        x:Name="Artwork"
+        Grid.Row="0"
+        StrokeThickness="1"
+        Stroke="{AppThemeBinding Light=#10000000, Dark=#1FFFFFFF}"
+        StrokeShape="RoundRectangle 18"
+        Background="{StaticResource ArtworkPlaceholderGradient}"
+        HorizontalOptions="Fill">
+        <Grid>
+            <Label
+                Text="&#xe019;"
+                FontFamily="MaterialIcons"
+                FontSize="34"
+                TextColor="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource PrimaryDark}}"
+                HorizontalOptions="Center"
+                VerticalOptions="Center" />
+
+            <Image
+                Source="{Binding ArtworkPath, Converter={StaticResource ArtworkToImageSourceConverter}}"
+                Aspect="AspectFill"
+                IsVisible="{Binding ArtworkPath, Converter={StaticResource StringIsNullOrEmptyConverter}, ConverterParameter=inverse}" />
+
+            <!-- Bottom scrim keeps the play chip legible over bright covers. -->
+            <Border
+                StrokeThickness="0"
+                StrokeShape="RoundRectangle 0,0,18,18"
+                Background="{StaticResource ArtworkSheen}"
+                InputTransparent="True" />
+
+            <Button
+                x:Name="PlayButton"
+                Text="&#xe037;"
+                Style="{StaticResource FloatingIconButton}"
+                HorizontalOptions="End"
+                VerticalOptions="End"
+                Margin="0,0,8,8"
+                Clicked="OnPlayClicked"
+                SemanticProperties.Description="Play album" />
+        </Grid>
+    </Border>
+
+    <Label
+        Grid.Row="1"
+        Text="{Binding Title}"
+        FontFamily="InterSemiBold"
+        FontSize="14"
+        CharacterSpacing="-0.15"
+        TextColor="{AppThemeBinding Light={StaticResource TextOnLight}, Dark={StaticResource TextOnDark}}"
+        LineBreakMode="TailTruncation"
+        Margin="2,10,2,0" />
+
+    <Label
+        Grid.Row="2"
+        Text="{Binding ., Converter={StaticResource AlbumMetaConverter}}"
+        Style="{StaticResource MetaText}"
+        Margin="2,2,2,0" />
+</Grid>

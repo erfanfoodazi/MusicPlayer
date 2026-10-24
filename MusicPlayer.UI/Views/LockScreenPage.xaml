@@ -1,0 +1,365 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<ContentPage
+    x:Class="MusicPlayer.UI.Views.LockScreenPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:viewmodels="clr-namespace:MusicPlayer.UI.ViewModels"
+    xmlns:behaviors="clr-namespace:MusicPlayer.UI.Behaviors"
+    x:DataType="viewmodels:LyricsViewModel"
+    Title="Lock Screen"
+    Shell.TabBarIsVisible="False"
+    Shell.NavBarIsVisible="False"
+    BackgroundColor="#08080C">
+
+    <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto,*">
+
+        <!-- Full-bleed artwork wash. -->
+        <Image
+            Grid.RowSpan="6"
+            Source="{Binding ArtworkSource}"
+            Aspect="AspectFill"
+            Opacity="0.16"
+            InputTransparent="True" />
+
+        <BoxView Grid.RowSpan="6" InputTransparent="True">
+            <BoxView.Background>
+                <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                    <GradientStop Color="#B308080C" Offset="0.0" />
+                    <GradientStop Color="#A608080C" Offset="0.34" />
+                    <GradientStop Color="#E608080C" Offset="0.68" />
+                    <GradientStop Color="#FF08080C" Offset="1.0" />
+                </LinearGradientBrush>
+            </BoxView.Background>
+        </BoxView>
+
+        <!-- Header -->
+        <Grid x:Name="LockHeader" Grid.Row="0" ColumnDefinitions="Auto,*,Auto" Padding="22,8,10,0">
+            <HorizontalStackLayout Grid.Column="0" Spacing="7" VerticalOptions="Center">
+                <Label
+                    Text="&#xe897;"
+                    FontFamily="MaterialIcons"
+                    FontSize="16"
+                    TextColor="#A78BFF"
+                    VerticalTextAlignment="Center" />
+                <Label
+                    Text="LOCK SCREEN"
+                    FontFamily="InterSemiBold"
+                    FontSize="10"
+                    CharacterSpacing="2.4"
+                    TextColor="#A7A7BA"
+                    VerticalTextAlignment="Center" />
+            </HorizontalStackLayout>
+
+            <Button
+                Grid.Column="2"
+                Text="&#xe5c4;"
+                FontFamily="MaterialIcons"
+                FontSize="22"
+                WidthRequest="40"
+                HeightRequest="40"
+                MinimumWidthRequest="40"
+                MinimumHeightRequest="40"
+                Padding="0"
+                CornerRadius="20"
+                BackgroundColor="#33101018"
+                TextColor="#F4F4F9"
+                Clicked="OnCloseClicked"
+                SemanticProperties.Description="Leave lock-screen player" />
+        </Grid>
+
+        <!-- Artwork -->
+        <Border
+            x:Name="ArtworkCard"
+            Grid.Row="1"
+            WidthRequest="180"
+            HeightRequest="180"
+            Margin="0,8,0,0"
+            HorizontalOptions="Center"
+            StrokeThickness="0"
+            StrokeShape="RoundRectangle 24"
+            Background="{StaticResource ArtworkPlaceholderGradient}">
+            <Border.Shadow>
+                <Shadow Brush="#000000" Offset="0,14" Radius="32" Opacity="0.55" />
+            </Border.Shadow>
+            <Grid>
+                <Label
+                    Text="&#xe405;"
+                    FontFamily="MaterialIcons"
+                    FontSize="42"
+                    TextColor="#A78BFF"
+                    HorizontalOptions="Center"
+                    VerticalOptions="Center" />
+                <Image
+                    Source="{Binding ArtworkSource}"
+                    Aspect="AspectFill"
+                    WidthRequest="180"
+                    HeightRequest="180" />
+            </Grid>
+        </Border>
+
+        <!-- Track -->
+        <VerticalStackLayout x:Name="TrackBlock" Grid.Row="2" Spacing="3" Padding="12,14,12,0">
+            <Label
+                Text="{Binding TrackTitle}"
+                FontFamily="InterBold"
+                FontSize="21"
+                CharacterSpacing="-0.3"
+                HorizontalTextAlignment="Center"
+                LineBreakMode="TailTruncation"
+                TextColor="#F4F4F9" />
+            <Label
+                Text="{Binding TrackArtist}"
+                FontFamily="Inter"
+                FontSize="13"
+                HorizontalTextAlignment="Center"
+                LineBreakMode="TailTruncation"
+                TextColor="#A7A7BA" />
+        </VerticalStackLayout>
+
+        <!-- Seek -->
+        <Grid x:Name="SeekBlock" Grid.Row="3" RowDefinitions="Auto,Auto" Padding="22,4,22,0">
+            <Slider
+                x:Name="SeekSlider"
+                Grid.Row="0"
+                Minimum="0"
+                Maximum="1"
+                Margin="0,8,-2,-7"
+                MinimumTrackColor="#A78BFF"
+                MaximumTrackColor="#2C2C3A"
+                ThumbColor="#FFFFFF"
+                DragStarted="OnSeekDragStarted"
+                DragCompleted="OnSeekDragCompleted"
+                ValueChanged="OnSeekValueChanged" />
+
+            <Grid Grid.Row="1" ColumnDefinitions="Auto,*,Auto">
+                <Label
+                    x:Name="PositionLabel"
+                    Grid.Column="0"
+                    Text="0:00"
+                    FontFamily="InterMedium"
+                    FontSize="10"
+                    TextColor="#A7A7BA" />
+                <Label
+                    x:Name="DurationLabel"
+                    Grid.Column="2"
+                    Text="0:00"
+                    FontFamily="InterMedium"
+                    FontSize="10"
+                    TextColor="#A7A7BA" />
+            </Grid>
+        </Grid>
+
+        <!-- Transport -->
+        <Grid x:Name="TransportGrid" Grid.Row="4" ColumnDefinitions="*,*,*,*,*" Padding="8,2,8,0">
+            <Button
+                x:Name="ShuffleButton"
+                Grid.Column="0"
+                Text="&#xe043;"
+                FontFamily="MaterialIcons"
+                FontSize="19"
+                WidthRequest="42"
+                HeightRequest="42"
+                MinimumWidthRequest="42"
+                MinimumHeightRequest="42"
+                Padding="0"
+                CornerRadius="21"
+                BackgroundColor="Transparent"
+                HorizontalOptions="Center"
+                Clicked="OnShuffleClicked"
+                SemanticProperties.Description="Shuffle" />
+
+            <Button
+                Grid.Column="1"
+                Text="&#xe045;"
+                FontFamily="MaterialIcons"
+                FontSize="28"
+                WidthRequest="48"
+                HeightRequest="48"
+                MinimumWidthRequest="48"
+                MinimumHeightRequest="48"
+                Padding="0"
+                CornerRadius="24"
+                BackgroundColor="Transparent"
+                TextColor="#F4F4F9"
+                HorizontalOptions="Center"
+                Clicked="OnPreviousClicked"
+                SemanticProperties.Description="Previous track or restart" />
+
+            <Button
+                x:Name="PlayPauseButton"
+                Grid.Column="2"
+                Text="&#xe037;"
+                Style="{StaticResource PlayButton}"
+                HorizontalOptions="Center"
+                Clicked="OnPlayPauseClicked"
+                SemanticProperties.Description="Play or pause" />
+
+            <Button
+                Grid.Column="3"
+                Text="&#xe044;"
+                FontFamily="MaterialIcons"
+                FontSize="28"
+                WidthRequest="48"
+                HeightRequest="48"
+                MinimumWidthRequest="48"
+                MinimumHeightRequest="48"
+                Padding="0"
+                CornerRadius="24"
+                BackgroundColor="Transparent"
+                TextColor="#F4F4F9"
+                HorizontalOptions="Center"
+                Clicked="OnNextClicked"
+                SemanticProperties.Description="Next track" />
+
+            <Button
+                x:Name="RepeatButton"
+                Grid.Column="4"
+                Text="&#xe040;"
+                FontFamily="MaterialIcons"
+                FontSize="19"
+                WidthRequest="42"
+                HeightRequest="42"
+                MinimumWidthRequest="42"
+                MinimumHeightRequest="42"
+                Padding="0"
+                CornerRadius="21"
+                BackgroundColor="Transparent"
+                HorizontalOptions="Center"
+                Clicked="OnRepeatClicked"
+                SemanticProperties.Description="Repeat mode" />
+        </Grid>
+
+        <!-- Lyrics -->
+        <Border
+            x:Name="LyricsCard"
+            Grid.Row="5"
+            Margin="16,10,16,14"
+            Padding="4,12,4,5"
+            StrokeThickness="1"
+            Stroke="#242432"
+            StrokeShape="RoundRectangle 22"
+            BackgroundColor="#B30B0B11">
+            <Grid RowDefinitions="Auto,*">
+
+                <Grid Grid.Row="0" ColumnDefinitions="*,Auto" Padding="14,0,14,7">
+                    <HorizontalStackLayout Grid.Column="0" Spacing="7" VerticalOptions="Center">
+                        <Label
+                            Text="&#xec0b;"
+                            FontFamily="MaterialIcons"
+                            FontSize="14"
+                            TextColor="#A78BFF"
+                            VerticalTextAlignment="Center" />
+                        <Label
+                            Text="LYRICS"
+                            FontFamily="InterSemiBold"
+                            FontSize="9"
+                            CharacterSpacing="2.2"
+                            TextColor="#A7A7BA"
+                            VerticalTextAlignment="Center" />
+                    </HorizontalStackLayout>
+
+                    <Label
+                        Grid.Column="1"
+                        Text="{Binding SourceLabel}"
+                        FontFamily="InterMedium"
+                        FontSize="9"
+                        TextColor="#77778C"
+                        VerticalTextAlignment="Center"
+                        LineBreakMode="TailTruncation" />
+                </Grid>
+
+                <Grid Grid.Row="1">
+
+                    <CollectionView
+                        x:Name="LyricsList"
+                        ItemsSource="{Binding Lines}"
+                        IsVisible="{Binding IsSyncedMode}"
+                        SelectionMode="None"
+                        ItemSizingStrategy="MeasureAllItems"
+                        VerticalScrollBarVisibility="Never">
+                        <CollectionView.Header>
+                            <BoxView HeightRequest="6" Color="Transparent" />
+                        </CollectionView.Header>
+                        <CollectionView.Footer>
+                            <BoxView HeightRequest="40" Color="Transparent" />
+                        </CollectionView.Footer>
+                        <CollectionView.ItemTemplate>
+                            <DataTemplate x:DataType="viewmodels:LyricsLineViewModel">
+                                <Grid
+                                    Padding="10,1"
+                                    Opacity="0.42"
+                                    behaviors:LyricLineAnimation.IsActive="{Binding IsActive}">
+                                    <Grid.GestureRecognizers>
+                                        <TapGestureRecognizer Tapped="OnLyricLineTapped" />
+                                    </Grid.GestureRecognizers>
+                                    <Border
+                                        Padding="14,7"
+                                        HorizontalOptions="Center"
+                                        MaximumWidthRequest="600"
+                                        StrokeThickness="0"
+                                        StrokeShape="RoundRectangle 16"
+                                        BackgroundColor="Transparent"
+                                        behaviors:LockScreenLyricHighlight.IsActive="{Binding IsActive}">
+                                        <Label
+                                            Text="{Binding Text}"
+                                            FontFamily="InterMedium"
+                                            FontSize="17"
+                                            HorizontalTextAlignment="Center"
+                                            LineBreakMode="WordWrap"
+                                            TextColor="#B7B7C8"
+                                            behaviors:LockScreenLyricTextColor.IsActive="{Binding IsActive}" />
+                                    </Border>
+                                </Grid>
+                            </DataTemplate>
+                        </CollectionView.ItemTemplate>
+                    </CollectionView>
+
+                    <ScrollView IsVisible="{Binding IsPlainMode}" VerticalScrollBarVisibility="Never">
+                        <Label
+                            Text="{Binding PlainText}"
+                            FontFamily="Inter"
+                            FontSize="15"
+                            LineHeight="1.5"
+                            HorizontalTextAlignment="Center"
+                            Padding="20,8,20,36"
+                            TextColor="#C7C7D6" />
+                    </ScrollView>
+
+                    <VerticalStackLayout
+                        IsVisible="{Binding ShowEmptyState}"
+                        VerticalOptions="Center"
+                        HorizontalOptions="Center"
+                        Padding="22"
+                        Spacing="8">
+                        <Label
+                            Text="&#xec0b;"
+                            FontFamily="MaterialIcons"
+                            FontSize="26"
+                            HorizontalOptions="Center"
+                            TextColor="#55556A" />
+                        <Label
+                            Text="No lyrics for this track"
+                            FontFamily="InterSemiBold"
+                            FontSize="13"
+                            HorizontalTextAlignment="Center"
+                            TextColor="#A7A7BA" />
+                        <Label
+                            Text="{Binding StatusMessage}"
+                            FontFamily="Inter"
+                            FontSize="11"
+                            HorizontalTextAlignment="Center"
+                            TextColor="#77778C"
+                            LineBreakMode="WordWrap" />
+                    </VerticalStackLayout>
+
+                    <ActivityIndicator
+                        IsRunning="{Binding IsBusy}"
+                        IsVisible="{Binding IsBusy}"
+                        Color="#A78BFF"
+                        HorizontalOptions="Center"
+                        VerticalOptions="Center" />
+                </Grid>
+            </Grid>
+        </Border>
+    </Grid>
+</ContentPage>

@@ -1,0 +1,458 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<ContentPage
+    x:Class="MusicPlayer.UI.Views.LyricsPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:viewmodels="clr-namespace:MusicPlayer.UI.ViewModels"
+    xmlns:behaviors="clr-namespace:MusicPlayer.UI.Behaviors"
+    x:DataType="viewmodels:LyricsViewModel"
+    Title="Lyrics"
+    Shell.TabBarIsVisible="False"
+    Shell.NavBarIsVisible="False"
+    BackgroundColor="{AppThemeBinding Light={StaticResource AppBackgroundLight}, Dark={StaticResource AppBackgroundDark}}">
+
+    <Grid RowDefinitions="Auto,Auto,Auto,*">
+
+        <!-- Ambient cover wash (Oto-style immersive lyrics). -->
+        <Image
+            Grid.RowSpan="4"
+            Source="{Binding ArtworkSource}"
+            Aspect="AspectFill"
+            Opacity="0.10"
+            InputTransparent="True" />
+        <BoxView Grid.RowSpan="4" InputTransparent="True">
+            <BoxView.Background>
+                <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                    <GradientStop Color="{AppThemeBinding Light=#DDF7F7FA, Dark=#CC08080C}" Offset="0.0" />
+                    <GradientStop Color="{AppThemeBinding Light=#F2F7F7FA, Dark=#F208080C}" Offset="0.5" />
+                    <GradientStop Color="{AppThemeBinding Light=#F7F7FA, Dark=#08080C}" Offset="1.0" />
+                </LinearGradientBrush>
+            </BoxView.Background>
+        </BoxView>
+
+        <!-- Ambient wash behind the header -->
+        <BoxView
+            Grid.RowSpan="2"
+            HeightRequest="230"
+            VerticalOptions="Start"
+            InputTransparent="True"
+            Background="{StaticResource HeaderWash}" />
+
+        <!-- ===== Header ===== -->
+        <Grid x:Name="PageHeader" Grid.Row="0" ColumnDefinitions="Auto,*,Auto" Padding="10,8,10,0" ColumnSpacing="4">
+            <Button
+                Grid.Column="0"
+                Text="&#xe5c4;"
+                Style="{StaticResource IconButton}"
+                FontSize="23"
+                Clicked="OnBackClicked"
+                SemanticProperties.Description="Back" />
+
+            <Label
+                Grid.Column="1"
+                Text="LYRICS"
+                Style="{StaticResource OverlineText}"
+                CharacterSpacing="2.6"
+                HorizontalTextAlignment="Center"
+                VerticalTextAlignment="Center" />
+
+            <Button
+                Grid.Column="2"
+                Text="&#xe5d4;"
+                Style="{StaticResource IconButton}"
+                FontSize="22"
+                Clicked="OnMoreClicked"
+                SemanticProperties.Description="More lyrics options" />
+        </Grid>
+
+        <!-- ===== Track + controls ===== -->
+        <VerticalStackLayout x:Name="TrackBlock" Grid.Row="1" Padding="22,10,22,8" Spacing="14">
+            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
+                <VerticalStackLayout Grid.Column="0" Spacing="2" VerticalOptions="Center">
+                    <Label
+                        Text="{Binding TrackTitle}"
+                        FontFamily="InterBold"
+                        FontSize="24"
+                        TextColor="{AppThemeBinding Light={StaticResource TextOnLight}, Dark={StaticResource TextOnDark}}"
+                        LineBreakMode="TailTruncation" />
+                    <Label
+                        Text="{Binding TrackArtist}"
+                        FontFamily="InterMedium"
+                        FontSize="13"
+                        TextColor="{AppThemeBinding Light={StaticResource MutedOnLight}, Dark={StaticResource MutedOnDark}}"
+                        LineBreakMode="TailTruncation" />
+                </VerticalStackLayout>
+
+                <Border
+                    Grid.Column="1"
+                    IsVisible="{Binding HasLyrics}"
+                    StrokeThickness="0"
+                    StrokeShape="RoundRectangle 14"
+                    BackgroundColor="{AppThemeBinding Light=#EDE9FE, Dark=#241C3F}"
+                    Padding="10,6"
+                    VerticalOptions="Center">
+                    <Label
+                        Text="{Binding SourceLabel}"
+                        FontFamily="InterSemiBold"
+                        FontSize="10"
+                        TextColor="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource PrimaryDark}}"
+                        LineBreakMode="TailTruncation" />
+                </Border>
+            </Grid>
+
+            <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="8">
+                <Border
+                    Grid.Column="0"
+                    IsVisible="{Binding HasSyncedLyrics}"
+                    StrokeThickness="1"
+                    Stroke="{AppThemeBinding Light={StaticResource OutlineLight}, Dark={StaticResource OutlineDark}}"
+                    StrokeShape="RoundRectangle 16"
+                    BackgroundColor="{AppThemeBinding Light={StaticResource SurfaceLight}, Dark={StaticResource SurfaceDark}}"
+                    Padding="12,7">
+                    <Border.GestureRecognizers>
+                        <TapGestureRecognizer Command="{Binding ToggleModeCommand}" />
+                    </Border.GestureRecognizers>
+                    <HorizontalStackLayout Spacing="6">
+                        <Label
+                            Text="&#xe627;"
+                            FontFamily="MaterialIcons"
+                            FontSize="15"
+                            TextColor="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource PrimaryDark}}"
+                            VerticalOptions="Center" />
+                        <Label
+                            Text="{Binding ModeButtonText}"
+                            FontFamily="InterSemiBold"
+                            FontSize="11"
+                            TextColor="{AppThemeBinding Light={StaticResource TextOnLight}, Dark={StaticResource TextOnDark}}"
+                            VerticalOptions="Center" />
+                    </HorizontalStackLayout>
+                </Border>
+
+                <Label
+                    Grid.Column="1"
+                    Text="{Binding StatusMessage}"
+                    IsVisible="{Binding HasStatus}"
+                    FontFamily="Inter"
+                    FontSize="11"
+                    VerticalTextAlignment="Center"
+                    LineBreakMode="TailTruncation"
+                    TextColor="{AppThemeBinding Light={StaticResource MutedOnLight}, Dark={StaticResource MutedOnDark}}"
+                    Margin="2,0" />
+
+                <HorizontalStackLayout Grid.Column="2" Spacing="6" IsVisible="{Binding CanShiftOffset}">
+                    <Button
+                        Text="−0.1s"
+                        FontFamily="InterSemiBold"
+                        FontSize="10"
+                        HeightRequest="32"
+                        MinimumHeightRequest="32"
+                        Padding="10,0"
+                        CornerRadius="16"
+                        BackgroundColor="Transparent"
+                        BorderWidth="1"
+                        BorderColor="{AppThemeBinding Light={StaticResource OutlineLight}, Dark={StaticResource OutlineDark}}"
+                        TextColor="{AppThemeBinding Light={StaticResource MutedOnLight}, Dark={StaticResource MutedOnDark}}"
+                        SemanticProperties.Description="Show lyrics 0.1 seconds earlier"
+                        Command="{Binding ShiftEarlierCommand}" />
+                    <Button
+                        Text="+0.1s"
+                        FontFamily="InterSemiBold"
+                        FontSize="10"
+                        HeightRequest="32"
+                        MinimumHeightRequest="32"
+                        Padding="10,0"
+                        CornerRadius="16"
+                        BackgroundColor="Transparent"
+                        BorderWidth="1"
+                        BorderColor="{AppThemeBinding Light={StaticResource OutlineLight}, Dark={StaticResource OutlineDark}}"
+                        TextColor="{AppThemeBinding Light={StaticResource MutedOnLight}, Dark={StaticResource MutedOnDark}}"
+                        SemanticProperties.Description="Show lyrics 0.1 seconds later"
+                        Command="{Binding ShiftLaterCommand}" />
+                </HorizontalStackLayout>
+            </Grid>
+        </VerticalStackLayout>
+
+        <!-- ===== Content ===== -->
+        <Grid x:Name="LyricsContent" Grid.Row="3">
+
+            <!-- Synced lyrics -->
+            <CollectionView
+                x:Name="LinesView"
+                ItemsSource="{Binding Lines}"
+                IsVisible="{Binding IsSyncedMode}"
+                ItemSizingStrategy="MeasureAllItems"
+                SelectionMode="None"
+                VerticalScrollBarVisibility="Never">
+                <CollectionView.Header>
+                    <BoxView HeightRequest="18" Color="Transparent" />
+                </CollectionView.Header>
+                <CollectionView.Footer>
+                    <BoxView HeightRequest="120" Color="Transparent" />
+                </CollectionView.Footer>
+                <CollectionView.ItemTemplate>
+                    <DataTemplate x:DataType="viewmodels:LyricsLineViewModel">
+                        <Grid
+                            Padding="16,2"
+                            Opacity="0.42"
+                            behaviors:LyricLineAnimation.IsActive="{Binding IsActive}">
+                            <Grid.GestureRecognizers>
+                                <TapGestureRecognizer Tapped="OnLyricLineTapped" />
+                            </Grid.GestureRecognizers>
+                            <Border
+                                Padding="18,10"
+                                HorizontalOptions="Center"
+                                MaximumWidthRequest="620"
+                                StrokeThickness="0"
+                                StrokeShape="RoundRectangle 18"
+                                BackgroundColor="Transparent"
+                                behaviors:LyricHighlightAnimation.IsActive="{Binding IsActive}">
+                                <VerticalStackLayout Spacing="2" HorizontalOptions="Center">
+                                    <Label
+                                        Text="{Binding Text}"
+                                        IsVisible="{Binding ShowPlainText}"
+                                        FontFamily="InterMedium"
+                                        FontSize="19"
+                                        HorizontalTextAlignment="Center"
+                                        LineBreakMode="WordWrap"
+                                        behaviors:LyricTextColorAnimation.IsActive="{Binding IsActive}"
+                                        TextColor="{AppThemeBinding Light={StaticResource MutedOnLight}, Dark={StaticResource MutedOnDark}}" />
+
+                                    <FlexLayout
+                                        Wrap="Wrap"
+                                        JustifyContent="Center"
+                                        IsVisible="{Binding HasWords}"
+                                        BindableLayout.ItemsSource="{Binding Words}">
+                                        <BindableLayout.ItemTemplate>
+                                            <DataTemplate x:DataType="viewmodels:LyricsWordViewModel">
+                                                <Label
+                                                    Text="{Binding Text}"
+                                                    FontFamily="InterMedium"
+                                                    FontSize="19"
+                                                    Margin="0,0,6,0"
+                                                    behaviors:LyricTextColorAnimation.IsActive="{Binding IsActive}"
+                                                    TextColor="{AppThemeBinding Light={StaticResource MutedOnLight}, Dark={StaticResource MutedOnDark}}" />
+                                            </DataTemplate>
+                                        </BindableLayout.ItemTemplate>
+                                    </FlexLayout>
+                                </VerticalStackLayout>
+                            </Border>
+                        </Grid>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+
+            <!-- Plain lyrics -->
+            <ScrollView IsVisible="{Binding IsPlainMode}" VerticalScrollBarVisibility="Never">
+                <VerticalStackLayout Padding="24,10,24,120" Spacing="18">
+                    <Label
+                        Text="{Binding PlainText}"
+                        FontFamily="Inter"
+                        FontSize="17"
+                        LineHeight="1.5"
+                        HorizontalTextAlignment="Center"
+                        TextColor="{AppThemeBinding Light={StaticResource TextOnLight}, Dark={StaticResource TextOnDark}}" />
+                </VerticalStackLayout>
+            </ScrollView>
+
+            <!-- Empty state -->
+            <VerticalStackLayout
+                IsVisible="{Binding ShowEmptyState}"
+                VerticalOptions="Center"
+                Padding="34"
+                Spacing="14">
+                <Border
+                    WidthRequest="70"
+                    HeightRequest="70"
+                    HorizontalOptions="Center"
+                    StrokeThickness="0"
+                    StrokeShape="RoundRectangle 22"
+                    BackgroundColor="{AppThemeBinding Light=#EDE9FE, Dark=#241C3F}">
+                    <Label
+                        Text="&#xec0b;"
+                        FontFamily="MaterialIcons"
+                        FontSize="32"
+                        TextColor="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource PrimaryDark}}"
+                        HorizontalOptions="Center"
+                        VerticalOptions="Center" />
+                </Border>
+                <Label
+                    Text="No lyrics yet"
+                    FontFamily="InterBold"
+                    FontSize="21"
+                    HorizontalTextAlignment="Center"
+                    TextColor="{AppThemeBinding Light={StaticResource TextOnLight}, Dark={StaticResource TextOnDark}}" />
+                <Label
+                    Text="{Binding StatusMessage}"
+                    FontFamily="Inter"
+                    FontSize="13"
+                    HorizontalTextAlignment="Center"
+                    TextColor="{AppThemeBinding Light={StaticResource MutedOnLight}, Dark={StaticResource MutedOnDark}}" />
+                <Label
+                    Text="Auralis checks embedded lyrics and a matching .lrc file first. If none are available, search LRCLIB for synced or plain lyrics. Applying a result saves it on this device for offline listening."
+                    FontFamily="Inter"
+                    FontSize="12"
+                    HorizontalTextAlignment="Center"
+                    LineHeight="1.35"
+                    TextColor="{AppThemeBinding Light={StaticResource MutedOnLight}, Dark={StaticResource MutedOnDark}}" />
+                <Button
+                    Text="Search LRCLIB"
+                    Style="{StaticResource PrimaryPillButton}"
+                    HorizontalOptions="Center"
+                    Command="{Binding SearchOnlineCommand}" />
+            </VerticalStackLayout>
+
+            <!-- Top/bottom fades make the scrolling text feel anchored. -->
+            <BoxView InputTransparent="True" HeightRequest="38" VerticalOptions="Start">
+                <BoxView.Background>
+                    <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                        <GradientStop Color="{AppThemeBinding Light=#F7F7FA, Dark=#08080C}" Offset="0.0" />
+                        <GradientStop Color="{AppThemeBinding Light=#00F7F7FA, Dark=#0008080C}" Offset="1.0" />
+                    </LinearGradientBrush>
+                </BoxView.Background>
+            </BoxView>
+
+            <BoxView InputTransparent="True" HeightRequest="90" VerticalOptions="End">
+                <BoxView.Background>
+                    <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                        <GradientStop Color="{AppThemeBinding Light=#00F7F7FA, Dark=#0008080C}" Offset="0.0" />
+                        <GradientStop Color="{AppThemeBinding Light=#F7F7FA, Dark=#08080C}" Offset="1.0" />
+                    </LinearGradientBrush>
+                </BoxView.Background>
+            </BoxView>
+
+            <ActivityIndicator
+                IsRunning="{Binding IsBusy}"
+                IsVisible="{Binding IsBusy}"
+                VerticalOptions="Center"
+                HorizontalOptions="Center"
+                Color="{StaticResource Primary}" />
+        </Grid>
+
+        <!-- ===== LRCLIB preview sheet ===== -->
+        <Grid
+            Grid.Row="0"
+            Grid.RowSpan="4"
+            IsVisible="{Binding IsSearchPanelVisible}"
+            BackgroundColor="#CC05050A">
+            <Border
+                VerticalOptions="End"
+                MaximumHeightRequest="600"
+                BackgroundColor="{AppThemeBinding Light={StaticResource SurfaceLight}, Dark={StaticResource SurfaceDark}}"
+                StrokeThickness="0"
+                StrokeShape="RoundRectangle 28,28,0,0"
+                Padding="18,10,18,16">
+                <Border.Shadow>
+                    <Shadow Brush="#000000" Offset="0,-10" Radius="30" Opacity="0.5" />
+                </Border.Shadow>
+
+                <Grid RowDefinitions="Auto,Auto,Auto,Auto,*" RowSpacing="10">
+                    <Border Grid.Row="0" Style="{StaticResource SheetGrabber}" />
+
+                    <Grid Grid.Row="1" ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                        <VerticalStackLayout Spacing="1" VerticalOptions="Center">
+                            <Label
+                                Text="Find lyrics online"
+                                FontFamily="InterBold"
+                                FontSize="20"
+                                TextColor="{AppThemeBinding Light={StaticResource TextOnLight}, Dark={StaticResource TextOnDark}}" />
+                            <Label
+                                Text="Results from LRCLIB · preview before applying"
+                                FontFamily="Inter"
+                                FontSize="11"
+                                TextColor="{AppThemeBinding Light={StaticResource MutedOnLight}, Dark={StaticResource MutedOnDark}}" />
+                        </VerticalStackLayout>
+
+                        <Button
+                            Grid.Column="1"
+                            Text="&#xe5cd;"
+                            FontFamily="MaterialIcons"
+                            FontSize="20"
+                            WidthRequest="38"
+                            HeightRequest="38"
+                            MinimumWidthRequest="38"
+                            MinimumHeightRequest="38"
+                            Padding="0"
+                            CornerRadius="19"
+                            BackgroundColor="Transparent"
+                            TextColor="{AppThemeBinding Light={StaticResource MutedOnLight}, Dark={StaticResource MutedOnDark}}"
+                            Command="{Binding CloseSearchPanelCommand}" />
+                    </Grid>
+
+                    <Label
+                        Grid.Row="2"
+                        Text="{Binding StatusMessage}"
+                        FontFamily="Inter"
+                        FontSize="12"
+                        IsVisible="{Binding HasStatus}"
+                        TextColor="{AppThemeBinding Light={StaticResource MutedOnLight}, Dark={StaticResource MutedOnDark}}" />
+
+                    <ActivityIndicator
+                        Grid.Row="3"
+                        IsRunning="{Binding IsSearching}"
+                        IsVisible="{Binding IsSearching}"
+                        HorizontalOptions="Start"
+                        HeightRequest="20"
+                        WidthRequest="20"
+                        Color="{StaticResource Primary}" />
+
+                    <ScrollView Grid.Row="4" MaximumHeightRequest="420" VerticalScrollBarVisibility="Never">
+                        <VerticalStackLayout Spacing="8" BindableLayout.ItemsSource="{Binding SearchResults}">
+                            <BindableLayout.ItemTemplate>
+                                <DataTemplate x:DataType="viewmodels:LyricsSearchResultViewModel">
+                                    <Border
+                                        StrokeThickness="1"
+                                        Stroke="{AppThemeBinding Light={StaticResource OutlineLight}, Dark={StaticResource OutlineDark}}"
+                                        StrokeShape="RoundRectangle 18"
+                                        BackgroundColor="{AppThemeBinding Light={StaticResource AppBackgroundLight}, Dark={StaticResource SurfaceDarkAlt}}"
+                                        Padding="14,12">
+                                        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
+                                            <VerticalStackLayout Grid.Column="0" Spacing="2">
+                                                <Label
+                                                    Text="{Binding Title}"
+                                                    FontFamily="InterSemiBold"
+                                                    FontSize="14"
+                                                    TextColor="{AppThemeBinding Light={StaticResource TextOnLight}, Dark={StaticResource TextOnDark}}"
+                                                    LineBreakMode="TailTruncation" />
+                                                <Label
+                                                    Text="{Binding Artist}"
+                                                    FontFamily="Inter"
+                                                    FontSize="12"
+                                                    TextColor="{AppThemeBinding Light={StaticResource MutedOnLight}, Dark={StaticResource MutedOnDark}}"
+                                                    LineBreakMode="TailTruncation" />
+                                                <Label
+                                                    Text="{Binding Details}"
+                                                    FontFamily="Inter"
+                                                    FontSize="11"
+                                                    TextColor="{AppThemeBinding Light={StaticResource MutedOnLight}, Dark={StaticResource MutedOnDark}}"
+                                                    LineBreakMode="TailTruncation" />
+                                                <Label
+                                                    Text="{Binding Kind}"
+                                                    FontFamily="InterSemiBold"
+                                                    FontSize="10"
+                                                    CharacterSpacing="1"
+                                                    TextColor="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource PrimaryDark}}" />
+                                            </VerticalStackLayout>
+                                            <Button
+                                                Grid.Column="1"
+                                                Text="Use"
+                                                FontFamily="InterSemiBold"
+                                                FontSize="12"
+                                                HeightRequest="34"
+                                                MinimumHeightRequest="34"
+                                                Padding="18,0"
+                                                CornerRadius="17"
+                                                Style="{StaticResource PrimaryPillButton}"
+                                                VerticalOptions="Center"
+                                                CommandParameter="{Binding .}"
+                                                Clicked="OnUseSearchResultClicked" />
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </BindableLayout.ItemTemplate>
+                        </VerticalStackLayout>
+                    </ScrollView>
+                </Grid>
+            </Border>
+        </Grid>
+    </Grid>
+</ContentPage>

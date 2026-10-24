@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<Grid
+    x:Class="MusicPlayer.UI.Controls.PlaylistItem"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:models="clr-namespace:Domain.Models;assembly=Domain"
+    xmlns:converters="clr-namespace:MusicPlayer.UI.Converters"
+    x:DataType="models:Playlist"
+    ColumnDefinitions="Auto,*,Auto,Auto"
+    ColumnSpacing="10"
+    HeightRequest="70"
+    Padding="10,0"
+    BackgroundColor="Transparent">
+
+    <Grid.Resources>
+        <converters:ArtworkToImageSourceConverter x:Key="ArtworkToImageSourceConverter" />
+        <converters:StringIsNullOrEmptyConverter x:Key="StringIsNullOrEmptyConverter" />
+    </Grid.Resources>
+
+    <Grid.GestureRecognizers>
+        <TapGestureRecognizer Tapped="OnPlaylistTapped" />
+    </Grid.GestureRecognizers>
+
+    <!-- Card surface behind the row. -->
+    <Border
+        Grid.ColumnSpan="4"
+        Margin="0,3"
+        StrokeThickness="1"
+        Stroke="{AppThemeBinding Light={StaticResource OutlineLight}, Dark={StaticResource OutlineDark}}"
+        StrokeShape="RoundRectangle 16"
+        BackgroundColor="{AppThemeBinding Light={StaticResource SurfaceLight}, Dark={StaticResource SurfaceDark}}" />
+
+    <Border
+        Grid.Column="0"
+        WidthRequest="46"
+        HeightRequest="46"
+        StrokeThickness="0"
+        StrokeShape="RoundRectangle 13"
+        Background="{StaticResource ArtworkPlaceholderGradient}"
+        VerticalOptions="Center">
+        <Grid>
+            <Label
+                Text="&#xe03d;"
+                FontFamily="MaterialIcons"
+                FontSize="21"
+                TextColor="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource PrimaryDark}}"
+                HorizontalOptions="Center"
+                VerticalOptions="Center" />
+            <Image
+                Source="{Binding ArtworkPath, Converter={StaticResource ArtworkToImageSourceConverter}}"
+                Aspect="AspectFill"
+                IsVisible="{Binding ArtworkPath, Converter={StaticResource StringIsNullOrEmptyConverter}, ConverterParameter=inverse}" />
+        </Grid>
+    </Border>
+
+    <VerticalStackLayout Grid.Column="1" VerticalOptions="Center" Spacing="1">
+        <Label
+            Text="{Binding Name}"
+            FontFamily="InterSemiBold"
+            FontSize="15"
+            CharacterSpacing="-0.1"
+            TextColor="{AppThemeBinding Light={StaticResource TextOnLight}, Dark={StaticResource TextOnDark}}"
+            LineBreakMode="TailTruncation" />
+        <Label
+            Text="{Binding TrackCount, StringFormat='{0} songs'}"
+            FontFamily="Inter"
+            FontSize="11.5"
+            TextColor="{AppThemeBinding Light={StaticResource MutedOnLight}, Dark={StaticResource MutedOnDark}}"
+            LineBreakMode="TailTruncation" />
+    </VerticalStackLayout>
+
+    <Button
+        Grid.Column="2"
+        Text="&#xe145;"
+        FontFamily="MaterialIcons"
+        FontSize="18"
+        TextColor="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource PrimaryDark}}"
+        BackgroundColor="{AppThemeBinding Light={StaticResource AccentSoftLight}, Dark={StaticResource AccentSoftDark}}"
+        WidthRequest="34"
+        HeightRequest="34"
+        MinimumWidthRequest="34"
+        MinimumHeightRequest="34"
+        CornerRadius="17"
+        Padding="0"
+        VerticalOptions="Center"
+        Clicked="OnAddSongsClicked"
+        SemanticProperties.Description="Add songs to this playlist" />
+
+    <Button
+        Grid.Column="3"
+        Text="&#xe5d4;"
+        FontFamily="MaterialIcons"
+        FontSize="20"
+        TextColor="{AppThemeBinding Light={StaticResource MutedOnLight}, Dark={StaticResource MutedOnDark}}"
+        BackgroundColor="Transparent"
+        WidthRequest="34"
+        HeightRequest="44"
+        MinimumWidthRequest="34"
+        MinimumHeightRequest="44"
+        CornerRadius="18"
+        Padding="0"
+        VerticalOptions="Center"
+        Clicked="OnMenuClicked"
+        SemanticProperties.Description="Playlist options" />
+</Grid>

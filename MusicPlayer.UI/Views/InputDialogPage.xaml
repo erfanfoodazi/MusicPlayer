@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<ContentPage
+    x:Class="MusicPlayer.UI.Views.InputDialogPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:views="clr-namespace:MusicPlayer.UI.Views"
+    x:DataType="views:InputDialogPage"
+    Shell.NavBarIsVisible="False"
+    Shell.TabBarIsVisible="False"
+    BackgroundColor="#D905050A">
+
+    <Grid Padding="24">
+        <Border
+            x:Name="Card"
+            VerticalOptions="Center"
+            StrokeThickness="1"
+            StrokeShape="RoundRectangle 24"
+            BackgroundColor="{AppThemeBinding Light={StaticResource SurfaceLight}, Dark={StaticResource SurfaceDark}}"
+            Stroke="{AppThemeBinding Light={StaticResource OutlineLight}, Dark={StaticResource OutlineDark}}">
+            <Border.Shadow>
+                <Shadow Brush="#000000" Offset="0,12" Radius="30" Opacity="0.5" />
+            </Border.Shadow>
+
+            <VerticalStackLayout Padding="22,24,22,20" Spacing="12">
+                <Border
+                    x:Name="IconTile"
+                    WidthRequest="48"
+                    HeightRequest="48"
+                    HorizontalOptions="Start"
+                    StrokeThickness="0"
+                    StrokeShape="RoundRectangle 15"
+                    BackgroundColor="{AppThemeBinding Light={StaticResource AccentSoftLight}, Dark={StaticResource AccentSoftDark}}">
+                    <Label
+                        x:Name="IconGlyphLabel"
+                        Text="&#xe145;"
+                        FontFamily="MaterialIcons"
+                        FontSize="24"
+                        TextColor="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource PrimaryDark}}"
+                        HorizontalOptions="Center"
+                        VerticalOptions="Center" />
+                </Border>
+
+                <Label
+                    x:Name="TitleLabel"
+                    Style="{StaticResource SheetTitleText}"
+                    FontSize="20"
+                    Margin="0,2,0,0" />
+
+                <Label
+                    x:Name="HintLabel"
+                    Style="{StaticResource CaptionText}"
+                    LineHeight="1.3"
+                    IsVisible="False" />
+
+                <Border Style="{StaticResource FieldBorder}" Margin="0,4,0,0">
+                    <Entry
+                        x:Name="InputEntry"
+                        FontSize="15"
+                        ReturnType="Go"
+                        ReturnCommand="{Binding ConfirmCommand}"
+                        VerticalOptions="Center" />
+                </Border>
+
+                <Label
+                    x:Name="ErrorLabel"
+                    Style="{StaticResource CaptionText}"
+                    TextColor="{StaticResource Danger}"
+                    FontSize="12"
+                    IsVisible="False" />
+
+                <Button
+                    x:Name="ConfirmButton"
+                    Text="Create"
+                    Style="{StaticResource PrimaryPillButton}"
+                    HeightRequest="46"
+                    CornerRadius="23"
+                    Margin="0,6,0,0"
+                    Clicked="OnConfirmClicked" />
+
+                <Button
+                    x:Name="CancelButton"
+                    Text="Cancel"
+                    Style="{StaticResource GhostButton}"
+                    HeightRequest="46"
+                    CornerRadius="23"
+                    Clicked="OnCancelClicked" />
+            </VerticalStackLayout>
+        </Border>
+    </Grid>
+</ContentPage>

@@ -1,0 +1,395 @@
+﻿<?xml version="1.0" encoding="UTF-8" ?>
+<?xaml-comp compile="true" ?>
+<ResourceDictionary
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml">
+
+    <!--
+        Auralis design language
+
+        Minimal, neutral, one accent. Screens share the same rhythm:
+        20dp gutters, a large title, hairline separators, 40dp icon buttons.
+        Accent (violet) is reserved for active state, primary actions and the
+        currently playing item so it never competes with artwork.
+    -->
+
+    <!-- ============ Gradients ============ -->
+    <LinearGradientBrush x:Key="AccentGradient" StartPoint="0,0" EndPoint="1,1">
+        <GradientStop Color="{StaticResource GradientStart}" Offset="0.0" />
+        <GradientStop Color="{StaticResource GradientMiddle}" Offset="0.55" />
+        <GradientStop Color="{StaticResource GradientEnd}" Offset="1.0" />
+    </LinearGradientBrush>
+
+    <LinearGradientBrush x:Key="AccentGradientHorizontal" StartPoint="0,0" EndPoint="1,0">
+        <GradientStop Color="{StaticResource GradientStart}" Offset="0.0" />
+        <GradientStop Color="{StaticResource GradientEnd}" Offset="1.0" />
+    </LinearGradientBrush>
+
+    <!-- Very subtle wash under screen headers. Kept low so text stays crisp. -->
+    <LinearGradientBrush x:Key="HeaderWash" StartPoint="0,0" EndPoint="0,1">
+        <GradientStop Color="{AppThemeBinding Light=#F1ECFF, Dark=#17122C}" Offset="0.0" />
+        <GradientStop Color="{AppThemeBinding Light=#00F4F4F9, Dark=#0007070C}" Offset="1.0" />
+    </LinearGradientBrush>
+
+    <!-- Soft light that sits behind the album and artist hero areas. -->
+    <LinearGradientBrush x:Key="HeroGlow" StartPoint="0,0" EndPoint="0,1">
+        <GradientStop Color="{AppThemeBinding Light=#E9E2FF, Dark=#1A1433}" Offset="0.0" />
+        <GradientStop Color="{AppThemeBinding Light=#00F4F4F9, Dark=#0007070C}" Offset="1.0" />
+    </LinearGradientBrush>
+
+    <!-- Scrim painted over artwork so white controls stay readable on any cover. -->
+    <LinearGradientBrush x:Key="ArtworkSheen" StartPoint="0,0" EndPoint="0,1">
+        <GradientStop Color="#00000000" Offset="0.45" />
+        <GradientStop Color="#66000000" Offset="1.0" />
+    </LinearGradientBrush>
+
+    <!-- Selected row / chip fill. -->
+    <LinearGradientBrush x:Key="SelectedRowGradient" StartPoint="0,0" EndPoint="1,0">
+        <GradientStop Color="{AppThemeBinding Light=#F0ECFF, Dark=#1C1735}" Offset="0.0" />
+        <GradientStop Color="{AppThemeBinding Light=#00F0ECFF, Dark=#001C1735}" Offset="1.0" />
+    </LinearGradientBrush>
+
+    <LinearGradientBrush x:Key="ArtworkPlaceholderGradient" StartPoint="0,0" EndPoint="1,1">
+        <GradientStop Color="{AppThemeBinding Light=#ECE7FB, Dark=#221B3B}" Offset="0.0" />
+        <GradientStop Color="{AppThemeBinding Light=#F7F5FF, Dark=#171320}" Offset="1.0" />
+    </LinearGradientBrush>
+
+    <!-- Scrim used by sheets and full-screen players. -->
+    <LinearGradientBrush x:Key="SheetScrim" StartPoint="0,0" EndPoint="0,1">
+        <GradientStop Color="#00000000" Offset="0.0" />
+        <GradientStop Color="#B3000000" Offset="1.0" />
+    </LinearGradientBrush>
+
+    <!-- ============ Typography ============ -->
+    <Style x:Key="DisplayText" TargetType="Label">
+        <Setter Property="FontFamily" Value="InterBold" />
+        <Setter Property="FontSize" Value="30" />
+        <Setter Property="CharacterSpacing" Value="-0.6" />
+        <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource TextOnLight}, Dark={StaticResource TextOnDark}}" />
+    </Style>
+
+    <Style x:Key="PageTitleText" TargetType="Label">
+        <Setter Property="FontFamily" Value="InterBold" />
+        <Setter Property="FontSize" Value="26" />
+        <Setter Property="CharacterSpacing" Value="-0.5" />
+        <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource TextOnLight}, Dark={StaticResource TextOnDark}}" />
+    </Style>
+
+    <Style x:Key="SheetTitleText" TargetType="Label">
+        <Setter Property="FontFamily" Value="InterBold" />
+        <Setter Property="FontSize" Value="19" />
+        <Setter Property="CharacterSpacing" Value="-0.3" />
+        <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource TextOnLight}, Dark={StaticResource TextOnDark}}" />
+    </Style>
+
+    <Style x:Key="SectionTitleText" TargetType="Label">
+        <Setter Property="FontFamily" Value="InterSemiBold" />
+        <Setter Property="FontSize" Value="16" />
+        <Setter Property="CharacterSpacing" Value="-0.2" />
+        <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource TextOnLight}, Dark={StaticResource TextOnDark}}" />
+    </Style>
+
+    <!-- Small uppercase group label above cards and sections. -->
+    <Style x:Key="SectionLabelText" TargetType="Label">
+        <Setter Property="FontFamily" Value="InterSemiBold" />
+        <Setter Property="FontSize" Value="11" />
+        <Setter Property="CharacterSpacing" Value="1.4" />
+        <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource MutedOnLight}, Dark={StaticResource MutedOnDark}}" />
+    </Style>
+
+    <Style x:Key="BodyText" TargetType="Label">
+        <Setter Property="FontFamily" Value="Inter" />
+        <Setter Property="FontSize" Value="14" />
+        <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource TextOnLight}, Dark={StaticResource TextOnDark}}" />
+    </Style>
+
+    <Style x:Key="CaptionText" TargetType="Label">
+        <Setter Property="FontFamily" Value="Inter" />
+        <Setter Property="FontSize" Value="12" />
+        <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource MutedOnLight}, Dark={StaticResource MutedOnDark}}" />
+    </Style>
+
+    <Style x:Key="OverlineText" TargetType="Label">
+        <Setter Property="FontFamily" Value="InterSemiBold" />
+        <Setter Property="FontSize" Value="10" />
+        <Setter Property="CharacterSpacing" Value="1.8" />
+        <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource MutedOnLight}, Dark={StaticResource MutedOnDark}}" />
+    </Style>
+
+    <Style x:Key="TrackNameText" TargetType="Label">
+        <Setter Property="FontFamily" Value="InterSemiBold" />
+        <Setter Property="FontSize" Value="15" />
+        <Setter Property="CharacterSpacing" Value="-0.1" />
+        <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource TextOnLight}, Dark={StaticResource TextOnDark}}" />
+        <Setter Property="LineBreakMode" Value="TailTruncation" />
+    </Style>
+
+    <Style x:Key="TrackMetaText" TargetType="Label">
+        <Setter Property="FontFamily" Value="Inter" />
+        <Setter Property="FontSize" Value="12" />
+        <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource MutedOnLight}, Dark={StaticResource MutedOnDark}}" />
+        <Setter Property="LineBreakMode" Value="TailTruncation" />
+    </Style>
+
+    <!-- ============ Icons (Material Icons font) ============ -->
+    <Style x:Key="IconGlyph" TargetType="Label">
+        <Setter Property="FontFamily" Value="MaterialIcons" />
+        <Setter Property="FontSize" Value="22" />
+        <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource TextOnLight}, Dark={StaticResource TextOnDark}}" />
+        <Setter Property="VerticalTextAlignment" Value="Center" />
+        <Setter Property="HorizontalTextAlignment" Value="Center" />
+    </Style>
+
+    <!-- 40dp circular ghost icon button: the standard header action. -->
+    <Style x:Key="IconButton" TargetType="Button">
+        <Setter Property="FontFamily" Value="MaterialIcons" />
+        <Setter Property="FontSize" Value="21" />
+        <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource TextOnLight}, Dark={StaticResource TextOnDark}}" />
+        <Setter Property="BackgroundColor" Value="Transparent" />
+        <Setter Property="WidthRequest" Value="40" />
+        <Setter Property="HeightRequest" Value="40" />
+        <Setter Property="MinimumWidthRequest" Value="40" />
+        <Setter Property="MinimumHeightRequest" Value="40" />
+        <Setter Property="CornerRadius" Value="20" />
+        <Setter Property="Padding" Value="0" />
+    </Style>
+
+    <Style x:Key="IconButtonSurface" TargetType="Button" BasedOn="{StaticResource IconButton}">
+        <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource SurfaceLight}, Dark={StaticResource SurfaceDarkAlt}}" />
+        <Setter Property="BorderColor" Value="{AppThemeBinding Light={StaticResource OutlineLight}, Dark={StaticResource OutlineDark}}" />
+        <Setter Property="BorderWidth" Value="1" />
+    </Style>
+
+    <!-- 44dp touch target with a 26dp visual glyph, used in transport rows. -->
+    <Style x:Key="TransportIconButton" TargetType="Button" BasedOn="{StaticResource IconButton}">
+        <Setter Property="FontSize" Value="27" />
+        <Setter Property="WidthRequest" Value="48" />
+        <Setter Property="HeightRequest" Value="48" />
+        <Setter Property="MinimumWidthRequest" Value="48" />
+        <Setter Property="MinimumHeightRequest" Value="48" />
+        <Setter Property="CornerRadius" Value="24" />
+    </Style>
+
+    <Style x:Key="PrimaryPillButton" TargetType="Button">
+        <Setter Property="FontFamily" Value="InterSemiBold" />
+        <Setter Property="FontSize" Value="14" />
+        <Setter Property="TextColor" Value="White" />
+        <Setter Property="Background" Value="{StaticResource AccentGradientHorizontal}" />
+        <Setter Property="BorderWidth" Value="0" />
+        <Setter Property="CornerRadius" Value="22" />
+        <Setter Property="HeightRequest" Value="44" />
+        <Setter Property="MinimumHeightRequest" Value="44" />
+        <Setter Property="Padding" Value="22,0" />
+    </Style>
+
+    <!-- Flat accent pill: used for "Play" on detail screens. -->
+    <Style x:Key="PlayPillButton" TargetType="Button" BasedOn="{StaticResource PrimaryPillButton}">
+        <Setter Property="Background" Value="{StaticResource Primary}" />
+        <Setter Property="CornerRadius" Value="24" />
+        <Setter Property="HeightRequest" Value="48" />
+        <Setter Property="MinimumHeightRequest" Value="48" />
+        <Setter Property="FontSize" Value="15" />
+    </Style>
+
+    <Style x:Key="PlayButton" TargetType="Button">
+        <Setter Property="FontFamily" Value="MaterialIcons" />
+        <Setter Property="FontSize" Value="30" />
+        <Setter Property="TextColor" Value="White" />
+        <Setter Property="Background" Value="{StaticResource AccentGradient}" />
+        <Setter Property="WidthRequest" Value="64" />
+        <Setter Property="HeightRequest" Value="64" />
+        <Setter Property="MinimumWidthRequest" Value="64" />
+        <Setter Property="MinimumHeightRequest" Value="64" />
+        <Setter Property="CornerRadius" Value="32" />
+        <Setter Property="Padding" Value="0" />
+        <Setter Property="BorderWidth" Value="0" />
+    </Style>
+
+    <Style x:Key="GhostButton" TargetType="Button">
+        <Setter Property="FontFamily" Value="InterSemiBold" />
+        <Setter Property="FontSize" Value="13" />
+        <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource TextOnLight}, Dark={StaticResource TextOnDark}}" />
+        <Setter Property="BackgroundColor" Value="Transparent" />
+        <Setter Property="BorderWidth" Value="1" />
+        <Setter Property="BorderColor" Value="{AppThemeBinding Light={StaticResource OutlineLight}, Dark={StaticResource OutlineDark}}" />
+        <Setter Property="CornerRadius" Value="22" />
+        <Setter Property="HeightRequest" Value="44" />
+        <Setter Property="MinimumHeightRequest" Value="44" />
+        <Setter Property="Padding" Value="18,0" />
+    </Style>
+
+    <Style x:Key="DangerButton" TargetType="Button">
+        <Setter Property="FontFamily" Value="InterSemiBold" />
+        <Setter Property="FontSize" Value="14" />
+        <Setter Property="TextColor" Value="#FFFFFF" />
+        <Setter Property="BackgroundColor" Value="#E5484D" />
+        <Setter Property="CornerRadius" Value="24" />
+        <Setter Property="HeightRequest" Value="48" />
+        <Setter Property="MinimumHeightRequest" Value="48" />
+        <Setter Property="Padding" Value="20,0" />
+        <Setter Property="BorderWidth" Value="0" />
+    </Style>
+
+    <!-- ============ Surfaces ============ -->
+    <!-- Grouped content card. One per section, never nested. -->
+    <Style x:Key="CardBorder" TargetType="Border">
+        <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource SurfaceLight}, Dark={StaticResource SurfaceDark}}" />
+        <Setter Property="Stroke" Value="{AppThemeBinding Light={StaticResource OutlineLight}, Dark={StaticResource OutlineDark}}" />
+        <Setter Property="StrokeThickness" Value="1" />
+        <Setter Property="StrokeShape" Value="RoundRectangle 20" />
+    </Style>
+
+    <Style x:Key="PillBorder" TargetType="Border">
+        <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource SurfaceLightAlt}, Dark={StaticResource SurfaceDarkAlt}}" />
+        <Setter Property="StrokeThickness" Value="1" />
+        <Setter Property="Stroke" Value="{AppThemeBinding Light={StaticResource OutlineLight}, Dark={StaticResource OutlineDark}}" />
+        <Setter Property="StrokeShape" Value="RoundRectangle 22" />
+    </Style>
+
+    <Style x:Key="SearchPillBorder" TargetType="Border">
+        <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource SurfaceLight}, Dark={StaticResource SurfaceDarkAlt}}" />
+        <Setter Property="StrokeThickness" Value="1" />
+        <Setter Property="Stroke" Value="{AppThemeBinding Light={StaticResource OutlineLight}, Dark={StaticResource OutlineDark}}" />
+        <Setter Property="StrokeShape" Value="RoundRectangle 14" />
+        <Setter Property="Padding" Value="12,0" />
+        <Setter Property="HeightRequest" Value="46" />
+    </Style>
+
+    <!-- Text field container for editors. -->
+    <Style x:Key="FieldBorder" TargetType="Border">
+        <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource SurfaceLight}, Dark={StaticResource SurfaceDarkAlt}}" />
+        <Setter Property="StrokeThickness" Value="1" />
+        <Setter Property="Stroke" Value="{AppThemeBinding Light={StaticResource OutlineLight}, Dark={StaticResource OutlineDark}}" />
+        <Setter Property="StrokeShape" Value="RoundRectangle 12" />
+        <Setter Property="Padding" Value="12,0" />
+        <Setter Property="HeightRequest" Value="48" />
+    </Style>
+
+    <Style x:Key="IconTile" TargetType="Border">
+        <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource AccentSoftLight}, Dark={StaticResource AccentSoftDark}}" />
+        <Setter Property="StrokeThickness" Value="0" />
+        <Setter Property="StrokeShape" Value="RoundRectangle 13" />
+        <Setter Property="WidthRequest" Value="40" />
+        <Setter Property="HeightRequest" Value="40" />
+    </Style>
+
+    <Style x:Key="DividerLine" TargetType="BoxView">
+        <Setter Property="HeightRequest" Value="1" />
+        <Setter Property="Color" Value="{AppThemeBinding Light={StaticResource OutlineLight}, Dark={StaticResource OutlineDark}}" />
+        <Setter Property="Opacity" Value="1" />
+    </Style>
+
+    <!-- Sheet grabber handle. -->
+    <Style x:Key="SheetGrabber" TargetType="Border">
+        <Setter Property="WidthRequest" Value="36" />
+        <Setter Property="HeightRequest" Value="4" />
+        <Setter Property="HorizontalOptions" Value="Center" />
+        <Setter Property="StrokeThickness" Value="0" />
+        <Setter Property="StrokeShape" Value="RoundRectangle 2" />
+        <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource Gray300}, Dark={StaticResource SurfaceDarkElevated}}" />
+    </Style>
+
+    <!-- Segmented control: the track that holds mutually exclusive options. -->
+    <Style x:Key="SegmentTrack" TargetType="Border">
+        <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource SurfaceLightAlt}, Dark={StaticResource SurfaceDark}}" />
+        <Setter Property="StrokeThickness" Value="1" />
+        <Setter Property="Stroke" Value="{AppThemeBinding Light={StaticResource OutlineLight}, Dark={StaticResource OutlineDark}}" />
+        <Setter Property="StrokeShape" Value="RoundRectangle 12" />
+        <Setter Property="Padding" Value="3" />
+    </Style>
+
+    <Style x:Key="SegmentButton" TargetType="Button">
+        <Setter Property="FontFamily" Value="InterSemiBold" />
+        <Setter Property="FontSize" Value="13" />
+        <Setter Property="HeightRequest" Value="34" />
+        <Setter Property="MinimumHeightRequest" Value="34" />
+        <Setter Property="CornerRadius" Value="9" />
+        <Setter Property="Padding" Value="0" />
+        <Setter Property="BackgroundColor" Value="Transparent" />
+        <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource MutedOnLight}, Dark={StaticResource MutedOnDark}}" />
+    </Style>
+
+    <!-- Scrollbar-free list look on Android; still scrollable. -->
+    <Style x:Key="CleanCollectionView" TargetType="CollectionView">
+        <Setter Property="SelectionMode" Value="None" />
+        <Setter Property="VerticalScrollBarVisibility" Value="Never" />
+    </Style>
+
+    <!-- ============ Refined surfaces ============ -->
+
+    <!-- Secondary panel: slightly recessed, used inside a card or as a standalone block. -->
+    <Style x:Key="PanelBorder" TargetType="Border">
+        <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource SurfaceLightAlt}, Dark={StaticResource SurfaceDarkAlt}}" />
+        <Setter Property="StrokeThickness" Value="1" />
+        <Setter Property="Stroke" Value="{AppThemeBinding Light={StaticResource OutlineLight}, Dark={StaticResource OutlineDark}}" />
+        <Setter Property="StrokeShape" Value="RoundRectangle 18" />
+    </Style>
+
+    <!-- Hairline-only row used for the grouped settings lists. -->
+    <Style x:Key="RowCard" TargetType="Border">
+        <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource SurfaceLight}, Dark={StaticResource SurfaceDark}}" />
+        <Setter Property="StrokeThickness" Value="0" />
+        <Setter Property="StrokeShape" Value="RoundRectangle 14" />
+        <Setter Property="Padding" Value="14,12" />
+    </Style>
+
+    <Style x:Key="ChipBorder" TargetType="Border">
+        <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource SurfaceLightAlt}, Dark={StaticResource SurfaceDarkAlt}}" />
+        <Setter Property="StrokeThickness" Value="1" />
+        <Setter Property="Stroke" Value="{AppThemeBinding Light={StaticResource OutlineLight}, Dark={StaticResource OutlineDark}}" />
+        <Setter Property="StrokeShape" Value="RoundRectangle 12" />
+        <Setter Property="Padding" Value="10,5" />
+    </Style>
+
+    <Style x:Key="MetaChipText" TargetType="Label">
+        <Setter Property="FontFamily" Value="InterSemiBold" />
+        <Setter Property="FontSize" Value="10" />
+        <Setter Property="CharacterSpacing" Value="0.5" />
+        <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource MutedOnLight}, Dark={StaticResource MutedOnDark}}" />
+    </Style>
+
+    <!-- Compact round icon button used on artwork and cards. -->
+    <Style x:Key="FloatingIconButton" TargetType="Button">
+        <Setter Property="FontFamily" Value="MaterialIcons" />
+        <Setter Property="FontSize" Value="17" />
+        <Setter Property="TextColor" Value="#FFFFFF" />
+        <Setter Property="BackgroundColor" Value="#66000000" />
+        <Setter Property="WidthRequest" Value="34" />
+        <Setter Property="HeightRequest" Value="34" />
+        <Setter Property="MinimumWidthRequest" Value="34" />
+        <Setter Property="MinimumHeightRequest" Value="34" />
+        <Setter Property="CornerRadius" Value="17" />
+        <Setter Property="Padding" Value="0" />
+        <Setter Property="BorderWidth" Value="0" />
+    </Style>
+
+    <Style x:Key="SectionDivider" TargetType="BoxView">
+        <Setter Property="HeightRequest" Value="1" />
+        <Setter Property="Color" Value="{AppThemeBinding Light={StaticResource OutlineLight}, Dark={StaticResource OutlineDark}}" />
+        <Setter Property="Opacity" Value="0.7" />
+    </Style>
+
+    <!-- ============ Typography additions ============ -->
+
+    <Style x:Key="HeroTitleText" TargetType="Label">
+        <Setter Property="FontFamily" Value="InterBold" />
+        <Setter Property="FontSize" Value="34" />
+        <Setter Property="CharacterSpacing" Value="-0.9" />
+        <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource TextOnLight}, Dark={StaticResource TextOnDark}}" />
+    </Style>
+
+    <Style x:Key="MetaText" TargetType="Label">
+        <Setter Property="FontFamily" Value="Inter" />
+        <Setter Property="FontSize" Value="11.5" />
+        <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource FaintOnLight}, Dark={StaticResource FaintOnDark}}" />
+        <Setter Property="LineBreakMode" Value="TailTruncation" />
+    </Style>
+
+    <Style x:Key="GroupHeaderText" TargetType="Label">
+        <Setter Property="FontFamily" Value="InterSemiBold" />
+        <Setter Property="FontSize" Value="10" />
+        <Setter Property="CharacterSpacing" Value="1.6" />
+        <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource MutedOnLight}, Dark={StaticResource MutedOnDark}}" />
+    </Style>
+
+</ResourceDictionary>

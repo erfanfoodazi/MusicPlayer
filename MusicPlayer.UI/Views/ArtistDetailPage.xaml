@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<ContentPage
+    x:Class="MusicPlayer.UI.Views.ArtistDetailPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:viewmodels="clr-namespace:MusicPlayer.UI.ViewModels"
+    xmlns:controls="clr-namespace:MusicPlayer.UI.Controls"
+    xmlns:models="clr-namespace:Domain.Models;assembly=Domain"
+    xmlns:converters="clr-namespace:MusicPlayer.UI.Converters"
+    x:DataType="viewmodels:ArtistDetailViewModel"
+    Title="Artist"
+    Shell.TabBarIsVisible="False"
+    Shell.NavBarIsVisible="False"
+    BackgroundColor="{AppThemeBinding Light={StaticResource AppBackgroundLight}, Dark={StaticResource AppBackgroundDark}}">
+
+    <ContentPage.Resources>
+        <converters:IntToBoolConverter x:Key="IntToBoolConverter" />
+    </ContentPage.Resources>
+
+    <Grid RowDefinitions="Auto,*,Auto">
+
+        <!-- ===== Top bar ===== -->
+        <Grid x:Name="PageHeader" Grid.Row="0" ColumnDefinitions="Auto,*,Auto" Padding="8,6,8,0">
+            <Button
+                Grid.Column="0"
+                Text="&#xe5c4;"
+                Style="{StaticResource IconButton}"
+                FontSize="23"
+                Clicked="OnBackClicked"
+                SemanticProperties.Description="Back" />
+            <Label
+                Grid.Column="1"
+                Text="ARTIST"
+                Style="{StaticResource OverlineText}"
+                CharacterSpacing="2"
+                HorizontalTextAlignment="Center"
+                VerticalTextAlignment="Center" />
+        </Grid>
+
+        <ScrollView x:Name="ArtistContent" Grid.Row="1" VerticalScrollBarVisibility="Never">
+            <VerticalStackLayout Padding="20,10,20,12" Spacing="0">
+
+                <Border
+                    WidthRequest="96"
+                    HeightRequest="96"
+                    HorizontalOptions="Center"
+                    StrokeThickness="0"
+                    StrokeShape="RoundRectangle 48"
+                    BackgroundColor="{AppThemeBinding Light={StaticResource AccentSoftLight}, Dark={StaticResource AccentSoftDark}}">
+                    <Label
+                        Text="{Binding ArtistInitial}"
+                        FontFamily="InterBold"
+                        FontSize="36"
+                        HorizontalOptions="Center"
+                        VerticalOptions="Center"
+                        TextColor="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource PrimaryDark}}" />
+                </Border>
+
+                <Label
+                    Text="{Binding Artist.Name}"
+                    FontFamily="InterBold"
+                    FontSize="23"
+                    CharacterSpacing="-0.4"
+                    HorizontalTextAlignment="Center"
+                    LineBreakMode="TailTruncation"
+                    Margin="0,16,0,0"
+                    TextColor="{AppThemeBinding Light={StaticResource TextOnLight}, Dark={StaticResource TextOnDark}}" />
+
+                <Label
+                    Text="{Binding Artist.TrackCount, StringFormat='{0} tracks'}"
+                    Style="{StaticResource CaptionText}"
+                    HorizontalTextAlignment="Center"
+                    Margin="0,4,0,0" />
+
+                <!-- Actions -->
+                <HorizontalStackLayout Spacing="10" HorizontalOptions="Center" Margin="0,18,0,0">
+                    <Border
+                        HeightRequest="44"
+                        Padding="22,0"
+                        StrokeThickness="0"
+                        StrokeShape="RoundRectangle 22"
+                        BackgroundColor="{StaticResource Primary}">
+                        <Border.GestureRecognizers>
+                            <TapGestureRecognizer Command="{Binding PlayArtistCommand}" />
+                        </Border.GestureRecognizers>
+                        <HorizontalStackLayout Spacing="7" VerticalOptions="Center">
+                            <Label Text="&#xe037;" FontFamily="MaterialIcons" FontSize="19" TextColor="White" VerticalOptions="Center" />
+                            <Label Text="Play" FontFamily="InterSemiBold" FontSize="14" TextColor="White" VerticalOptions="Center" />
+                        </HorizontalStackLayout>
+                    </Border>
+
+                    <Border
+                        HeightRequest="44"
+                        Padding="20,0"
+                        StrokeThickness="1"
+                        Stroke="{AppThemeBinding Light={StaticResource OutlineLight}, Dark={StaticResource OutlineDark}}"
+                        StrokeShape="RoundRectangle 22"
+                        BackgroundColor="Transparent">
+                        <Border.GestureRecognizers>
+                            <TapGestureRecognizer Command="{Binding ShufflePlayCommand}" />
+                        </Border.GestureRecognizers>
+                        <HorizontalStackLayout Spacing="7" VerticalOptions="Center">
+                            <Label
+                                Text="&#xe043;"
+                                FontFamily="MaterialIcons"
+                                FontSize="19"
+                                VerticalOptions="Center"
+                                TextColor="{AppThemeBinding Light={StaticResource TextOnLight}, Dark={StaticResource TextOnDark}}" />
+                            <Label
+                                Text="Shuffle"
+                                FontFamily="InterSemiBold"
+                                FontSize="14"
+                                VerticalOptions="Center"
+                                TextColor="{AppThemeBinding Light={StaticResource TextOnLight}, Dark={StaticResource TextOnDark}}" />
+                        </HorizontalStackLayout>
+                    </Border>
+                </HorizontalStackLayout>
+
+                <!-- Top tracks -->
+                <VerticalStackLayout Spacing="4" IsVisible="{Binding TopTracks.Count, Converter={StaticResource IntToBoolConverter}}" Margin="0,28,0,0">
+                    <Label Text="TOP TRACKS" Style="{StaticResource SectionLabelText}" Margin="2,0,0,4" />
+                    <VerticalStackLayout BindableLayout.ItemsSource="{Binding TopTracks}" Spacing="0" Margin="-6,0">
+                        <BindableLayout.ItemTemplate>
+                            <DataTemplate x:DataType="models:Music">
+                                <controls:TrackItem Track="{Binding .}" />
+                            </DataTemplate>
+                        </BindableLayout.ItemTemplate>
+                    </VerticalStackLayout>
+                </VerticalStackLayout>
+
+                <!-- Albums -->
+                <VerticalStackLayout Spacing="10" IsVisible="{Binding Albums.Count, Converter={StaticResource IntToBoolConverter}}" Margin="0,28,0,0">
+                    <Label Text="ALBUMS" Style="{StaticResource SectionLabelText}" Margin="2,0,0,0" />
+                    <FlexLayout Wrap="Wrap" Direction="Row" JustifyContent="Start" BindableLayout.ItemsSource="{Binding Albums}">
+                        <BindableLayout.ItemTemplate>
+                            <DataTemplate x:DataType="models:Album">
+                                <Grid WidthRequest="132" Margin="0,0,14,18">
+                                    <controls:AlbumItem Album="{Binding .}" />
+                                </Grid>
+                            </DataTemplate>
+                        </BindableLayout.ItemTemplate>
+                    </FlexLayout>
+                </VerticalStackLayout>
+            </VerticalStackLayout>
+        </ScrollView>
+
+        <!-- Docked mini player -->
+        <controls:MiniPlayer Grid.Row="2" />
+    </Grid>
+</ContentPage>

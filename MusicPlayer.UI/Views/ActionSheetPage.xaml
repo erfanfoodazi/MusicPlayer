@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<ContentPage
+    x:Class="MusicPlayer.UI.Views.ActionSheetPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:services="clr-namespace:MusicPlayer.UI.Services"
+    Shell.NavBarIsVisible="False"
+    Shell.TabBarIsVisible="False"
+    BackgroundColor="#E605050A">
+
+    <Grid RowDefinitions="*,Auto" Padding="10,0,10,10">
+
+        <!-- Tapping the dimmed area dismisses the sheet. -->
+        <Grid Grid.Row="0" BackgroundColor="Transparent">
+            <Grid.GestureRecognizers>
+                <TapGestureRecognizer Tapped="OnScrimTapped" />
+            </Grid.GestureRecognizers>
+        </Grid>
+
+        <Border
+            x:Name="Sheet"
+            Grid.Row="1"
+            MaximumHeightRequest="560"
+            StrokeThickness="0"
+            StrokeShape="RoundRectangle 28"
+            BackgroundColor="{AppThemeBinding Light={StaticResource SurfaceLight}, Dark={StaticResource SurfaceDark}}">
+            <Border.Shadow>
+                <Shadow Brush="#000000" Offset="0,-8" Radius="24" Opacity="0.45" />
+            </Border.Shadow>
+
+            <Grid RowDefinitions="Auto,*,Auto" RowSpacing="2" Padding="12,10,12,10">
+
+                <VerticalStackLayout Grid.Row="0" Spacing="0">
+                    <Border
+                        WidthRequest="40"
+                        HeightRequest="4"
+                        HorizontalOptions="Center"
+                        StrokeThickness="0"
+                        StrokeShape="RoundRectangle 2"
+                        BackgroundColor="{AppThemeBinding Light={StaticResource Gray200}, Dark={StaticResource Gray700}}"
+                        Margin="0,2,0,10" />
+
+                    <Label
+                        x:Name="TitleLabel"
+                        Style="{StaticResource SheetTitleText}"
+                        Padding="10,0"
+                        LineBreakMode="TailTruncation" />
+
+                    <Label
+                        x:Name="SubtitleLabel"
+                        Style="{StaticResource CaptionText}"
+                        Padding="10,0,10,4"
+                        IsVisible="False"
+                        LineBreakMode="WordWrap" />
+                </VerticalStackLayout>
+
+                <ScrollView
+                    Grid.Row="1"
+                    VerticalScrollBarVisibility="Never"
+                    Margin="0,6,0,2">
+                    <VerticalStackLayout
+                        x:Name="ActionsLayout"
+                        Spacing="2">
+                        <BindableLayout.ItemTemplate>
+                            <DataTemplate x:DataType="services:AppSheetAction">
+                                <Border
+                                    StrokeThickness="0"
+                                    StrokeShape="RoundRectangle 18"
+                                    BackgroundColor="Transparent"
+                                    Padding="10,9">
+                                    <Border.GestureRecognizers>
+                                        <TapGestureRecognizer Tapped="OnActionTapped" />
+                                    </Border.GestureRecognizers>
+                                    <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="12">
+                                        <Border
+                                            Grid.Column="0"
+                                            WidthRequest="40"
+                                            HeightRequest="40"
+                                            VerticalOptions="Center"
+                                            StrokeThickness="0"
+                                            StrokeShape="RoundRectangle 13"
+                                            BackgroundColor="{AppThemeBinding Light=#EFEAFE, Dark=#231C3A}">
+                                            <Label
+                                                Text="{Binding Glyph}"
+                                                FontFamily="MaterialIcons"
+                                                FontSize="20"
+                                                TextColor="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource PrimaryDark}}"
+                                                HorizontalOptions="Center"
+                                                VerticalOptions="Center">
+                                                <Label.Triggers>
+                                                    <DataTrigger TargetType="Label" Binding="{Binding IsDestructive}" Value="True">
+                                                        <Setter Property="TextColor" Value="{StaticResource Danger}" />
+                                                    </DataTrigger>
+                                                </Label.Triggers>
+                                            </Label>
+                                        </Border>
+
+                                        <VerticalStackLayout Grid.Column="1" VerticalOptions="Center" Spacing="1">
+                                            <Label
+                                                Text="{Binding Label}"
+                                                Style="{StaticResource BodyText}"
+                                                FontFamily="InterSemiBold"
+                                                FontSize="15">
+                                                <Label.Triggers>
+                                                    <DataTrigger TargetType="Label" Binding="{Binding IsDestructive}" Value="True">
+                                                        <Setter Property="TextColor" Value="{StaticResource Danger}" />
+                                                    </DataTrigger>
+                                                </Label.Triggers>
+                                            </Label>
+                                            <Label
+                                                Text="{Binding Description}"
+                                                Style="{StaticResource CaptionText}"
+                                                IsVisible="{Binding Description, Converter={StaticResource StringNotEmptyConverter}}"
+                                                LineBreakMode="WordWrap" />
+                                        </VerticalStackLayout>
+
+                                        <Label
+                                            Grid.Column="2"
+                                            Text="&#xe5ca;"
+                                            FontFamily="MaterialIcons"
+                                            FontSize="20"
+                                            TextColor="{StaticResource Primary}"
+                                            VerticalOptions="Center"
+                                            IsVisible="{Binding IsSelected}" />
+                                    </Grid>
+
+                                    <Border.Triggers>
+                                        <DataTrigger TargetType="Border" Binding="{Binding IsDestructive}" Value="True">
+                                            <Setter Property="BackgroundColor" Value="{AppThemeBinding Light=#FEF2F2, Dark=#2A171A}" />
+                                        </DataTrigger>
+                                    </Border.Triggers>
+                                </Border>
+                            </DataTemplate>
+                        </BindableLayout.ItemTemplate>
+                    </VerticalStackLayout>
+                </ScrollView>
+
+                <Button
+                    Grid.Row="2"
+                    Text="Cancel"
+                    Style="{StaticResource GhostButton}"
+                    FontSize="14"
+                    HeightRequest="48"
+                    CornerRadius="16"
+                    Margin="0,4,0,0"
+                    Clicked="OnCancelClicked" />
+            </Grid>
+        </Border>
+    </Grid>
+</ContentPage>

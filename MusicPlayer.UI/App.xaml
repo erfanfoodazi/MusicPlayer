@@ -1,0 +1,20 @@
+﻿<?xml version = "1.0" encoding = "UTF-8" ?>
+<Application xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:local="clr-namespace:MusicPlayer.UI"
+             xmlns:converters="clr-namespace:MusicPlayer.UI.Converters"
+             x:Class="MusicPlayer.UI.App">
+    <Application.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="Resources/Styles/Colors.xaml" />
+                <ResourceDictionary Source="Resources/Styles/Styles.xaml" />
+                <ResourceDictionary Source="Resources/Styles/Auralis.xaml" />
+            </ResourceDictionary.MergedDictionaries>
+
+            <converters:StringNotEmptyConverter x:Key="StringNotEmptyConverter" />
+            <converters:StringIsNullOrEmptyConverter x:Key="AppStringEmptyConverter" />
+            <converters:IntToBoolConverter x:Key="AppIntToBoolConverter" />
+        </ResourceDictionary>
+    </Application.Resources>
+</Application>

@@ -1,0 +1,430 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<ContentPage
+    x:Class="MusicPlayer.UI.Views.SettingsPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:viewmodels="clr-namespace:MusicPlayer.UI.ViewModels"
+    xmlns:controls="clr-namespace:MusicPlayer.UI.Controls"
+    x:DataType="viewmodels:SettingsViewModel"
+    Title="Settings"
+    Shell.NavBarIsVisible="False"
+    BackgroundColor="{AppThemeBinding Light={StaticResource AppBackgroundLight}, Dark={StaticResource AppBackgroundDark}}">
+
+    <Grid RowDefinitions="*,Auto">
+
+        <ScrollView Grid.Row="0" VerticalScrollBarVisibility="Never">
+            <VerticalStackLayout Padding="20,12,20,26" Spacing="22">
+
+                <VerticalStackLayout x:Name="HeaderBlock" Spacing="14">
+                    <VerticalStackLayout Spacing="1">
+                        <Label
+                            Text="AURALIS"
+                            Style="{StaticResource OverlineText}"
+                            FontSize="9"
+                            CharacterSpacing="2.4"
+                            TextColor="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource PrimaryDark}}" />
+                        <Label Text="Settings" Style="{StaticResource DisplayText}" />
+                    </VerticalStackLayout>
+
+                    <Border
+                        IsVisible="{Binding HasStatus}"
+                        BackgroundColor="{AppThemeBinding Light={StaticResource AccentSoftLight}, Dark={StaticResource AccentSoftDark}}"
+                        StrokeThickness="0"
+                        StrokeShape="RoundRectangle 12"
+                        Padding="14,10">
+                        <Label
+                            Text="{Binding StatusMessage}"
+                            FontFamily="Inter"
+                            FontSize="12"
+                            LineHeight="1.3"
+                            TextColor="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource PrimaryDark}}" />
+                    </Border>
+                </VerticalStackLayout>
+
+                <!-- ===== Playback ===== -->
+                <VerticalStackLayout x:Name="PlaybackSection" Spacing="8">
+                    <Label Text="PLAYBACK" Style="{StaticResource SectionLabelText}" Margin="4,0,0,0" />
+
+                    <Border Style="{StaticResource CardBorder}">
+                        <VerticalStackLayout Spacing="0">
+
+                            <Grid ColumnDefinitions="*,Auto" Padding="16,0" MinimumHeightRequest="62" ColumnSpacing="12">
+                                <VerticalStackLayout VerticalOptions="Center" Spacing="1">
+                                    <Label Text="Crossfade" FontFamily="InterMedium" FontSize="15" TextColor="{AppThemeBinding Light={StaticResource TextOnLight}, Dark={StaticResource TextOnDark}}" />
+                                    <Label Text="Blend the end of one track into the next" Style="{StaticResource CaptionText}" FontSize="11" />
+                                </VerticalStackLayout>
+                                <Switch Grid.Column="1" IsToggled="{Binding CrossfadeEnabled, Mode=TwoWay}" VerticalOptions="Center" />
+                            </Grid>
+
+                            <BoxView Style="{StaticResource DividerLine}" Margin="16,0" IsVisible="{Binding CrossfadeEnabled}" />
+
+                            <Grid ColumnDefinitions="*,Auto" Padding="16,0" MinimumHeightRequest="56" IsVisible="{Binding CrossfadeEnabled}">
+                                <Label Text="Duration" FontFamily="Inter" FontSize="14" VerticalOptions="Center" TextColor="{AppThemeBinding Light={StaticResource MutedOnLight}, Dark={StaticResource MutedOnDark}}" />
+                                <HorizontalStackLayout Grid.Column="1" Spacing="4" VerticalOptions="Center">
+                                    <Button
+                                        Text="&#xe15b;"
+                                        Style="{StaticResource IconButton}"
+                                        FontSize="18"
+                                        WidthRequest="34"
+                                        HeightRequest="34"
+                                        MinimumWidthRequest="34"
+                                        MinimumHeightRequest="34"
+                                        CornerRadius="17"
+                                        BackgroundColor="{AppThemeBinding Light={StaticResource SurfaceLightAlt}, Dark={StaticResource SurfaceDarkAlt}}"
+                                        Command="{Binding AdjustCrossfadeCommand}"
+                                        CommandParameter="-1"
+                                        SemanticProperties.Description="Shorter crossfade" />
+                                    <Label
+                                        Text="{Binding CrossfadeDuration, StringFormat='{0}s'}"
+                                        FontFamily="InterSemiBold"
+                                        FontSize="14"
+                                        WidthRequest="34"
+                                        HorizontalTextAlignment="Center"
+                                        VerticalTextAlignment="Center"
+                                        TextColor="{AppThemeBinding Light={StaticResource TextOnLight}, Dark={StaticResource TextOnDark}}" />
+                                    <Button
+                                        Text="&#xe145;"
+                                        Style="{StaticResource IconButton}"
+                                        FontSize="18"
+                                        WidthRequest="34"
+                                        HeightRequest="34"
+                                        MinimumWidthRequest="34"
+                                        MinimumHeightRequest="34"
+                                        CornerRadius="17"
+                                        BackgroundColor="{AppThemeBinding Light={StaticResource SurfaceLightAlt}, Dark={StaticResource SurfaceDarkAlt}}"
+                                        Command="{Binding AdjustCrossfadeCommand}"
+                                        CommandParameter="1"
+                                        SemanticProperties.Description="Longer crossfade" />
+                                </HorizontalStackLayout>
+                            </Grid>
+
+                            <BoxView Style="{StaticResource DividerLine}" Margin="16,0" />
+
+                            <Grid ColumnDefinitions="*,Auto" Padding="16,0" MinimumHeightRequest="56">
+                                <Label Text="Normalize volume" FontFamily="InterMedium" FontSize="15" VerticalOptions="Center" TextColor="{AppThemeBinding Light={StaticResource TextOnLight}, Dark={StaticResource TextOnDark}}" />
+                                <Switch Grid.Column="1" IsToggled="{Binding NormalizeVolume, Mode=TwoWay}" VerticalOptions="Center" />
+                            </Grid>
+
+                            <BoxView Style="{StaticResource DividerLine}" Margin="16,0" />
+
+                            <Grid ColumnDefinitions="*,Auto" Padding="16,0" MinimumHeightRequest="56">
+                                <Label Text="Equalizer" FontFamily="InterMedium" FontSize="15" VerticalOptions="Center" TextColor="{AppThemeBinding Light={StaticResource TextOnLight}, Dark={StaticResource TextOnDark}}" />
+                                <Switch Grid.Column="1" IsToggled="{Binding EnableEqualizer, Mode=TwoWay}" VerticalOptions="Center" />
+                            </Grid>
+
+                            <BoxView Style="{StaticResource DividerLine}" Margin="16,0" />
+
+                            <VerticalStackLayout Padding="16,14,16,16" Spacing="10">
+                                <Label Text="Audio quality" FontFamily="InterMedium" FontSize="15" TextColor="{AppThemeBinding Light={StaticResource TextOnLight}, Dark={StaticResource TextOnDark}}" />
+                                <Border Style="{StaticResource SegmentTrack}">
+                                    <Grid ColumnDefinitions="*,*,*,*" ColumnSpacing="2">
+                                        <Button Grid.Column="0" Text="Low" Style="{StaticResource SegmentButton}" FontSize="12" Command="{Binding SetQualityCommand}" CommandParameter="Low">
+                                            <Button.Triggers>
+                                                <DataTrigger TargetType="Button" Binding="{Binding AudioQuality}" Value="Low">
+                                                    <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource SurfaceLight}, Dark={StaticResource SurfaceDarkElevated}}" />
+                                                    <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource TextOnLight}, Dark={StaticResource TextOnDark}}" />
+                                                </DataTrigger>
+                                            </Button.Triggers>
+                                        </Button>
+                                        <Button Grid.Column="1" Text="Normal" Style="{StaticResource SegmentButton}" FontSize="12" Command="{Binding SetQualityCommand}" CommandParameter="Normal">
+                                            <Button.Triggers>
+                                                <DataTrigger TargetType="Button" Binding="{Binding AudioQuality}" Value="Normal">
+                                                    <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource SurfaceLight}, Dark={StaticResource SurfaceDarkElevated}}" />
+                                                    <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource TextOnLight}, Dark={StaticResource TextOnDark}}" />
+                                                </DataTrigger>
+                                            </Button.Triggers>
+                                        </Button>
+                                        <Button Grid.Column="2" Text="High" Style="{StaticResource SegmentButton}" FontSize="12" Command="{Binding SetQualityCommand}" CommandParameter="High">
+                                            <Button.Triggers>
+                                                <DataTrigger TargetType="Button" Binding="{Binding AudioQuality}" Value="High">
+                                                    <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource SurfaceLight}, Dark={StaticResource SurfaceDarkElevated}}" />
+                                                    <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource TextOnLight}, Dark={StaticResource TextOnDark}}" />
+                                                </DataTrigger>
+                                            </Button.Triggers>
+                                        </Button>
+                                        <Button Grid.Column="3" Text="Lossless" Style="{StaticResource SegmentButton}" FontSize="12" Command="{Binding SetQualityCommand}" CommandParameter="Lossless">
+                                            <Button.Triggers>
+                                                <DataTrigger TargetType="Button" Binding="{Binding AudioQuality}" Value="Lossless">
+                                                    <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource SurfaceLight}, Dark={StaticResource SurfaceDarkElevated}}" />
+                                                    <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource TextOnLight}, Dark={StaticResource TextOnDark}}" />
+                                                </DataTrigger>
+                                            </Button.Triggers>
+                                        </Button>
+                                    </Grid>
+                                </Border>
+                            </VerticalStackLayout>
+                        </VerticalStackLayout>
+                    </Border>
+                </VerticalStackLayout>
+
+                <!-- ===== Library ===== -->
+                <VerticalStackLayout x:Name="LibrarySection" Spacing="8">
+                    <Label Text="LIBRARY" Style="{StaticResource SectionLabelText}" Margin="4,0,0,0" />
+
+                    <Border Style="{StaticResource CardBorder}">
+                        <VerticalStackLayout Spacing="0">
+                            <Grid ColumnDefinitions="*,Auto" Padding="16,0" MinimumHeightRequest="56">
+                                <Label Text="Show lyrics" FontFamily="InterMedium" FontSize="15" VerticalOptions="Center" TextColor="{AppThemeBinding Light={StaticResource TextOnLight}, Dark={StaticResource TextOnDark}}" />
+                                <Switch Grid.Column="1" IsToggled="{Binding ShowLyrics, Mode=TwoWay}" VerticalOptions="Center" />
+                            </Grid>
+
+                            <BoxView Style="{StaticResource DividerLine}" Margin="16,0" />
+
+                            <Grid ColumnDefinitions="*,Auto" Padding="16,0" MinimumHeightRequest="56">
+                                <Label Text="Fetch artwork automatically" FontFamily="InterMedium" FontSize="15" VerticalOptions="Center" TextColor="{AppThemeBinding Light={StaticResource TextOnLight}, Dark={StaticResource TextOnDark}}" />
+                                <Switch Grid.Column="1" IsToggled="{Binding AutoFetchArtwork, Mode=TwoWay}" VerticalOptions="Center" />
+                            </Grid>
+
+                            <BoxView Style="{StaticResource DividerLine}" Margin="16,0" />
+
+                            <Grid ColumnDefinitions="*,Auto" Padding="16,0" MinimumHeightRequest="56">
+                                <Label Text="Fetch lyrics automatically" FontFamily="InterMedium" FontSize="15" VerticalOptions="Center" TextColor="{AppThemeBinding Light={StaticResource TextOnLight}, Dark={StaticResource TextOnDark}}" />
+                                <Switch Grid.Column="1" IsToggled="{Binding AutoFetchLyrics, Mode=TwoWay}" VerticalOptions="Center" />
+                            </Grid>
+                        </VerticalStackLayout>
+                    </Border>
+                </VerticalStackLayout>
+
+                <!-- ===== Appearance ===== -->
+                <VerticalStackLayout x:Name="AppearanceSection" Spacing="8">
+                    <Label Text="APPEARANCE" Style="{StaticResource SectionLabelText}" Margin="4,0,0,0" />
+
+                    <Border Style="{StaticResource CardBorder}">
+                        <VerticalStackLayout Padding="16,14,16,16" Spacing="10">
+                            <Label Text="Theme" FontFamily="InterMedium" FontSize="15" TextColor="{AppThemeBinding Light={StaticResource TextOnLight}, Dark={StaticResource TextOnDark}}" />
+                            <Border Style="{StaticResource SegmentTrack}">
+                                <Grid ColumnDefinitions="*,*,*" ColumnSpacing="2">
+                                    <Button Grid.Column="0" Text="System" Style="{StaticResource SegmentButton}" Command="{Binding SetThemeCommand}" CommandParameter="System">
+                                        <Button.Triggers>
+                                            <DataTrigger TargetType="Button" Binding="{Binding Theme}" Value="System">
+                                                <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource SurfaceLight}, Dark={StaticResource SurfaceDarkElevated}}" />
+                                                <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource TextOnLight}, Dark={StaticResource TextOnDark}}" />
+                                            </DataTrigger>
+                                        </Button.Triggers>
+                                    </Button>
+                                    <Button Grid.Column="1" Text="Light" Style="{StaticResource SegmentButton}" Command="{Binding SetThemeCommand}" CommandParameter="Light">
+                                        <Button.Triggers>
+                                            <DataTrigger TargetType="Button" Binding="{Binding Theme}" Value="Light">
+                                                <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource SurfaceLight}, Dark={StaticResource SurfaceDarkElevated}}" />
+                                                <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource TextOnLight}, Dark={StaticResource TextOnDark}}" />
+                                            </DataTrigger>
+                                        </Button.Triggers>
+                                    </Button>
+                                    <Button Grid.Column="2" Text="Dark" Style="{StaticResource SegmentButton}" Command="{Binding SetThemeCommand}" CommandParameter="Dark">
+                                        <Button.Triggers>
+                                            <DataTrigger TargetType="Button" Binding="{Binding Theme}" Value="Dark">
+                                                <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource SurfaceLight}, Dark={StaticResource SurfaceDarkElevated}}" />
+                                                <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource TextOnLight}, Dark={StaticResource TextOnDark}}" />
+                                            </DataTrigger>
+                                        </Button.Triggers>
+                                    </Button>
+                                </Grid>
+                            </Border>
+
+                            <Label Text="Accent color" FontFamily="InterMedium" FontSize="13" Margin="0,6,0,0" TextColor="{AppThemeBinding Light={StaticResource MutedOnLight}, Dark={StaticResource MutedOnDark}}" />
+
+                            <Grid ColumnDefinitions="*,*,*,*,*,*" ColumnSpacing="6">
+                                <Border Grid.Column="0" WidthRequest="38" HeightRequest="38" HorizontalOptions="Center"
+                                        BackgroundColor="#7C5CFF" StrokeThickness="2" Stroke="Transparent" StrokeShape="RoundRectangle 19">
+                                    <Border.GestureRecognizers>
+                                        <TapGestureRecognizer Command="{Binding SetAccentCommand}" CommandParameter="Violet" />
+                                    </Border.GestureRecognizers>
+                                    <Border.Triggers>
+                                        <DataTrigger TargetType="Border" Binding="{Binding AccentId}" Value="Violet">
+                                            <Setter Property="Stroke" Value="{AppThemeBinding Light={StaticResource TextOnLight}, Dark={StaticResource White}}" />
+                                            <Setter Property="Scale" Value="1.08" />
+                                        </DataTrigger>
+                                    </Border.Triggers>
+                                </Border>
+
+                                <Border Grid.Column="1" WidthRequest="38" HeightRequest="38" HorizontalOptions="Center"
+                                        BackgroundColor="#D93B6C" StrokeThickness="2" Stroke="Transparent" StrokeShape="RoundRectangle 19">
+                                    <Border.GestureRecognizers>
+                                        <TapGestureRecognizer Command="{Binding SetAccentCommand}" CommandParameter="Rose" />
+                                    </Border.GestureRecognizers>
+                                    <Border.Triggers>
+                                        <DataTrigger TargetType="Border" Binding="{Binding AccentId}" Value="Rose">
+                                            <Setter Property="Stroke" Value="{AppThemeBinding Light={StaticResource TextOnLight}, Dark={StaticResource White}}" />
+                                            <Setter Property="Scale" Value="1.08" />
+                                        </DataTrigger>
+                                    </Border.Triggers>
+                                </Border>
+
+                                <Border Grid.Column="2" WidthRequest="38" HeightRequest="38" HorizontalOptions="Center"
+                                        BackgroundColor="#0B6BCB" StrokeThickness="2" Stroke="Transparent" StrokeShape="RoundRectangle 19">
+                                    <Border.GestureRecognizers>
+                                        <TapGestureRecognizer Command="{Binding SetAccentCommand}" CommandParameter="Ocean" />
+                                    </Border.GestureRecognizers>
+                                    <Border.Triggers>
+                                        <DataTrigger TargetType="Border" Binding="{Binding AccentId}" Value="Ocean">
+                                            <Setter Property="Stroke" Value="{AppThemeBinding Light={StaticResource TextOnLight}, Dark={StaticResource White}}" />
+                                            <Setter Property="Scale" Value="1.08" />
+                                        </DataTrigger>
+                                    </Border.Triggers>
+                                </Border>
+
+                                <Border Grid.Column="3" WidthRequest="38" HeightRequest="38" HorizontalOptions="Center"
+                                        BackgroundColor="#0B8F6A" StrokeThickness="2" Stroke="Transparent" StrokeShape="RoundRectangle 19">
+                                    <Border.GestureRecognizers>
+                                        <TapGestureRecognizer Command="{Binding SetAccentCommand}" CommandParameter="Emerald" />
+                                    </Border.GestureRecognizers>
+                                    <Border.Triggers>
+                                        <DataTrigger TargetType="Border" Binding="{Binding AccentId}" Value="Emerald">
+                                            <Setter Property="Stroke" Value="{AppThemeBinding Light={StaticResource TextOnLight}, Dark={StaticResource White}}" />
+                                            <Setter Property="Scale" Value="1.08" />
+                                        </DataTrigger>
+                                    </Border.Triggers>
+                                </Border>
+
+                                <Border Grid.Column="4" WidthRequest="38" HeightRequest="38" HorizontalOptions="Center"
+                                        BackgroundColor="#E85D04" StrokeThickness="2" Stroke="Transparent" StrokeShape="RoundRectangle 19">
+                                    <Border.GestureRecognizers>
+                                        <TapGestureRecognizer Command="{Binding SetAccentCommand}" CommandParameter="Sunset" />
+                                    </Border.GestureRecognizers>
+                                    <Border.Triggers>
+                                        <DataTrigger TargetType="Border" Binding="{Binding AccentId}" Value="Sunset">
+                                            <Setter Property="Stroke" Value="{AppThemeBinding Light={StaticResource TextOnLight}, Dark={StaticResource White}}" />
+                                            <Setter Property="Scale" Value="1.08" />
+                                        </DataTrigger>
+                                    </Border.Triggers>
+                                </Border>
+
+                                <Border Grid.Column="5" WidthRequest="38" HeightRequest="38" HorizontalOptions="Center"
+                                        BackgroundColor="#52525B" StrokeThickness="2" Stroke="Transparent" StrokeShape="RoundRectangle 19">
+                                    <Border.GestureRecognizers>
+                                        <TapGestureRecognizer Command="{Binding SetAccentCommand}" CommandParameter="Graphite" />
+                                    </Border.GestureRecognizers>
+                                    <Border.Triggers>
+                                        <DataTrigger TargetType="Border" Binding="{Binding AccentId}" Value="Graphite">
+                                            <Setter Property="Stroke" Value="{AppThemeBinding Light={StaticResource TextOnLight}, Dark={StaticResource White}}" />
+                                            <Setter Property="Scale" Value="1.08" />
+                                        </DataTrigger>
+                                    </Border.Triggers>
+                                </Border>
+                            </Grid>
+                        </VerticalStackLayout>
+                    </Border>
+                </VerticalStackLayout>
+
+                <!-- ===== Storage ===== -->
+                <VerticalStackLayout x:Name="StorageSection" Spacing="8">
+                    <Label Text="STORAGE" Style="{StaticResource SectionLabelText}" Margin="4,0,0,0" />
+
+                    <Border Style="{StaticResource CardBorder}">
+                        <VerticalStackLayout Spacing="0">
+                            <Grid ColumnDefinitions="*,Auto" Padding="16,0" MinimumHeightRequest="56">
+                                <Label Text="Download over Wi-Fi only" FontFamily="InterMedium" FontSize="15" VerticalOptions="Center" TextColor="{AppThemeBinding Light={StaticResource TextOnLight}, Dark={StaticResource TextOnDark}}" />
+                                <Switch Grid.Column="1" IsToggled="{Binding DownloadOverWifiOnly, Mode=TwoWay}" VerticalOptions="Center" />
+                            </Grid>
+
+                            <BoxView Style="{StaticResource DividerLine}" Margin="16,0" />
+
+                            <Grid ColumnDefinitions="*,Auto" Padding="16,0" MinimumHeightRequest="56">
+                                <Label Text="Artwork cache" FontFamily="InterMedium" FontSize="15" VerticalOptions="Center" TextColor="{AppThemeBinding Light={StaticResource TextOnLight}, Dark={StaticResource TextOnDark}}" />
+                                <Button
+                                    Grid.Column="1"
+                                    Text="Clear"
+                                    FontFamily="InterSemiBold"
+                                    FontSize="12"
+                                    HeightRequest="32"
+                                    MinimumHeightRequest="32"
+                                    Padding="14,0"
+                                    CornerRadius="16"
+                                    BackgroundColor="{AppThemeBinding Light={StaticResource SurfaceLightAlt}, Dark={StaticResource SurfaceDarkAlt}}"
+                                    TextColor="{AppThemeBinding Light={StaticResource TextOnLight}, Dark={StaticResource TextOnDark}}"
+                                    Command="{Binding ClearCacheCommand}" />
+                            </Grid>
+                        </VerticalStackLayout>
+                    </Border>
+                </VerticalStackLayout>
+
+                <!-- ===== File access ===== -->
+                <VerticalStackLayout x:Name="FileAccessSection" Spacing="8">
+                    <Label Text="FILE ACCESS" Style="{StaticResource SectionLabelText}" Margin="4,0,0,0" />
+
+                    <Border Style="{StaticResource CardBorder}">
+                        <VerticalStackLayout Spacing="0">
+                            <Grid ColumnDefinitions="*,Auto" Padding="16,0" MinimumHeightRequest="56" ColumnSpacing="10">
+                                <Label Text="All files access" FontFamily="InterMedium" FontSize="15" VerticalOptions="Center" TextColor="{AppThemeBinding Light={StaticResource TextOnLight}, Dark={StaticResource TextOnDark}}" />
+                                <Border
+                                    Grid.Column="1"
+                                    Padding="10,4"
+                                    StrokeThickness="0"
+                                    StrokeShape="RoundRectangle 10"
+                                    BackgroundColor="{AppThemeBinding Light={StaticResource SurfaceLightAlt}, Dark={StaticResource SurfaceDarkAlt}}"
+                                    VerticalOptions="Center">
+                                    <Label
+                                        Text="{Binding StorageAccessStateText}"
+                                        FontFamily="InterSemiBold"
+                                        FontSize="11"
+                                        TextColor="{AppThemeBinding Light={StaticResource MutedOnLight}, Dark={StaticResource MutedOnDark}}">
+                                        <Label.Triggers>
+                                            <DataTrigger TargetType="Label" Binding="{Binding HasFullFileAccess}" Value="True">
+                                                <Setter Property="TextColor" Value="{StaticResource Success}" />
+                                            </DataTrigger>
+                                        </Label.Triggers>
+                                    </Label>
+                                </Border>
+                            </Grid>
+
+                            <Label
+                                Text="Editing tags, deleting files and reading local .lrc files need this on Android 11 and newer. Grant it on the screen that opens, then come back."
+                                IsVisible="{Binding IsStorageAccessWarning}"
+                                Style="{StaticResource CaptionText}"
+                                FontSize="11"
+                                LineHeight="1.3"
+                                Padding="16,0,16,12" />
+
+                            <BoxView Style="{StaticResource DividerLine}" Margin="16,0" />
+
+                            <Grid Padding="16,0" MinimumHeightRequest="52">
+                                <Button
+                                    Text="{Binding StorageAccessButtonText}"
+                                    FontFamily="InterSemiBold"
+                                    FontSize="13"
+                                    HeightRequest="36"
+                                    MinimumHeightRequest="36"
+                                    Padding="16,0"
+                                    CornerRadius="18"
+                                    HorizontalOptions="Start"
+                                    VerticalOptions="Center"
+                                    BackgroundColor="{AppThemeBinding Light={StaticResource AccentSoftLight}, Dark={StaticResource AccentSoftDark}}"
+                                    TextColor="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource PrimaryDark}}"
+                                    Command="{Binding RequestStorageAccessCommand}" />
+                            </Grid>
+                        </VerticalStackLayout>
+                    </Border>
+                </VerticalStackLayout>
+
+                <!-- ===== Advanced ===== -->
+                <VerticalStackLayout x:Name="AdvancedSection" Spacing="8">
+                    <Label Text="ADVANCED" Style="{StaticResource SectionLabelText}" Margin="4,0,0,0" />
+
+                    <Border Style="{StaticResource CardBorder}">
+                        <Grid Padding="16,0" MinimumHeightRequest="56">
+                            <Button
+                                Text="Reset to defaults"
+                                FontFamily="InterMedium"
+                                FontSize="14"
+                                BackgroundColor="Transparent"
+                                TextColor="{StaticResource Danger}"
+                                HorizontalOptions="Start"
+                                VerticalOptions="Center"
+                                Padding="0"
+                                Command="{Binding ResetToDefaultsCommand}" />
+                        </Grid>
+                    </Border>
+                </VerticalStackLayout>
+
+                <Label
+                    Text="AURALIS  ·  1.1"
+                    Style="{StaticResource OverlineText}"
+                    FontSize="9"
+                    HorizontalTextAlignment="Center"
+                    Margin="0,4,0,0" />
+            </VerticalStackLayout>
+        </ScrollView>
+
+        <controls:MiniPlayer Grid.Row="1" />
+    </Grid>
+</ContentPage>

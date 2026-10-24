@@ -1,0 +1,384 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<ContentPage
+    x:Class="MusicPlayer.UI.Views.LibraryPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:viewmodels="clr-namespace:MusicPlayer.UI.ViewModels"
+    xmlns:controls="clr-namespace:MusicPlayer.UI.Controls"
+    xmlns:models="clr-namespace:Domain.Models;assembly=Domain"
+    x:DataType="viewmodels:LibraryViewModel"
+    Title="Library"
+    Shell.NavBarIsVisible="False"
+    BackgroundColor="{AppThemeBinding Light={StaticResource AppBackgroundLight}, Dark={StaticResource AppBackgroundDark}}">
+
+    <Grid RowDefinitions="*,Auto">
+
+        <Grid Grid.Row="0" RowDefinitions="Auto,*">
+
+            <!-- A single, very soft accent wash behind the header. -->
+            <BoxView
+                Grid.Row="0"
+                HeightRequest="196"
+                VerticalOptions="Start"
+                InputTransparent="True"
+                Background="{StaticResource HeaderWash}" />
+
+            <!-- ===== Header ===== -->
+            <VerticalStackLayout x:Name="HeaderBlock" Grid.Row="0" Padding="20,10,20,8" Spacing="12">
+
+                <Grid ColumnDefinitions="*,Auto,Auto,Auto,Auto" ColumnSpacing="4">
+                    <VerticalStackLayout Spacing="1" VerticalOptions="Center">
+                        <Label
+                            Text="AURALIS"
+                            Style="{StaticResource OverlineText}"
+                            FontSize="9"
+                            CharacterSpacing="2.4"
+                            TextColor="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource PrimaryDark}}" />
+                        <Label Text="Library" Style="{StaticResource DisplayText}" />
+                    </VerticalStackLayout>
+
+                    <Button
+                        Grid.Column="1"
+                        Text="&#xe145;"
+                        Style="{StaticResource IconButtonSurface}"
+                        Command="{Binding CreatePlaylistCommand}"
+                        SemanticProperties.Description="Create a playlist" />
+
+                    <Button
+                        Grid.Column="2"
+                        Text="&#xe5d5;"
+                        Style="{StaticResource IconButtonSurface}"
+                        Command="{Binding RescanCommand}"
+                        SemanticProperties.Description="Rescan library" />
+
+                    <Button
+                        Grid.Column="3"
+                        Text="&#xe2c8;"
+                        Style="{StaticResource IconButtonSurface}"
+                        Command="{Binding PickFolderCommand}"
+                        SemanticProperties.Description="Choose music folder" />
+
+                    <Button
+                        Grid.Column="4"
+                        Text="&#xe8b8;"
+                        Style="{StaticResource IconButtonSurface}"
+                        Clicked="OnSettingsClicked"
+                        SemanticProperties.Description="Open settings" />
+                </Grid>
+
+                <!-- Search pill -->
+                <Border Style="{StaticResource SearchPillBorder}">
+                    <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="8">
+                        <Label
+                            Grid.Column="0"
+                            Text="&#xe8b6;"
+                            Style="{StaticResource IconGlyph}"
+                            FontSize="20"
+                            TextColor="{AppThemeBinding Light={StaticResource FaintOnLight}, Dark={StaticResource FaintOnDark}}"
+                            VerticalOptions="Center"
+                            InputTransparent="True" />
+
+                        <Entry
+                            x:Name="SearchEntry"
+                            Grid.Column="1"
+                            Text="{Binding SearchText, Mode=TwoWay}"
+                            Placeholder="Search your library"
+                            PlaceholderColor="{AppThemeBinding Light={StaticResource FaintOnLight}, Dark={StaticResource FaintOnDark}}"
+                            FontSize="14"
+                            BackgroundColor="Transparent"
+                            ClearButtonVisibility="Never"
+                            VerticalOptions="Center" />
+
+                        <Button
+                            Grid.Column="2"
+                            Text="&#xe5cd;"
+                            Style="{StaticResource IconButton}"
+                            FontSize="18"
+                            WidthRequest="28"
+                            HeightRequest="28"
+                            MinimumWidthRequest="28"
+                            MinimumHeightRequest="28"
+                            CornerRadius="14"
+                            TextColor="{AppThemeBinding Light={StaticResource MutedOnLight}, Dark={StaticResource MutedOnDark}}"
+                            IsVisible="{Binding HasSearchText}"
+                            Command="{Binding ClearSearchCommand}" />
+                    </Grid>
+                </Border>
+
+                <!-- Segmented tabs -->
+                <Border Style="{StaticResource SegmentTrack}">
+                    <Grid ColumnDefinitions="*,*,*,*" ColumnSpacing="2">
+                        <Button
+                            Grid.Column="0"
+                            Text="Tracks"
+                            Style="{StaticResource SegmentButton}"
+                            Command="{Binding SelectTabCommand}"
+                            CommandParameter="0">
+                            <Button.Triggers>
+                                <DataTrigger TargetType="Button" Binding="{Binding IsTracksTab}" Value="True">
+                                    <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource SurfaceLight}, Dark={StaticResource SurfaceDarkElevated}}" />
+                                    <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource TextOnLight}, Dark={StaticResource TextOnDark}}" />
+                                </DataTrigger>
+                            </Button.Triggers>
+                        </Button>
+
+                        <Button
+                            Grid.Column="1"
+                            Text="Albums"
+                            Style="{StaticResource SegmentButton}"
+                            Command="{Binding SelectTabCommand}"
+                            CommandParameter="1">
+                            <Button.Triggers>
+                                <DataTrigger TargetType="Button" Binding="{Binding IsAlbumsTab}" Value="True">
+                                    <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource SurfaceLight}, Dark={StaticResource SurfaceDarkElevated}}" />
+                                    <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource TextOnLight}, Dark={StaticResource TextOnDark}}" />
+                                </DataTrigger>
+                            </Button.Triggers>
+                        </Button>
+
+                        <Button
+                            Grid.Column="2"
+                            Text="Artists"
+                            Style="{StaticResource SegmentButton}"
+                            Command="{Binding SelectTabCommand}"
+                            CommandParameter="2">
+                            <Button.Triggers>
+                                <DataTrigger TargetType="Button" Binding="{Binding IsArtistsTab}" Value="True">
+                                    <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource SurfaceLight}, Dark={StaticResource SurfaceDarkElevated}}" />
+                                    <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource TextOnLight}, Dark={StaticResource TextOnDark}}" />
+                                </DataTrigger>
+                            </Button.Triggers>
+                        </Button>
+
+                        <Button
+                            Grid.Column="3"
+                            Text="Lists"
+                            Style="{StaticResource SegmentButton}"
+                            Command="{Binding SelectTabCommand}"
+                            CommandParameter="3">
+                            <Button.Triggers>
+                                <DataTrigger TargetType="Button" Binding="{Binding IsPlaylistsTab}" Value="True">
+                                    <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource SurfaceLight}, Dark={StaticResource SurfaceDarkElevated}}" />
+                                    <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource TextOnLight}, Dark={StaticResource TextOnDark}}" />
+                                </DataTrigger>
+                            </Button.Triggers>
+                        </Button>
+                    </Grid>
+                </Border>
+
+                <!-- Count + sort -->
+                <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                    <Label
+                        Text="{Binding TabCountText}"
+                        Style="{StaticResource CaptionText}"
+                        VerticalOptions="Center" />
+
+                    <Border
+                        Grid.Column="1"
+                        Padding="10,6"
+                        StrokeThickness="0"
+                        StrokeShape="RoundRectangle 14"
+                        BackgroundColor="Transparent">
+                        <Border.GestureRecognizers>
+                            <TapGestureRecognizer Command="{Binding ShowSortCommand}" />
+                        </Border.GestureRecognizers>
+                        <HorizontalStackLayout Spacing="5" VerticalOptions="Center">
+                            <Label
+                                Text="&#xe164;"
+                                FontFamily="MaterialIcons"
+                                FontSize="15"
+                                TextColor="{AppThemeBinding Light={StaticResource MutedOnLight}, Dark={StaticResource MutedOnDark}}"
+                                VerticalOptions="Center" />
+                            <Label
+                                Text="{Binding SortDisplayName}"
+                                FontFamily="InterMedium"
+                                FontSize="12"
+                                TextColor="{AppThemeBinding Light={StaticResource TextOnLight}, Dark={StaticResource TextOnDark}}"
+                                VerticalOptions="Center" />
+                            <Label
+                                Text="&#xe5cf;"
+                                FontFamily="MaterialIcons"
+                                FontSize="16"
+                                TextColor="{AppThemeBinding Light={StaticResource FaintOnLight}, Dark={StaticResource FaintOnDark}}"
+                                VerticalOptions="Center" />
+                        </HorizontalStackLayout>
+                    </Border>
+                </Grid>
+
+                <Label
+                    Text="{Binding StatusMessage}"
+                    Style="{StaticResource CaptionText}"
+                    FontSize="11"
+                    Margin="0,-6,0,0"
+                    LineBreakMode="TailTruncation"
+                    IsVisible="{Binding HasStatus}">
+                    <Label.Triggers>
+                        <DataTrigger TargetType="Label" Binding="{Binding HasError}" Value="True">
+                            <Setter Property="TextColor" Value="{StaticResource Danger}" />
+                        </DataTrigger>
+                    </Label.Triggers>
+                </Label>
+            </VerticalStackLayout>
+
+            <!-- ===== Content ===== -->
+            <!--
+                The gutters live on this container: CollectionView margins are dropped by the
+                Android handler, so rows used to render edge to edge and everything sat flush
+                against the screen.
+            -->
+            <Grid Grid.Row="1" Padding="18,0">
+
+                <!-- Tracks -->
+                <RefreshView
+                    x:Name="TracksView"
+                    Command="{Binding RefreshCommand}"
+                    IsRefreshing="{Binding IsRefreshing, Mode=TwoWay}"
+                    IsVisible="{Binding IsTracksTab}">
+                    <CollectionView
+                        ItemsSource="{Binding Tracks}"
+                        SelectionMode="None"
+                        ItemSizingStrategy="MeasureFirstItem">
+                        <CollectionView.Header>
+                            <BoxView HeightRequest="6" Color="Transparent" />
+                        </CollectionView.Header>
+                        <CollectionView.EmptyView>
+                            <VerticalStackLayout Padding="26,46" Spacing="10" HorizontalOptions="Center" VerticalOptions="Center">
+                                <Border Style="{StaticResource IconTile}" WidthRequest="56" HeightRequest="56">
+                                    <Label
+                                        Text="&#xe405;"
+                                        FontFamily="MaterialIcons"
+                                        FontSize="26"
+                                        TextColor="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource PrimaryDark}}"
+                                        HorizontalOptions="Center"
+                                        VerticalOptions="Center" />
+                                </Border>
+                                <Label Text="Your library is empty" Style="{StaticResource SectionTitleText}" HorizontalTextAlignment="Center" Margin="0,4,0,0" />
+                                <Label
+                                    Text="Choose the folder that holds your music, or copy files into your Music folder and rescan."
+                                    Style="{StaticResource CaptionText}"
+                                    LineHeight="1.35"
+                                    HorizontalTextAlignment="Center" />
+                                <Button Text="Choose music folder" Style="{StaticResource PrimaryPillButton}" Command="{Binding PickFolderCommand}" HorizontalOptions="Center" Margin="0,8,0,0" />
+                            </VerticalStackLayout>
+                        </CollectionView.EmptyView>
+                        <CollectionView.Footer>
+                            <BoxView HeightRequest="14" Color="Transparent" />
+                        </CollectionView.Footer>
+                        <CollectionView.ItemTemplate>
+                            <DataTemplate x:DataType="models:Music">
+                                <controls:TrackItem Track="{Binding .}" />
+                            </DataTemplate>
+                        </CollectionView.ItemTemplate>
+                    </CollectionView>
+                </RefreshView>
+
+                <!-- Albums -->
+                <RefreshView
+                    x:Name="AlbumsView"
+                    Command="{Binding RefreshCommand}"
+                    IsRefreshing="{Binding IsRefreshing, Mode=TwoWay}"
+                    IsVisible="{Binding IsAlbumsTab}">
+                    <CollectionView
+                        ItemsSource="{Binding Albums}"
+                        SelectionMode="None"
+                        ItemSizingStrategy="MeasureFirstItem">
+                        <CollectionView.ItemsLayout>
+                            <GridItemsLayout Orientation="Vertical" Span="2" HorizontalItemSpacing="14" VerticalItemSpacing="18" />
+                        </CollectionView.ItemsLayout>
+                        <CollectionView.Header>
+                            <BoxView HeightRequest="6" Color="Transparent" />
+                        </CollectionView.Header>
+                        <CollectionView.EmptyView>
+                            <VerticalStackLayout Padding="26,46" Spacing="10" HorizontalOptions="Center" VerticalOptions="Center">
+                                <Border Style="{StaticResource IconTile}" WidthRequest="56" HeightRequest="56">
+                                    <Label Text="&#xe019;" FontFamily="MaterialIcons" FontSize="26" TextColor="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource PrimaryDark}}" HorizontalOptions="Center" VerticalOptions="Center" />
+                                </Border>
+                                <Label Text="No albums yet" Style="{StaticResource SectionTitleText}" HorizontalTextAlignment="Center" Margin="0,4,0,0" />
+                                <Label Text="Albums appear after your library has been scanned." Style="{StaticResource CaptionText}" HorizontalTextAlignment="Center" />
+                                <Button Text="Scan music folder" Style="{StaticResource PrimaryPillButton}" Command="{Binding PickFolderCommand}" HorizontalOptions="Center" Margin="0,8,0,0" />
+                            </VerticalStackLayout>
+                        </CollectionView.EmptyView>
+                        <CollectionView.Footer>
+                            <BoxView HeightRequest="14" Color="Transparent" />
+                        </CollectionView.Footer>
+                        <CollectionView.ItemTemplate>
+                            <DataTemplate x:DataType="models:Album">
+                                <controls:AlbumItem Album="{Binding .}" />
+                            </DataTemplate>
+                        </CollectionView.ItemTemplate>
+                    </CollectionView>
+                </RefreshView>
+
+                <!-- Artists -->
+                <RefreshView
+                    x:Name="ArtistsView"
+                    Command="{Binding RefreshCommand}"
+                    IsRefreshing="{Binding IsRefreshing, Mode=TwoWay}"
+                    IsVisible="{Binding IsArtistsTab}">
+                    <CollectionView
+                        ItemsSource="{Binding Artists}"
+                        SelectionMode="None"
+                        ItemSizingStrategy="MeasureFirstItem">
+                        <CollectionView.Header>
+                            <BoxView HeightRequest="6" Color="Transparent" />
+                        </CollectionView.Header>
+                        <CollectionView.EmptyView>
+                            <VerticalStackLayout Padding="26,46" Spacing="10" HorizontalOptions="Center" VerticalOptions="Center">
+                                <Border Style="{StaticResource IconTile}" WidthRequest="56" HeightRequest="56">
+                                    <Label Text="&#xe7fd;" FontFamily="MaterialIcons" FontSize="26" TextColor="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource PrimaryDark}}" HorizontalOptions="Center" VerticalOptions="Center" />
+                                </Border>
+                                <Label Text="No artists yet" Style="{StaticResource SectionTitleText}" HorizontalTextAlignment="Center" Margin="0,4,0,0" />
+                                <Label Text="Artists appear after your library has been scanned." Style="{StaticResource CaptionText}" HorizontalTextAlignment="Center" />
+                                <Button Text="Scan music folder" Style="{StaticResource PrimaryPillButton}" Command="{Binding PickFolderCommand}" HorizontalOptions="Center" Margin="0,8,0,0" />
+                            </VerticalStackLayout>
+                        </CollectionView.EmptyView>
+                        <CollectionView.Footer>
+                            <BoxView HeightRequest="14" Color="Transparent" />
+                        </CollectionView.Footer>
+                        <CollectionView.ItemTemplate>
+                            <DataTemplate x:DataType="models:Artist">
+                                <controls:ArtistItem Artist="{Binding .}" />
+                            </DataTemplate>
+                        </CollectionView.ItemTemplate>
+                    </CollectionView>
+                </RefreshView>
+
+                <!-- Playlists -->
+                <RefreshView
+                    x:Name="PlaylistsView"
+                    Command="{Binding RefreshCommand}"
+                    IsRefreshing="{Binding IsRefreshing, Mode=TwoWay}"
+                    IsVisible="{Binding IsPlaylistsTab}">
+                    <CollectionView
+                        ItemsSource="{Binding Playlists}"
+                        SelectionMode="None">
+                        <CollectionView.Header>
+                            <BoxView HeightRequest="6" Color="Transparent" />
+                        </CollectionView.Header>
+                        <CollectionView.EmptyView>
+                            <VerticalStackLayout Padding="26,46" Spacing="10" HorizontalOptions="Center" VerticalOptions="Center">
+                                <Border Style="{StaticResource IconTile}" WidthRequest="56" HeightRequest="56">
+                                    <Label Text="&#xe03d;" FontFamily="MaterialIcons" FontSize="26" TextColor="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource PrimaryDark}}" HorizontalOptions="Center" VerticalOptions="Center" />
+                                </Border>
+                                <Label Text="No lists yet" Style="{StaticResource SectionTitleText}" HorizontalTextAlignment="Center" Margin="0,4,0,0" />
+                                <Label Text="Start a playlist for a mood, a night or a place." Style="{StaticResource CaptionText}" HorizontalTextAlignment="Center" />
+                                <Button Text="Create playlist" Style="{StaticResource PrimaryPillButton}" Command="{Binding CreatePlaylistCommand}" HorizontalOptions="Center" Margin="0,8,0,0" />
+                            </VerticalStackLayout>
+                        </CollectionView.EmptyView>
+                        <CollectionView.Footer>
+                            <BoxView HeightRequest="14" Color="Transparent" />
+                        </CollectionView.Footer>
+                        <CollectionView.ItemTemplate>
+                            <DataTemplate x:DataType="models:Playlist">
+                                <controls:PlaylistItem Playlist="{Binding .}" />
+                            </DataTemplate>
+                        </CollectionView.ItemTemplate>
+                    </CollectionView>
+                </RefreshView>
+            </Grid>
+        </Grid>
+
+        <!-- Docked mini player -->
+        <controls:MiniPlayer Grid.Row="1" VerticalOptions="End" />
+    </Grid>
+</ContentPage>

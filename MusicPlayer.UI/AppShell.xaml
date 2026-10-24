@@ -7,10 +7,24 @@
     Title="Auralis"
     FlyoutBehavior="Disabled"
     Shell.NavBarIsVisible="True"
+    Shell.TabBarIsVisible="False"
     BackgroundColor="{AppThemeBinding Light={StaticResource AppBackgroundLight}, Dark={StaticResource AppBackgroundDark}}">
 
-    <ShellContent
-        Title="Library"
-        Route="library"
-        ContentTemplate="{DataTemplate views:LibraryPage}" />
+    <!-- The footer tab bar stays hidden; navigation between the three roots happens through
+         the segmented control at the top of each page. The roots still have to exist in the
+         Shell hierarchy so absolute routes such as //search and //settings resolve. -->
+    <TabBar Shell.TabBarIsVisible="False">
+        <ShellContent
+            Title="Library"
+            Route="library"
+            ContentTemplate="{DataTemplate views:LibraryPage}" />
+        <ShellContent
+            Title="Search"
+            Route="search"
+            ContentTemplate="{DataTemplate views:SearchPage}" />
+        <ShellContent
+            Title="Settings"
+            Route="settings"
+            ContentTemplate="{DataTemplate views:SettingsPage}" />
+    </TabBar>
 </Shell>

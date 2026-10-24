@@ -25,13 +25,13 @@
         HeightRequest="44"
         StrokeThickness="0"
         StrokeShape="RoundRectangle 22"
-        BackgroundColor="{AppThemeBinding Light={StaticResource AccentSoftLight}, Dark={StaticResource AccentSoftDark}}"
+        BackgroundColor="{DynamicResource AccentSoftColor}"
         VerticalOptions="Center">
         <Label
             Text="{Binding Name, Converter={StaticResource FirstCharConverter}}"
             FontFamily="InterBold"
             FontSize="17"
-            TextColor="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource PrimaryDark}}"
+            TextColor="{DynamicResource AccentColor}"
             HorizontalOptions="Center"
             VerticalOptions="Center" />
     </Border>

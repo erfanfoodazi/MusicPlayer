@@ -37,7 +37,8 @@ public class MainActivity : MauiAppCompatActivity
 
         if (Microsoft.Maui.Controls.Application.Current is { } app)
         {
-            app.RequestedThemeChanged += (_, _) => SystemChrome.ApplyAppTheme();
+            app.RequestedThemeChanged += (_, _) =>
+                app.Dispatcher.Dispatch(SystemChrome.ApplyAppTheme);
         }
 
         HandleLockScreenIntent(Intent);
@@ -227,7 +228,25 @@ public class MainActivity : MauiAppCompatActivity
 
         if (pending.Count > 0)
         {
+            AndroidMediaAccess.BeginStartupRequest();
             RequestPermissions([.. pending], PermissionRequest);
+        }
+    }
+
+    [System.Diagnostics.CodeAnalysis.SuppressMessage(
+        "Platform Compatibility",
+        "CA1416",
+        Justification = "MauiAppCompatActivity only invokes this on API 23+, where runtime permissions exist.")]
+    public override void OnRequestPermissionsResult(
+        int requestCode,
+        string[] permissions,
+        Permission[] grantResults)
+    {
+        base.OnRequestPermissionsResult(requestCode, permissions, grantResults);
+
+        if (requestCode == PermissionRequest)
+        {
+            AndroidMediaAccess.CompleteStartupRequest();
         }
     }
 }

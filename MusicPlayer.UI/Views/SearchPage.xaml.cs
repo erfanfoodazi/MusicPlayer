@@ -78,7 +78,7 @@ public partial class SearchPage : ContentPage
 
     private async void OnNavLibraryClicked(object? sender, EventArgs e)
     {
-        await Shell.Current.GoToAsync("..");
+        await Shell.Current.GoToAsync(Routes.Library);
     }
 
     private async void OnNavSettingsClicked(object? sender, EventArgs e)

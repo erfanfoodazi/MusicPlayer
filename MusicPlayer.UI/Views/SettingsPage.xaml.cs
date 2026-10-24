@@ -53,7 +53,7 @@ public partial class SettingsPage : ContentPage
 
     private async void OnNavLibraryClicked(object? sender, EventArgs e)
     {
-        await Shell.Current.GoToAsync("..");
+        await Shell.Current.GoToAsync(Routes.Library);
     }
 
     private async void OnNavSearchClicked(object? sender, EventArgs e)

@@ -84,7 +84,7 @@
                                                 Text="{Binding Glyph}"
                                                 FontFamily="MaterialIcons"
                                                 FontSize="20"
-                                                TextColor="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource PrimaryDark}}"
+                                                TextColor="{DynamicResource AccentColor}"
                                                 HorizontalOptions="Center"
                                                 VerticalOptions="Center">
                                                 <Label.Triggers>
@@ -119,7 +119,7 @@
                                             Text="&#xe5ca;"
                                             FontFamily="MaterialIcons"
                                             FontSize="20"
-                                            TextColor="{StaticResource Primary}"
+                                            TextColor="{DynamicResource Primary}"
                                             VerticalOptions="Center"
                                             IsVisible="{Binding IsSelected}" />
                                     </Grid>

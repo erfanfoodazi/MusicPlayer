@@ -36,7 +36,7 @@
             HeightRequest="230"
             VerticalOptions="Start"
             InputTransparent="True"
-            Background="{StaticResource HeaderWash}" />
+            Background="{DynamicResource HeaderWash}" />
 
         <!-- ===== Header ===== -->
         <Grid x:Name="PageHeader" Grid.Row="0" ColumnDefinitions="Auto,*,Auto" Padding="10,8,10,0" ColumnSpacing="4">
@@ -95,7 +95,7 @@
                         Text="{Binding SourceLabel}"
                         FontFamily="InterSemiBold"
                         FontSize="10"
-                        TextColor="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource PrimaryDark}}"
+                        TextColor="{DynamicResource AccentColor}"
                         LineBreakMode="TailTruncation" />
                 </Border>
             </Grid>
@@ -117,7 +117,7 @@
                             Text="&#xe627;"
                             FontFamily="MaterialIcons"
                             FontSize="15"
-                            TextColor="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource PrimaryDark}}"
+                            TextColor="{DynamicResource AccentColor}"
                             VerticalOptions="Center" />
                         <Label
                             Text="{Binding ModeButtonText}"
@@ -271,7 +271,7 @@
                         Text="&#xec0b;"
                         FontFamily="MaterialIcons"
                         FontSize="32"
-                        TextColor="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource PrimaryDark}}"
+                        TextColor="{DynamicResource AccentColor}"
                         HorizontalOptions="Center"
                         VerticalOptions="Center" />
                 </Border>
@@ -325,7 +325,7 @@
                 IsVisible="{Binding IsBusy}"
                 VerticalOptions="Center"
                 HorizontalOptions="Center"
-                Color="{StaticResource Primary}" />
+                Color="{DynamicResource Primary}" />
         </Grid>
 
         <!-- ===== LRCLIB preview sheet ===== -->
@@ -393,7 +393,7 @@
                         HorizontalOptions="Start"
                         HeightRequest="20"
                         WidthRequest="20"
-                        Color="{StaticResource Primary}" />
+                        Color="{DynamicResource Primary}" />
 
                     <ScrollView Grid.Row="4" MaximumHeightRequest="420" VerticalScrollBarVisibility="Never">
                         <VerticalStackLayout Spacing="8" BindableLayout.ItemsSource="{Binding SearchResults}">
@@ -430,7 +430,7 @@
                                                     FontFamily="InterSemiBold"
                                                     FontSize="10"
                                                     CharacterSpacing="1"
-                                                    TextColor="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource PrimaryDark}}" />
+                                                    TextColor="{DynamicResource AccentColor}" />
                                             </VerticalStackLayout>
                                             <Button
                                                 Grid.Column="1"

@@ -10,6 +10,12 @@ public interface IMusicFileDiscovery
     /// <summary>True when <see cref="DiscoverAsync"/> returns the whole device library.</summary>
     bool ScansWholeLibrary { get; }
 
+    /// <summary>
+    /// False when the platform is withholding the media index until the user grants access.
+    /// Desktop discovery always has access to the folder the user chose.
+    /// </summary>
+    bool HasLibraryAccess { get; }
+
     /// <summary>Path stored in the library snapshot for the whole-library source.</summary>
     string SourcePath { get; }
 

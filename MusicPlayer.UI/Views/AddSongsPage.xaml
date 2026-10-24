@@ -23,7 +23,7 @@
             HeightRequest="190"
             VerticalOptions="Start"
             InputTransparent="True"
-            Background="{StaticResource HeaderWash}" />
+            Background="{DynamicResource HeaderWash}" />
 
         <Grid Grid.Row="0" RowDefinitions="Auto,Auto,Auto" Padding="18,8,18,10" RowSpacing="12">
 
@@ -65,8 +65,8 @@
                     MinimumHeightRequest="32"
                     Padding="12,0"
                     CornerRadius="16"
-                    BackgroundColor="{AppThemeBinding Light={StaticResource AccentSoftLight}, Dark={StaticResource AccentSoftDark}}"
-                    TextColor="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource PrimaryDark}}"
+                    BackgroundColor="{DynamicResource AccentSoftColor}"
+                    TextColor="{DynamicResource AccentColor}"
                     Command="{Binding SelectAllCommand}"
                     SemanticProperties.Description="Select or clear all visible songs" />
             </Grid>
@@ -148,7 +148,7 @@
                             Text="&#xe405;"
                             FontFamily="MaterialIcons"
                             FontSize="25"
-                            TextColor="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource PrimaryDark}}"
+                            TextColor="{DynamicResource AccentColor}"
                             HorizontalOptions="Center"
                             VerticalOptions="Center" />
                     </Border>
@@ -191,7 +191,7 @@
                                 IsVisible="{Binding IsSelected}" />
                             <Border.Triggers>
                                 <DataTrigger TargetType="Border" Binding="{Binding IsSelected}" Value="True">
-                                    <Setter Property="BackgroundColor" Value="{StaticResource Primary}" />
+                                    <Setter Property="BackgroundColor" Value="{DynamicResource Primary}" />
                                     <Setter Property="StrokeThickness" Value="0" />
                                 </DataTrigger>
                             </Border.Triggers>
@@ -210,7 +210,7 @@
                                     Text="&#xe405;"
                                     FontFamily="MaterialIcons"
                                     FontSize="17"
-                                    TextColor="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource PrimaryDark}}"
+                                    TextColor="{DynamicResource AccentColor}"
                                     HorizontalOptions="Center"
                                     VerticalOptions="Center" />
                                 <Image
@@ -287,6 +287,6 @@
             IsVisible="{Binding IsBusy}"
             VerticalOptions="Center"
             HorizontalOptions="Center"
-            Color="{StaticResource Primary}" />
+            Color="{DynamicResource Primary}" />
     </Grid>
 </ContentPage>

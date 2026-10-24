@@ -26,24 +26,37 @@ public class TagLibMetadataReader : IMetadataReader
         Directory.CreateDirectory(_artworkCacheDirectory);
     }
 
-    public Music Read(string filePath)
+    public Music? Read(string filePath)
     {
         // FileShare.Read lets us read files that another process (e.g. a sync tool) has open.
         using var stream = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.Read);
         return ReadCore(stream, Path.GetFileName(filePath), filePath);
     }
 
-    public Music Read(Stream stream, string nameHint)
+    public Music? Read(Stream stream, string nameHint)
         => ReadCore(stream, nameHint, nameHint);
 
-    private Music ReadCore(Stream stream, string nameHint, string filePath)
+    private Music? ReadCore(Stream stream, string nameHint, string filePath)
     {
-        // TagLib identifies the format from the name hint's extension, then parses the
+        // TagLib identifies the format from the name hint's extension and parses the
         // container from the stream. It needs a seekable stream (all formats rewind).
-        using var tagFile = TFile.Create(new ReadOnlyStreamAbstraction(nameHint, stream));
+        // Downloads often carry the wrong extension (an AAC-in-MP4 file named .mp3), so the
+        // real container is sniffed first and passed explicitly.
+        var mimeType = DetectMimeType(stream, nameHint);
+        using var tagFile = TFile.Create(
+            new ReadOnlyStreamAbstraction(nameHint, stream),
+            mimeType,
+            TagLib.ReadStyle.Average);
 
         var tag = tagFile.Tag;
         var props = tagFile.Properties;
+
+        // Skip files that contain video tracks (real videos, not audio-only MP4/M4A files).
+        // TagLib reports video dimensions when a video track is present.
+        if (props.VideoWidth > 0 || props.VideoHeight > 0)
+        {
+            return null;
+        }
 
         var title = tag.Title?.Trim();
         var performer = tag.Performers.FirstOrDefault()?.Trim() ?? string.Empty;
@@ -53,7 +66,7 @@ public class TagLibMetadataReader : IMetadataReader
         var music = new Music
         {
             FilePath = filePath,
-            Format = GetFormatName(nameHint),
+            Format = GetFormatName(nameHint, mimeType),
             FileSize = GetStreamLength(stream),
             Duration = props.Duration,
 
@@ -73,7 +86,7 @@ public class TagLibMetadataReader : IMetadataReader
 
             AudioFileInfo = new AudioFileInfo
             {
-                Codec = string.IsNullOrWhiteSpace(props.Description) ? GetFormatName(nameHint) : props.Description,
+                Codec = string.IsNullOrWhiteSpace(props.Description) ? GetFormatName(nameHint, mimeType) : props.Description,
                 BitrateKbps = (int)props.AudioBitrate,
                 SampleRateHz = (int)props.AudioSampleRate,
                 Channels = props.AudioChannels,
@@ -154,8 +167,113 @@ public class TagLibMetadataReader : IMetadataReader
         _ => ".jpg",
     };
 
-    private static string GetFormatName(string fileName)
-        => Path.GetExtension(fileName).TrimStart('.').ToUpperInvariant();
+    /// <summary>
+    /// Identifies the real container from its magic bytes. Files shared through messaging
+    /// apps and download sites regularly keep a misleading extension, and TagLib would pick
+    /// the wrong parser from that extension alone.
+    /// </summary>
+    private static string? DetectMimeType(Stream stream, string nameHint)
+    {
+        if (!stream.CanSeek)
+        {
+            return MimeTypeForExtension(nameHint);
+        }
+
+        var position = stream.Position;
+        Span<byte> header = stackalloc byte[12];
+        var read = stream.Read(header);
+        stream.Position = position;
+
+        if (read >= 3 && header[0] == (byte)'I' && header[1] == (byte)'D' && header[2] == (byte)'3')
+        {
+            return "audio/mpeg";
+        }
+
+        if (read >= 8 && header[4] == (byte)'f' && header[5] == (byte)'t' &&
+            header[6] == (byte)'y' && header[7] == (byte)'p')
+        {
+            return "audio/mp4";
+        }
+
+        if (read >= 4 && header[0] == (byte)'f' && header[1] == (byte)'L' &&
+            header[2] == (byte)'a' && header[3] == (byte)'C')
+        {
+            return "audio/flac";
+        }
+
+        if (read >= 4 && header[0] == (byte)'O' && header[1] == (byte)'g' &&
+            header[2] == (byte)'g' && header[3] == (byte)'S')
+        {
+            return "audio/ogg";
+        }
+
+        if (read >= 4 && header[0] == (byte)'R' && header[1] == (byte)'I' &&
+            header[2] == (byte)'F' && header[3] == (byte)'F')
+        {
+            return "audio/x-wav";
+        }
+
+        if (read >= 4 && header[0] == (byte)'F' && header[1] == (byte)'O' &&
+            header[2] == (byte)'R' && header[3] == (byte)'M')
+        {
+            return "audio/aiff";
+        }
+
+        if (read >= 4 && header[0] == (byte)'M' && header[1] == (byte)'A' &&
+            header[2] == (byte)'C' && header[3] == (byte)' ')
+        {
+            return "audio/x-ape";
+        }
+
+        if (read >= 2 && header[0] == 0xFF)
+        {
+            // ADTS sync: layer bits are 00, which separates AAC from MPEG audio frames.
+            if ((header[1] & 0xF6) == 0xF0)
+            {
+                return "audio/aac";
+            }
+
+            if ((header[1] & 0xE0) == 0xE0)
+            {
+                return "audio/mpeg";
+            }
+        }
+
+        return MimeTypeForExtension(nameHint);
+    }
+
+    private static string? MimeTypeForExtension(string fileName) => Path.GetExtension(fileName).ToLowerInvariant() switch
+    {
+        ".mp3" => "audio/mpeg",
+        ".flac" => "audio/flac",
+        ".wav" => "audio/x-wav",
+        ".aac" => "audio/aac",
+        ".m4a" or ".mp4" or ".alac" => "audio/mp4",
+        ".ogg" or ".opus" => "audio/ogg",
+        ".aif" or ".aiff" => "audio/aiff",
+        ".ape" => "audio/x-ape",
+        ".wma" => "audio/x-ms-wma",
+        _ => null,
+    };
+
+    private static string GetFormatName(string fileName, string? mimeType)
+    {
+        var extension = Path.GetExtension(fileName).TrimStart('.').ToUpperInvariant();
+
+        return mimeType switch
+        {
+            "audio/mpeg" => "MP3",
+            "audio/flac" => "FLAC",
+            "audio/x-wav" => "WAV",
+            "audio/aac" => "AAC",
+            "audio/mp4" => extension == "MP4" || extension == "ALAC" ? extension : "M4A",
+            "audio/ogg" => extension == "OPUS" ? "OPUS" : "OGG",
+            "audio/aiff" => "AIFF",
+            "audio/x-ape" => "APE",
+            "audio/x-ms-wma" => "WMA",
+            _ => extension,
+        };
+    }
 
     private static long GetStreamLength(Stream stream)
         => stream.CanSeek ? stream.Length : 0;

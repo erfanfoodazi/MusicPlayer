@@ -73,7 +73,7 @@ public sealed class MusicFileService
     {
         await Task.Run(() => _writer.Write(track.FilePath, edit));
 
-        var refreshed = await Task.Run(() => _reader.Read(track.FilePath));
+        var refreshed = await Task.Run(() => _reader.Read(track.FilePath)) ?? track;
 
         // Library-only information the file itself cannot restore.
         refreshed.DateAdded = track.DateAdded;

@@ -9,15 +9,23 @@ public partial class App : Microsoft.Maui.Controls.Application
     {
         InitializeComponent();
 
-        // Palette resources must be in place before the first Shell/page is built.
-        ThemeService.Apply();
-
         var theme = Preferences.Default.Get("settings.theme", "System");
         UserAppTheme = theme switch
         {
             "Light" => AppTheme.Light,
             "Dark" => AppTheme.Dark,
             _ => AppTheme.Unspecified
+        };
+
+        // Palette resources must be in place before the first Shell/page is built. Apply after
+        // UserAppTheme so the light/dark accent variant is chosen correctly.
+        ThemeService.Apply();
+
+        RequestedThemeChanged += (_, _) =>
+        {
+            // Theme events can arrive while Android is reconfiguring the activity. Update the
+            // resource keys on the next main-thread turn instead of re-entering layout code.
+            Dispatcher.Dispatch(ThemeService.RefreshThemeColors);
         };
     }
 

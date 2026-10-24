@@ -17,9 +17,9 @@ public sealed record AccentPalette(
     string GradientEnd);
 
 /// <summary>
-/// Applies the user's accent palette to the app resource dictionary. MAUI resolves
-/// StaticResource once, so a palette change rebuilds the Shell after the resources have been
-/// swapped; playback lives in the PlayerService singleton and continues uninterrupted.
+/// Applies the user's accent palette to the app resource dictionary. Accent colours are consumed
+/// through DynamicResource, so changing the palette recolours the live visual tree without
+/// rebuilding the Shell or disturbing the navigation stack.
 /// </summary>
 public static class ThemeService
 {
@@ -63,6 +63,10 @@ public static class ThemeService
         resources["Accent"] = primary;
         resources["AccentSoftLight"] = Color.FromArgb(palette.SoftLight);
         resources["AccentSoftDark"] = Color.FromArgb(palette.SoftDark);
+
+        // These two keys are consumed through DynamicResource so the accent updates across the
+        // live visual tree the moment a palette is chosen (no Shell rebuild required).
+        PublishThemeColors(palette);
         resources["GradientStart"] = Color.FromArgb(palette.GradientStart);
         resources["GradientMiddle"] = Color.FromArgb(palette.GradientMiddle);
         resources["GradientEnd"] = Color.FromArgb(palette.GradientEnd);
@@ -107,15 +111,23 @@ public static class ThemeService
         resources["HeaderWash"] = headerWash;
     }
 
-    /// <summary>Rebuilds the visual tree so every StaticResource picks up the new palette.</summary>
-    public static void ReloadShell()
+    /// <summary>
+    /// Updates the accent keys that are used through DynamicResource. Called when the palette
+    /// changes and again when Android switches between light and dark mode.
+    /// </summary>
+    public static void RefreshThemeColors() => PublishThemeColors(Current);
+
+    private static void PublishThemeColors(AccentPalette palette)
     {
-        var application = Microsoft.Maui.Controls.Application.Current;
-        if (application?.Windows.FirstOrDefault() is not { } window)
+        var resources = Microsoft.Maui.Controls.Application.Current?.Resources;
+        if (resources is null)
         {
             return;
         }
 
-        window.Page = new AppShell();
+        var dark = Microsoft.Maui.Controls.Application.Current?.RequestedTheme == AppTheme.Dark;
+
+        resources["AccentColor"] = Color.FromArgb(dark ? palette.PrimaryDark : palette.Primary);
+        resources["AccentSoftColor"] = Color.FromArgb(dark ? palette.SoftDark : palette.SoftLight);
     }
 }

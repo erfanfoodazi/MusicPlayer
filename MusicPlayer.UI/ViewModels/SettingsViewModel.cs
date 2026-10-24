@@ -145,12 +145,25 @@ public partial class SettingsViewModel : BaseViewModel
         var app = Microsoft.Maui.Controls.Application.Current;
         if (app is null) return;
 
-        app.UserAppTheme = Theme switch
+        var requested = Theme switch
         {
             "Light" => AppTheme.Light,
             "Dark" => AppTheme.Dark,
             _ => AppTheme.Unspecified
         };
+
+        if (app.UserAppTheme == requested)
+        {
+            return;
+        }
+
+        // The dispatcher lets the button's tap/visual-state pass finish before the whole tree
+        // re-evaluates its AppThemeBindings.
+        app.Dispatcher.Dispatch(() =>
+        {
+            app.UserAppTheme = requested;
+            ThemeService.RefreshThemeColors();
+        });
     }
 
     [RelayCommand]
@@ -187,7 +200,7 @@ public partial class SettingsViewModel : BaseViewModel
     }
 
     [RelayCommand]
-    private async Task SetAccentAsync(string? id)
+    private void SetAccent(string? id)
     {
         var palette = ThemeService.Palettes.FirstOrDefault(p =>
             string.Equals(p.Id, id, StringComparison.OrdinalIgnoreCase));
@@ -197,18 +210,14 @@ public partial class SettingsViewModel : BaseViewModel
             return;
         }
 
+        // Apply updates the DynamicResource accent keys, so the live visual tree recolours
+        // immediately. No modal dialog and no Shell rebuild are involved: both of those were
+        // capable of leaving Shell in an invalid navigation state on Android.
         ThemeService.Apply(palette.Id);
         AccentId = palette.Id;
         OnPropertyChanged(nameof(AccentName));
+        StatusMessage = $"{palette.Name} accent applied.";
         Haptics.Tap();
-
-        await AppDialogs.ShowAlertAsync(
-            Shell.Current?.CurrentPage,
-            $"{palette.Name} accent",
-            "The new palette is ready. Auralis will refresh the interface so every screen uses it.",
-            "Open");
-
-        ThemeService.ReloadShell();
     }
 
     /// <summary>Selects an audio quality from the segmented control.</summary>

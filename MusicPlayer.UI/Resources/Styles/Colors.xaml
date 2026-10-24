@@ -16,6 +16,8 @@
     <Color x:Key="Tertiary">#38BDF8</Color>
 
     <Color x:Key="Accent">#6D5BF6</Color>
+    <Color x:Key="AccentColor">#6D5BF6</Color>
+    <Color x:Key="AccentSoftColor">#F0ECFF</Color>
     <Color x:Key="AccentAlt">#38BDF8</Color>
     <Color x:Key="AccentPink">#F472B6</Color>
     <Color x:Key="GradientStart">#6D5BF6</Color>

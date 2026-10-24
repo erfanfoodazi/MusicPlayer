@@ -46,14 +46,14 @@
                     HorizontalOptions="Center"
                     StrokeThickness="0"
                     StrokeShape="RoundRectangle 48"
-                    BackgroundColor="{AppThemeBinding Light={StaticResource AccentSoftLight}, Dark={StaticResource AccentSoftDark}}">
+                    BackgroundColor="{DynamicResource AccentSoftColor}">
                     <Label
                         Text="{Binding ArtistInitial}"
                         FontFamily="InterBold"
                         FontSize="36"
                         HorizontalOptions="Center"
                         VerticalOptions="Center"
-                        TextColor="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource PrimaryDark}}" />
+                        TextColor="{DynamicResource AccentColor}" />
                 </Border>
 
                 <Label
@@ -79,7 +79,7 @@
                         Padding="22,0"
                         StrokeThickness="0"
                         StrokeShape="RoundRectangle 22"
-                        BackgroundColor="{StaticResource Primary}">
+                        BackgroundColor="{DynamicResource Primary}">
                         <Border.GestureRecognizers>
                             <TapGestureRecognizer Command="{Binding PlayArtistCommand}" />
                         </Border.GestureRecognizers>

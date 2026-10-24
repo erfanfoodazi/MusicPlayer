@@ -107,6 +107,18 @@ public class StringNotEmptyConverter : IValueConverter
     }
 }
 
+/// <summary>True when the value is a real object. Used to hide the empty right-hand card in a grid row.</summary>
+public class IsNotNullConverter : IValueConverter
+{
+    public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
+        => value is not null;
+
+    public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
+    {
+        throw new NotImplementedException();
+    }
+}
+
 public class RepeatModeToIconConverter : IValueConverter
 {
     public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture)

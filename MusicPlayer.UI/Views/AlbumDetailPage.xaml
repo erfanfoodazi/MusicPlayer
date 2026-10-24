@@ -28,7 +28,7 @@
                 HeightRequest="200"
                 VerticalOptions="Start"
                 InputTransparent="True"
-                Background="{StaticResource HeaderWash}" />
+                Background="{DynamicResource HeaderWash}" />
 
             <!-- ===== Header ===== -->
             <VerticalStackLayout x:Name="HeaderBlock" Grid.Row="0" Padding="20,10,20,8" Spacing="12">
@@ -76,7 +76,7 @@
                             Text="&#xe019;"
                             FontFamily="MaterialIcons"
                             FontSize="60"
-                            TextColor="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource PrimaryDark}}"
+                            TextColor="{DynamicResource AccentColor}"
                             HorizontalOptions="Center"
                             VerticalOptions="Center" />
                         <Image
@@ -112,7 +112,7 @@
                         HeightRequest="52"
                         StrokeThickness="0"
                         StrokeShape="RoundRectangle 16"
-                        Background="{StaticResource AccentGradientHorizontal}">
+                        Background="{DynamicResource AccentGradientHorizontal}">
                         <Border.GestureRecognizers>
                             <TapGestureRecognizer Command="{Binding PlayAlbumCommand}" />
                         </Border.GestureRecognizers>

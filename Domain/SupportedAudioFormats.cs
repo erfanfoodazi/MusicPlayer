@@ -17,6 +17,9 @@ public static class SupportedAudioFormats
         ".wav",
         ".aac",
         ".m4a",
+        // Some downloads (Telegram, WhatsApp, YouTube rips) arrive as .mp4 even when they
+        // are music. Android indexes those as video, so discovery has a dedicated MP4 query.
+        ".mp4",
         ".ogg",
         ".opus",
         ".aif",

@@ -33,7 +33,7 @@
                 Text="&#xe019;"
                 FontFamily="MaterialIcons"
                 FontSize="34"
-                TextColor="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource PrimaryDark}}"
+                TextColor="{DynamicResource AccentColor}"
                 HorizontalOptions="Center"
                 VerticalOptions="Center" />
 

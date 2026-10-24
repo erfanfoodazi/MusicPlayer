@@ -5,6 +5,8 @@ public sealed class NoOpMusicFileDiscovery : IMusicFileDiscovery
 {
     public bool ScansWholeLibrary => false;
 
+    public bool HasLibraryAccess => true;
+
     public string SourcePath => string.Empty;
 
     public string SourceLabel => "music folder";

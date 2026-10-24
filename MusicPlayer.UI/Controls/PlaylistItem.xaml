@@ -6,10 +6,8 @@
     xmlns:models="clr-namespace:Domain.Models;assembly=Domain"
     xmlns:converters="clr-namespace:MusicPlayer.UI.Converters"
     x:DataType="models:Playlist"
-    ColumnDefinitions="Auto,*,Auto,Auto"
-    ColumnSpacing="10"
-    HeightRequest="70"
-    Padding="10,0"
+    RowDefinitions="Auto,Auto,Auto"
+    HeightRequest="238"
     BackgroundColor="Transparent">
 
     <Grid.Resources>
@@ -21,85 +19,74 @@
         <TapGestureRecognizer Tapped="OnPlaylistTapped" />
     </Grid.GestureRecognizers>
 
-    <!-- Card surface behind the row. -->
+    <!-- Square sleeve, matching the Albums grid so the two tabs feel like one library. -->
     <Border
-        Grid.ColumnSpan="4"
-        Margin="0,3"
+        Grid.Row="0"
+        HeightRequest="170"
         StrokeThickness="1"
-        Stroke="{AppThemeBinding Light={StaticResource OutlineLight}, Dark={StaticResource OutlineDark}}"
-        StrokeShape="RoundRectangle 16"
-        BackgroundColor="{AppThemeBinding Light={StaticResource SurfaceLight}, Dark={StaticResource SurfaceDark}}" />
-
-    <Border
-        Grid.Column="0"
-        WidthRequest="46"
-        HeightRequest="46"
-        StrokeThickness="0"
-        StrokeShape="RoundRectangle 13"
+        Stroke="{AppThemeBinding Light=#10000000, Dark=#1FFFFFFF}"
+        StrokeShape="RoundRectangle 18"
         Background="{StaticResource ArtworkPlaceholderGradient}"
-        VerticalOptions="Center">
+        HorizontalOptions="Fill">
         <Grid>
             <Label
                 Text="&#xe03d;"
                 FontFamily="MaterialIcons"
-                FontSize="21"
-                TextColor="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource PrimaryDark}}"
+                FontSize="34"
+                TextColor="{DynamicResource AccentColor}"
                 HorizontalOptions="Center"
                 VerticalOptions="Center" />
+
             <Image
                 Source="{Binding ArtworkPath, Converter={StaticResource ArtworkToImageSourceConverter}}"
                 Aspect="AspectFill"
+                WidthRequest="170"
+                HeightRequest="170"
                 IsVisible="{Binding ArtworkPath, Converter={StaticResource StringIsNullOrEmptyConverter}, ConverterParameter=inverse}" />
+
+            <Border
+                StrokeThickness="0"
+                StrokeShape="RoundRectangle 0,0,18,18"
+                Background="{StaticResource ArtworkSheen}"
+                InputTransparent="True" />
+
+            <Button
+                Text="&#xe5d4;"
+                Style="{StaticResource FloatingIconButton}"
+                HorizontalOptions="End"
+                VerticalOptions="Start"
+                Margin="0,8,8,0"
+                Clicked="OnMenuClicked"
+                SemanticProperties.Description="Playlist options" />
+
+            <Button
+                Text="&#xe037;"
+                Style="{StaticResource FloatingIconButton}"
+                HorizontalOptions="End"
+                VerticalOptions="End"
+                Margin="0,0,8,8"
+                Clicked="OnPlayClicked"
+                SemanticProperties.Description="Play playlist" />
         </Grid>
     </Border>
 
-    <VerticalStackLayout Grid.Column="1" VerticalOptions="Center" Spacing="1">
-        <Label
-            Text="{Binding Name}"
-            FontFamily="InterSemiBold"
-            FontSize="15"
-            CharacterSpacing="-0.1"
-            TextColor="{AppThemeBinding Light={StaticResource TextOnLight}, Dark={StaticResource TextOnDark}}"
-            LineBreakMode="TailTruncation" />
-        <Label
-            Text="{Binding TrackCount, StringFormat='{0} songs'}"
-            FontFamily="Inter"
-            FontSize="11.5"
-            TextColor="{AppThemeBinding Light={StaticResource MutedOnLight}, Dark={StaticResource MutedOnDark}}"
-            LineBreakMode="TailTruncation" />
-    </VerticalStackLayout>
+    <Label
+        Grid.Row="1"
+        Text="{Binding Name}"
+        FontFamily="InterSemiBold"
+        FontSize="14"
+        CharacterSpacing="-0.15"
+        TextColor="{AppThemeBinding Light={StaticResource TextOnLight}, Dark={StaticResource TextOnDark}}"
+        LineBreakMode="TailTruncation"
+        MaxLines="1"
+        Margin="2,10,2,0" />
 
-    <Button
-        Grid.Column="2"
-        Text="&#xe145;"
-        FontFamily="MaterialIcons"
-        FontSize="18"
-        TextColor="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource PrimaryDark}}"
-        BackgroundColor="{AppThemeBinding Light={StaticResource AccentSoftLight}, Dark={StaticResource AccentSoftDark}}"
-        WidthRequest="34"
-        HeightRequest="34"
-        MinimumWidthRequest="34"
-        MinimumHeightRequest="34"
-        CornerRadius="17"
-        Padding="0"
-        VerticalOptions="Center"
-        Clicked="OnAddSongsClicked"
-        SemanticProperties.Description="Add songs to this playlist" />
-
-    <Button
-        Grid.Column="3"
-        Text="&#xe5d4;"
-        FontFamily="MaterialIcons"
-        FontSize="20"
+    <Label
+        Grid.Row="2"
+        Text="{Binding TrackCount, StringFormat='{0} songs'}"
+        FontFamily="Inter"
+        FontSize="11.5"
         TextColor="{AppThemeBinding Light={StaticResource MutedOnLight}, Dark={StaticResource MutedOnDark}}"
-        BackgroundColor="Transparent"
-        WidthRequest="34"
-        HeightRequest="44"
-        MinimumWidthRequest="34"
-        MinimumHeightRequest="44"
-        CornerRadius="18"
-        Padding="0"
-        VerticalOptions="Center"
-        Clicked="OnMenuClicked"
-        SemanticProperties.Description="Playlist options" />
+        LineBreakMode="TailTruncation"
+        Margin="2,2,2,0" />
 </Grid>

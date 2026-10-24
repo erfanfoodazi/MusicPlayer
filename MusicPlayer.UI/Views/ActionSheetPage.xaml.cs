@@ -73,7 +73,14 @@ public partial class ActionSheetPage : ContentPage
         }
 
         _result.TrySetResult(result);
-        await Navigation.PopModalAsync(false);
+        try
+        {
+            await Navigation.PopModalAsync(false);
+        }
+        catch
+        {
+            // Known MAUI Shell modal issue; ignore and let the app continue.
+        }
     }
 
     protected override bool OnBackButtonPressed()

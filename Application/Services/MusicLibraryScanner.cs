@@ -166,7 +166,16 @@ public class MusicLibraryScanner
     {
         try
         {
-            return _metadataReader.Read(file);
+            var track = _metadataReader.Read(file);
+
+            // Reader returns null for non-audio files (e.g. videos). Skip them silently -
+            // they are not scan errors, just not music.
+            if (track is null)
+            {
+                return null;
+            }
+
+            return track;
         }
         catch (Exception ex)
         {

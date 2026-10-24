@@ -6,7 +6,7 @@ namespace MusicPlayer.UI.Controls;
 public partial class PlaylistItem : Grid
 {
     public static readonly BindableProperty PlaylistProperty =
-        BindableProperty.Create(nameof(Playlist), typeof(Playlist), typeof(PlaylistItem), propertyChanged: OnPlaylistChanged);
+        BindableProperty.Create(nameof(Playlist), typeof(Playlist), typeof(PlaylistItem));
 
     public Playlist? Playlist
     {
@@ -19,12 +19,25 @@ public partial class PlaylistItem : Grid
         InitializeComponent();
     }
 
-    private static void OnPlaylistChanged(BindableObject bindable, object oldValue, object newValue)
+    private void OnPlayClicked(object? sender, EventArgs e)
     {
-        if (bindable is PlaylistItem item)
+        if (Playlist is null)
         {
-            item.BindingContext = newValue;
+            return;
         }
+
+        var tracks = Playlist.Tracks
+            .Select(track => track.Music)
+            .OfType<Music>()
+            .ToList();
+
+        if (tracks.Count == 0)
+        {
+            return;
+        }
+
+        Haptics.Tap();
+        PlayerService.Instance.SetQueue(tracks);
     }
 
     private async void OnPlaylistTapped(object? sender, TappedEventArgs e)
@@ -38,22 +51,6 @@ public partial class PlaylistItem : Grid
         if (shell is not null)
         {
             await shell.GoToAsync($"{Routes.PlaylistDetail}?playlistId={Playlist.Id}");
-        }
-    }
-
-    private async void OnAddSongsClicked(object? sender, EventArgs e)
-    {
-        if (Playlist is null)
-        {
-            return;
-        }
-
-        Haptics.Tap();
-
-        var shell = Shell.Current;
-        if (shell is not null)
-        {
-            await shell.GoToAsync($"{Routes.AddSongs}?playlistId={Playlist.Id}");
         }
     }
 

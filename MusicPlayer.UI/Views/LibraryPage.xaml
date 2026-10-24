@@ -6,10 +6,15 @@
     xmlns:viewmodels="clr-namespace:MusicPlayer.UI.ViewModels"
     xmlns:controls="clr-namespace:MusicPlayer.UI.Controls"
     xmlns:models="clr-namespace:Domain.Models;assembly=Domain"
+    xmlns:converters="clr-namespace:MusicPlayer.UI.Converters"
     x:DataType="viewmodels:LibraryViewModel"
     Title="Library"
     Shell.NavBarIsVisible="False"
     BackgroundColor="{AppThemeBinding Light={StaticResource AppBackgroundLight}, Dark={StaticResource AppBackgroundDark}}">
+
+    <ContentPage.Resources>
+        <converters:IsNotNullConverter x:Key="IsNotNullConverter" />
+    </ContentPage.Resources>
 
     <Grid RowDefinitions="*,Auto">
 
@@ -21,7 +26,7 @@
                 HeightRequest="196"
                 VerticalOptions="Start"
                 InputTransparent="True"
-                Background="{StaticResource HeaderWash}" />
+                Background="{DynamicResource HeaderWash}" />
 
             <!-- ===== Header ===== -->
             <VerticalStackLayout x:Name="HeaderBlock" Grid.Row="0" Padding="20,10,20,8" Spacing="12">
@@ -33,7 +38,7 @@
                             Style="{StaticResource OverlineText}"
                             FontSize="9"
                             CharacterSpacing="2.4"
-                            TextColor="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource PrimaryDark}}" />
+                            TextColor="{DynamicResource AccentColor}" />
                         <Label Text="Library" Style="{StaticResource DisplayText}" />
                     </VerticalStackLayout>
 
@@ -270,7 +275,7 @@
                                         Text="&#xe405;"
                                         FontFamily="MaterialIcons"
                                         FontSize="26"
-                                        TextColor="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource PrimaryDark}}"
+                                        TextColor="{DynamicResource AccentColor}"
                                         HorizontalOptions="Center"
                                         VerticalOptions="Center" />
                                 </Border>
@@ -301,18 +306,16 @@
                     IsRefreshing="{Binding IsRefreshing, Mode=TwoWay}"
                     IsVisible="{Binding IsAlbumsTab}">
                     <CollectionView
-                        ItemsSource="{Binding Albums}"
-                        SelectionMode="None">
-                        <CollectionView.ItemsLayout>
-                            <GridItemsLayout Orientation="Vertical" Span="2" HorizontalItemSpacing="14" VerticalItemSpacing="18" />
-                        </CollectionView.ItemsLayout>
+                        ItemsSource="{Binding AlbumRows}"
+                        SelectionMode="None"
+                        ItemSizingStrategy="MeasureFirstItem">
                         <CollectionView.Header>
                             <BoxView HeightRequest="6" Color="Transparent" />
                         </CollectionView.Header>
                         <CollectionView.EmptyView>
                             <VerticalStackLayout Padding="26,46" Spacing="10" HorizontalOptions="Center" VerticalOptions="Center">
                                 <Border Style="{StaticResource IconTile}" WidthRequest="56" HeightRequest="56">
-                                    <Label Text="&#xe019;" FontFamily="MaterialIcons" FontSize="26" TextColor="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource PrimaryDark}}" HorizontalOptions="Center" VerticalOptions="Center" />
+                                    <Label Text="&#xe019;" FontFamily="MaterialIcons" FontSize="26" TextColor="{DynamicResource AccentColor}" HorizontalOptions="Center" VerticalOptions="Center" />
                                 </Border>
                                 <Label Text="No albums yet" Style="{StaticResource SectionTitleText}" HorizontalTextAlignment="Center" Margin="0,4,0,0" />
                                 <Label Text="Albums appear after your library has been scanned." Style="{StaticResource CaptionText}" HorizontalTextAlignment="Center" />
@@ -323,8 +326,39 @@
                             <BoxView HeightRequest="14" Color="Transparent" />
                         </CollectionView.Footer>
                         <CollectionView.ItemTemplate>
-                            <DataTemplate x:DataType="models:Album">
-                                <controls:AlbumItem Album="{Binding .}" />
+                            <DataTemplate x:DataType="models:AlbumRow">
+                                <Grid ColumnDefinitions="*,*" ColumnSpacing="14" Margin="18,0,18,0">
+                                    <Grid
+                                        Grid.Column="0"
+                                        RowDefinitions="Auto,Auto"
+                                        HorizontalOptions="Fill"
+                                        VerticalOptions="Start">
+                                        <Grid Grid.Row="0" IsVisible="{Binding Left, Converter={StaticResource IsNotNullConverter}}">
+                                            <Grid BindingContext="{Binding Left}">
+                                                <controls:AlbumItem x:DataType="models:Album" Album="{Binding .}" />
+                                            </Grid>
+                                        </Grid>
+                                        <BoxView
+                                            Grid.Row="1"
+                                            HeightRequest="10"
+                                            Color="Transparent" />
+                                    </Grid>
+                                    <Grid
+                                        Grid.Column="1"
+                                        RowDefinitions="Auto,Auto"
+                                        HorizontalOptions="Fill"
+                                        VerticalOptions="Start">
+                                        <Grid Grid.Row="0" IsVisible="{Binding Right, Converter={StaticResource IsNotNullConverter}}">
+                                            <Grid BindingContext="{Binding Right}">
+                                                <controls:AlbumItem x:DataType="models:Album" Album="{Binding .}" />
+                                            </Grid>
+                                        </Grid>
+                                        <BoxView
+                                            Grid.Row="1"
+                                            HeightRequest="10"
+                                            Color="Transparent" />
+                                    </Grid>
+                                </Grid>
                             </DataTemplate>
                         </CollectionView.ItemTemplate>
                     </CollectionView>
@@ -346,7 +380,7 @@
                         <CollectionView.EmptyView>
                             <VerticalStackLayout Padding="26,46" Spacing="10" HorizontalOptions="Center" VerticalOptions="Center">
                                 <Border Style="{StaticResource IconTile}" WidthRequest="56" HeightRequest="56">
-                                    <Label Text="&#xe7fd;" FontFamily="MaterialIcons" FontSize="26" TextColor="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource PrimaryDark}}" HorizontalOptions="Center" VerticalOptions="Center" />
+                                    <Label Text="&#xe7fd;" FontFamily="MaterialIcons" FontSize="26" TextColor="{DynamicResource AccentColor}" HorizontalOptions="Center" VerticalOptions="Center" />
                                 </Border>
                                 <Label Text="No artists yet" Style="{StaticResource SectionTitleText}" HorizontalTextAlignment="Center" Margin="0,4,0,0" />
                                 <Label Text="Artists appear after your library has been scanned." Style="{StaticResource CaptionText}" HorizontalTextAlignment="Center" />
@@ -371,15 +405,70 @@
                     IsRefreshing="{Binding IsRefreshing, Mode=TwoWay}"
                     IsVisible="{Binding IsPlaylistsTab}">
                     <CollectionView
-                        ItemsSource="{Binding Playlists}"
-                        SelectionMode="None">
+                        ItemsSource="{Binding PlaylistRows}"
+                        SelectionMode="None"
+                        ItemSizingStrategy="MeasureFirstItem">
                         <CollectionView.Header>
-                            <BoxView HeightRequest="6" Color="Transparent" />
+                            <VerticalStackLayout Padding="0,6,0,16" Spacing="14">
+                                <!-- Primary action for this tab: always visible, even with an empty library. -->
+                                <Border
+                                    HeightRequest="78"
+                                    StrokeThickness="0"
+                                    StrokeShape="RoundRectangle 20"
+                                    Background="{DynamicResource AccentGradientHorizontal}">
+                                    <Border.GestureRecognizers>
+                                        <TapGestureRecognizer Command="{Binding CreatePlaylistCommand}" />
+                                    </Border.GestureRecognizers>
+                                    <Grid Padding="16,0" ColumnDefinitions="Auto,*,Auto" ColumnSpacing="12">
+                                        <Border
+                                            Grid.Column="0"
+                                            WidthRequest="44"
+                                            HeightRequest="44"
+                                            StrokeThickness="0"
+                                            StrokeShape="RoundRectangle 14"
+                                            BackgroundColor="#2EFFFFFF"
+                                            VerticalOptions="Center">
+                                            <Label
+                                                Text="&#xe145;"
+                                                FontFamily="MaterialIcons"
+                                                FontSize="23"
+                                                TextColor="White"
+                                                HorizontalOptions="Center"
+                                                VerticalOptions="Center" />
+                                        </Border>
+
+                                        <VerticalStackLayout Grid.Column="1" Spacing="1" VerticalOptions="Center">
+                                            <Label
+                                                Text="New playlist"
+                                                FontFamily="InterSemiBold"
+                                                FontSize="15.5"
+                                                CharacterSpacing="-0.2"
+                                                TextColor="White" />
+                                            <Label
+                                                Text="Build a set for a mood, a night or a place"
+                                                FontFamily="Inter"
+                                                FontSize="11.5"
+                                                TextColor="#D9FFFFFF"
+                                                LineBreakMode="TailTruncation" />
+                                        </VerticalStackLayout>
+
+                                        <Label
+                                            Grid.Column="2"
+                                            Text="&#xe5cc;"
+                                            FontFamily="MaterialIcons"
+                                            FontSize="20"
+                                            TextColor="#D9FFFFFF"
+                                            VerticalOptions="Center" />
+                                    </Grid>
+                                </Border>
+
+                                <Label Text="YOUR LISTS" Style="{StaticResource SectionLabelText}" Margin="4,0,0,0" />
+                            </VerticalStackLayout>
                         </CollectionView.Header>
                         <CollectionView.EmptyView>
-                            <VerticalStackLayout Padding="26,46" Spacing="10" HorizontalOptions="Center" VerticalOptions="Center">
+                            <VerticalStackLayout Padding="26,30" Spacing="10" HorizontalOptions="Center" VerticalOptions="Center">
                                 <Border Style="{StaticResource IconTile}" WidthRequest="56" HeightRequest="56">
-                                    <Label Text="&#xe03d;" FontFamily="MaterialIcons" FontSize="26" TextColor="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource PrimaryDark}}" HorizontalOptions="Center" VerticalOptions="Center" />
+                                    <Label Text="&#xe03d;" FontFamily="MaterialIcons" FontSize="26" TextColor="{DynamicResource AccentColor}" HorizontalOptions="Center" VerticalOptions="Center" />
                                 </Border>
                                 <Label Text="No lists yet" Style="{StaticResource SectionTitleText}" HorizontalTextAlignment="Center" Margin="0,4,0,0" />
                                 <Label Text="Start a playlist for a mood, a night or a place." Style="{StaticResource CaptionText}" HorizontalTextAlignment="Center" />
@@ -390,8 +479,39 @@
                             <BoxView HeightRequest="14" Color="Transparent" />
                         </CollectionView.Footer>
                         <CollectionView.ItemTemplate>
-                            <DataTemplate x:DataType="models:Playlist">
-                                <controls:PlaylistItem Playlist="{Binding .}" />
+                            <DataTemplate x:DataType="models:PlaylistRow">
+                                <Grid ColumnDefinitions="*,*" ColumnSpacing="14" Margin="18,0,18,0">
+                                    <Grid
+                                        Grid.Column="0"
+                                        RowDefinitions="Auto,Auto"
+                                        HorizontalOptions="Fill"
+                                        VerticalOptions="Start">
+                                        <Grid Grid.Row="0" IsVisible="{Binding Left, Converter={StaticResource IsNotNullConverter}}">
+                                            <Grid BindingContext="{Binding Left}">
+                                                <controls:PlaylistItem x:DataType="models:Playlist" Playlist="{Binding .}" />
+                                            </Grid>
+                                        </Grid>
+                                        <BoxView
+                                            Grid.Row="1"
+                                            HeightRequest="12"
+                                            Color="Transparent" />
+                                    </Grid>
+                                    <Grid
+                                        Grid.Column="1"
+                                        RowDefinitions="Auto,Auto"
+                                        HorizontalOptions="Fill"
+                                        VerticalOptions="Start">
+                                        <Grid Grid.Row="0" IsVisible="{Binding Right, Converter={StaticResource IsNotNullConverter}}">
+                                            <Grid BindingContext="{Binding Right}">
+                                                <controls:PlaylistItem x:DataType="models:Playlist" Playlist="{Binding .}" />
+                                            </Grid>
+                                        </Grid>
+                                        <BoxView
+                                            Grid.Row="1"
+                                            HeightRequest="12"
+                                            Color="Transparent" />
+                                    </Grid>
+                                </Grid>
                             </DataTemplate>
                         </CollectionView.ItemTemplate>
                     </CollectionView>

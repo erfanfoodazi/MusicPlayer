@@ -29,13 +29,13 @@
                     HorizontalOptions="Start"
                     StrokeThickness="0"
                     StrokeShape="RoundRectangle 15"
-                    BackgroundColor="{AppThemeBinding Light={StaticResource AccentSoftLight}, Dark={StaticResource AccentSoftDark}}">
+                    BackgroundColor="{DynamicResource AccentSoftColor}">
                     <Label
                         x:Name="IconGlyphLabel"
                         Text="&#xe145;"
                         FontFamily="MaterialIcons"
                         FontSize="24"
-                        TextColor="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource PrimaryDark}}"
+                        TextColor="{DynamicResource AccentColor}"
                         HorizontalOptions="Center"
                         VerticalOptions="Center" />
                 </Border>

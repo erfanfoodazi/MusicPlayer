@@ -6,7 +6,7 @@ namespace MusicPlayer.UI.Controls;
 public partial class AlbumItem : Grid
 {
     public static readonly BindableProperty AlbumProperty =
-        BindableProperty.Create(nameof(Album), typeof(Album), typeof(AlbumItem), propertyChanged: OnAlbumChanged);
+        BindableProperty.Create(nameof(Album), typeof(Album), typeof(AlbumItem));
 
     public Album? Album
     {
@@ -17,14 +17,6 @@ public partial class AlbumItem : Grid
     public AlbumItem()
     {
         InitializeComponent();
-    }
-
-    private static void OnAlbumChanged(BindableObject bindable, object oldValue, object newValue)
-    {
-        if (bindable is AlbumItem item && newValue is Album album)
-        {
-            item.BindingContext = album;
-        }
     }
 
     private async void OnAlbumTapped(object? sender, TappedEventArgs e)

@@ -83,7 +83,17 @@ public partial class ConfirmDialogPage : ContentPage
         }
 
         _result.TrySetResult(confirmed);
-        await Navigation.PopModalAsync(false);
+        try
+        {
+            // Shell's NavigationImpl can fail to resolve the route after a modal pop on Android
+            // (throws "unable to figure out route"). The modal is already dismissed visually,
+            // and the result is already delivered above, so this is safe to ignore.
+            await Navigation.PopModalAsync(false);
+        }
+        catch
+        {
+            // Known MAUI Shell modal issue; ignore and let the app continue.
+        }
     }
 
     protected override bool OnBackButtonPressed()

@@ -13,9 +13,10 @@ public interface IMetadataReader
 {
     /// <summary>
     /// Reads metadata from a file on a real filesystem path (Windows).
-    /// Throws on unreadable/corrupt files - callers decide how to report the error.
+    /// Returns null when the file is not an audio file (e.g. a video). Throws on
+    /// unreadable/corrupt audio files - callers decide how to report the error.
     /// </summary>
-    Music Read(string filePath);
+    Music? Read(string filePath);
 
     /// <summary>
     /// Reads metadata from a seekable stream. Used on platforms where files are exposed as
@@ -23,5 +24,5 @@ public interface IMetadataReader
     /// </summary>
     /// <param name="stream">A seekable, readable stream positioned anywhere; the reader rewinds it.</param>
     /// <param name="nameHint">File name including extension (e.g. "song.mp3") - identifies the format.</param>
-    Music Read(Stream stream, string nameHint);
+    Music? Read(Stream stream, string nameHint);
 }

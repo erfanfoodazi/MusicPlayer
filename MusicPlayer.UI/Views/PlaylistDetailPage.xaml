@@ -24,7 +24,7 @@
             HeightRequest="300"
             VerticalOptions="Start"
             InputTransparent="True"
-            Background="{StaticResource HeaderWash}" />
+            Background="{DynamicResource HeaderWash}" />
 
         <!-- ===== Top bar ===== -->
         <Grid x:Name="TopBar" Grid.Row="0" ColumnDefinitions="Auto,*,Auto" Padding="8,6,8,0">
@@ -76,7 +76,7 @@
                                 Text="&#xe03d;"
                                 FontFamily="MaterialIcons"
                                 FontSize="56"
-                                TextColor="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource PrimaryDark}}"
+                                TextColor="{DynamicResource AccentColor}"
                                 HorizontalOptions="Center"
                                 VerticalOptions="Center" />
                             <Image
@@ -111,7 +111,7 @@
                             Padding="22,0"
                             StrokeThickness="0"
                             StrokeShape="RoundRectangle 22"
-                            BackgroundColor="{StaticResource Primary}">
+                            BackgroundColor="{DynamicResource Primary}">
                             <Border.GestureRecognizers>
                                 <TapGestureRecognizer Command="{Binding PlayPlaylistCommand}" />
                             </Border.GestureRecognizers>
@@ -152,7 +152,7 @@
                             Padding="18,0"
                             StrokeThickness="0"
                             StrokeShape="RoundRectangle 22"
-                            BackgroundColor="{AppThemeBinding Light={StaticResource AccentSoftLight}, Dark={StaticResource AccentSoftDark}}">
+                            BackgroundColor="{DynamicResource AccentSoftColor}">
                             <Border.GestureRecognizers>
                                 <TapGestureRecognizer Command="{Binding AddSongsCommand}" />
                             </Border.GestureRecognizers>
@@ -162,13 +162,13 @@
                                     FontFamily="MaterialIcons"
                                     FontSize="19"
                                     VerticalOptions="Center"
-                                    TextColor="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource PrimaryDark}}" />
+                                    TextColor="{DynamicResource AccentColor}" />
                                 <Label
                                     Text="Add"
                                     FontFamily="InterSemiBold"
                                     FontSize="14"
                                     VerticalOptions="Center"
-                                    TextColor="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource PrimaryDark}}" />
+                                    TextColor="{DynamicResource AccentColor}" />
                             </HorizontalStackLayout>
                         </Border>
                     </HorizontalStackLayout>

@@ -82,7 +82,7 @@
                             Text="&#xe405;"
                             FontFamily="MaterialIcons"
                             FontSize="56"
-                            TextColor="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource PrimaryDark}}"
+                            TextColor="{DynamicResource AccentColor}"
                             HorizontalOptions="Center"
                             VerticalOptions="Center" />
                         <Image
@@ -140,9 +140,9 @@
                     DragCompleted="OnSeekCompleted"
                     IsEnabled="{Binding HasCurrentTrack}"
                     Margin="0,18,-2,-6"
-                    MinimumTrackColor="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource PrimaryDark}}"
+                    MinimumTrackColor="{DynamicResource AccentColor}"
                     MaximumTrackColor="{AppThemeBinding Light={StaticResource OutlineLight}, Dark={StaticResource SurfaceDarkElevated}}"
-                    ThumbColor="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource White}}" />
+                    ThumbColor="{AppThemeBinding Light={DynamicResource Primary}, Dark={StaticResource White}}" />
 
                 <Grid ColumnDefinitions="Auto,*,Auto">
                     <Label
@@ -272,9 +272,9 @@
                         Minimum="0"
                         Maximum="1"
                         Value="{Binding Volume, Mode=TwoWay}"
-                        MinimumTrackColor="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource PrimaryDark}}"
+                        MinimumTrackColor="{DynamicResource AccentColor}"
                         MaximumTrackColor="{AppThemeBinding Light={StaticResource OutlineLight}, Dark={StaticResource SurfaceDarkElevated}}"
-                        ThumbColor="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource White}}" />
+                        ThumbColor="{AppThemeBinding Light={DynamicResource Primary}, Dark={StaticResource White}}" />
                 </HorizontalStackLayout>
             </VerticalStackLayout>
         </ScrollView>
@@ -293,7 +293,7 @@
                 SemanticProperties.Description="Shuffle">
                 <Button.Triggers>
                     <DataTrigger TargetType="Button" Binding="{Binding IsShuffle}" Value="True">
-                        <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource PrimaryDark}}" />
+                        <Setter Property="TextColor" Value="{DynamicResource AccentColor}" />
                     </DataTrigger>
                 </Button.Triggers>
             </Button>
@@ -337,7 +337,7 @@
                 SemanticProperties.Description="Repeat mode">
                 <Button.Triggers>
                     <DataTrigger TargetType="Button" Binding="{Binding IsRepeatActive}" Value="True">
-                        <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource PrimaryDark}}" />
+                        <Setter Property="TextColor" Value="{DynamicResource AccentColor}" />
                     </DataTrigger>
                 </Button.Triggers>
             </Button>
@@ -404,7 +404,7 @@
                         Padding="10,9"
                         StrokeThickness="0"
                         StrokeShape="RoundRectangle 14"
-                        BackgroundColor="{AppThemeBinding Light={StaticResource AccentSoftLight}, Dark={StaticResource AccentSoftDark}}"
+                        BackgroundColor="{DynamicResource AccentSoftColor}"
                         IsVisible="{Binding HasCurrentTrack}">
                         <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="12">
                             <Border
@@ -427,7 +427,7 @@
                                     FontFamily="InterSemiBold"
                                     FontSize="9"
                                     CharacterSpacing="1.6"
-                                    TextColor="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource PrimaryDark}}" />
+                                    TextColor="{DynamicResource AccentColor}" />
                                 <Label
                                     Text="{Binding CurrentTrackDisplayName}"
                                     FontFamily="InterSemiBold"
@@ -448,7 +448,7 @@
                                 FontFamily="MaterialIcons"
                                 FontSize="22"
                                 VerticalOptions="Center"
-                                TextColor="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource PrimaryDark}}" />
+                                TextColor="{DynamicResource AccentColor}" />
                         </Grid>
                     </Border>
 
@@ -501,7 +501,7 @@
                                         Background="{StaticResource ArtworkPlaceholderGradient}"
                                         VerticalOptions="Center">
                                         <Grid>
-                                            <Label Text="&#xe405;" FontFamily="MaterialIcons" FontSize="17" TextColor="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource PrimaryDark}}" HorizontalOptions="Center" VerticalOptions="Center" />
+                                            <Label Text="&#xe405;" FontFamily="MaterialIcons" FontSize="17" TextColor="{DynamicResource AccentColor}" HorizontalOptions="Center" VerticalOptions="Center" />
                                             <Image
                                                 Source="{Binding Track.ListArtworkPath, Converter={StaticResource ArtworkToImageSourceConverter}}"
                                                 Aspect="AspectFill" />
@@ -531,7 +531,7 @@
                                         FontSize="15"
                                         VerticalOptions="Center"
                                         IsVisible="{Binding IsPlayed}"
-                                        TextColor="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource PrimaryDark}}" />
+                                        TextColor="{DynamicResource AccentColor}" />
 
                                     <Label
                                         Grid.Column="2"

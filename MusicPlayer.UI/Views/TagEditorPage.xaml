@@ -24,7 +24,7 @@
             HeightRequest="210"
             VerticalOptions="Start"
             InputTransparent="True"
-            Background="{StaticResource HeaderWash}" />
+            Background="{DynamicResource HeaderWash}" />
 
         <!-- ===== Top bar ===== -->
         <Grid x:Name="TopBar" Grid.Row="0" ColumnDefinitions="Auto,*,Auto" Padding="12,8,12,6" ColumnSpacing="8">
@@ -59,7 +59,7 @@
                 MinimumHeightRequest="38"
                 Padding="22,0"
                 CornerRadius="19"
-                Background="{StaticResource AccentGradientHorizontal}"
+                Background="{DynamicResource AccentGradientHorizontal}"
                 TextColor="White"
                 IsEnabled="{Binding CanSave}"
                 Command="{Binding SaveCommand}" />
@@ -84,7 +84,7 @@
                                     Text="&#xe405;"
                                     FontFamily="MaterialIcons"
                                     FontSize="30"
-                                    TextColor="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource PrimaryDark}}"
+                                    TextColor="{DynamicResource AccentColor}"
                                     HorizontalOptions="Center"
                                     VerticalOptions="Center"
                                     IsVisible="{Binding HasCoverPreview, Converter={StaticResource InvertedBoolConverter}}" />
@@ -117,8 +117,8 @@
                                     MinimumHeightRequest="34"
                                     Padding="16,0"
                                     CornerRadius="17"
-                                    BackgroundColor="{AppThemeBinding Light={StaticResource AccentSoftLight}, Dark={StaticResource AccentSoftDark}}"
-                                    TextColor="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource PrimaryDark}}"
+                                    BackgroundColor="{DynamicResource AccentSoftColor}"
+                                    TextColor="{DynamicResource AccentColor}"
                                     Command="{Binding PickCoverCommand}" />
                                 <Button
                                     Text="Remove"
@@ -265,7 +265,7 @@
                 <!-- Unsaved-changes hint + status -->
                 <Border
                     IsVisible="{Binding HasChanges}"
-                    BackgroundColor="{AppThemeBinding Light={StaticResource AccentSoftLight}, Dark={StaticResource AccentSoftDark}}"
+                    BackgroundColor="{DynamicResource AccentSoftColor}"
                     StrokeThickness="0"
                     StrokeShape="RoundRectangle 14"
                     Padding="14,11">
@@ -275,14 +275,14 @@
                             FontFamily="MaterialIcons"
                             FontSize="16"
                             VerticalOptions="Center"
-                            TextColor="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource PrimaryDark}}" />
+                            TextColor="{DynamicResource AccentColor}" />
                         <Label
                             Text="Unsaved changes — tap Save to write them into the file."
                             FontFamily="InterMedium"
                             FontSize="12"
                             VerticalOptions="Center"
                             LineHeight="1.3"
-                            TextColor="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource PrimaryDark}}" />
+                            TextColor="{DynamicResource AccentColor}" />
                     </HorizontalStackLayout>
                 </Border>
 
@@ -321,6 +321,6 @@
             IsVisible="{Binding IsBusy}"
             VerticalOptions="Center"
             HorizontalOptions="Center"
-            Color="{StaticResource Primary}" />
+            Color="{DynamicResource Primary}" />
     </Grid>
 </ContentPage>

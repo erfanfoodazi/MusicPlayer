@@ -44,10 +44,16 @@ public partial class LibraryViewModel : BaseViewModel, IPlayTrackContext
     private ObservableCollection<Album> _albums = [];
 
     [ObservableProperty]
+    private ObservableCollection<AlbumRow> _albumRows = [];
+
+    [ObservableProperty]
     private ObservableCollection<Artist> _artists = [];
 
     [ObservableProperty]
     private ObservableCollection<Playlist> _playlists = [];
+
+    [ObservableProperty]
+    private ObservableCollection<PlaylistRow> _playlistRows = [];
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(HasSearchText))]
@@ -126,7 +132,12 @@ public partial class LibraryViewModel : BaseViewModel, IPlayTrackContext
             "songs" => "Songs",
             _ => "Name"
         },
-        _ => "Name"
+        _ => _playlistSort switch
+        {
+            "updated" => "Recent",
+            "songs" => "Songs",
+            _ => "Name"
+        }
     };
 
     public bool HasSearchText => !string.IsNullOrWhiteSpace(SearchText);
@@ -476,26 +487,31 @@ public partial class LibraryViewModel : BaseViewModel, IPlayTrackContext
 
             var sourcePath = folder;
             var sourceLabel = Path.GetFileName(folder);
-            IReadOnlyList<string>? discoveredFiles = null;
+            var allFiles = new List<string>();
 
-            // Android's media index is the one place that reliably sees Download, Telegram,
-            // WhatsApp and other app folders under scoped storage.
+            // Android's media index is the one place that reliably sees Music, Download,
+            // Telegram, WhatsApp and other app folders under scoped storage. Its discovery
+            // applies the music rules; this view model must not add raw folder audio back.
             if (_fileDiscovery.ScansWholeLibrary)
             {
-                discoveredFiles = await _fileDiscovery.DiscoverAsync(folder, ct);
+                var discoveredFiles = await _fileDiscovery.DiscoverAsync(folder, ct);
+
+                if (!_fileDiscovery.HasLibraryAccess)
+                {
+                    StatusMessage = "Music & audio access is off. Allow it in Android Settings, then tap Rescan.";
+                    return;
+                }
+
                 if (discoveredFiles.Count > 0)
                 {
                     sourcePath = _fileDiscovery.SourcePath;
                     sourceLabel = _fileDiscovery.SourceLabel;
-                }
-                else
-                {
-                    discoveredFiles = null;
+                    allFiles.AddRange(discoveredFiles);
                 }
             }
 
-            var result = discoveredFiles is { Count: > 0 }
-                ? await _scanner.ScanFilesAsync(discoveredFiles, progress, ct)
+            var result = allFiles.Count > 0
+                ? await _scanner.ScanFilesAsync(allFiles, progress, ct)
                 : await _scanner.ScanAsync(folder, progress, ct);
 
             IsBusy = false;
@@ -514,7 +530,7 @@ public partial class LibraryViewModel : BaseViewModel, IPlayTrackContext
 
             if (result.Tracks.Count == 0)
             {
-                StatusMessage = discoveredFiles is null
+                StatusMessage = allFiles.Count == 0
                     ? result.Errors.Count == 0
                         ? $"No supported audio files found in \"{folder}\". Tap Scan to choose another folder."
                         : $"No tracks could be read ({result.Errors.Count} file(s) failed). Check storage permissions."
@@ -618,9 +634,29 @@ public partial class LibraryViewModel : BaseViewModel, IPlayTrackContext
             : _library.Playlists.Where(p => Contains(p.Name, query));
 
         Tracks = new ObservableCollection<Music>(SortTracks(trackQuery));
-        Albums = new ObservableCollection<Album>(SortAlbums(albumQuery));
+        var sortedAlbums = SortAlbums(albumQuery).ToList();
+        Albums = new ObservableCollection<Album>(sortedAlbums);
+        AlbumRows = new ObservableCollection<AlbumRow>(
+            sortedAlbums
+                .Select((album, index) => new { Album = album, Index = index })
+                .GroupBy(x => x.Index / 2)
+                .Select(g => new AlbumRow
+                {
+                    Left = g.First().Album,
+                    Right = g.Skip(1).FirstOrDefault()?.Album
+                }));
         Artists = new ObservableCollection<Artist>(SortArtists(artistQuery));
-        Playlists = new ObservableCollection<Playlist>(SortPlaylists(playlistQuery));
+        var sortedPlaylists = SortPlaylists(playlistQuery).ToList();
+        Playlists = new ObservableCollection<Playlist>(sortedPlaylists);
+        PlaylistRows = new ObservableCollection<PlaylistRow>(
+            sortedPlaylists
+                .Select((playlist, index) => new { Playlist = playlist, Index = index })
+                .GroupBy(x => x.Index / 2)
+                .Select(g => new PlaylistRow
+                {
+                    Left = g.First().Playlist,
+                    Right = g.Skip(1).FirstOrDefault()?.Playlist
+                }));
         VisibleTrackCount = Tracks.Count;
         OnPropertyChanged(nameof(TabCountText));
     }
@@ -673,6 +709,12 @@ public partial class LibraryViewModel : BaseViewModel, IPlayTrackContext
 
     private IEnumerable<Playlist> SortPlaylists(IEnumerable<Playlist> playlists) => _playlistSort switch
     {
+        "updated" => playlists
+            .OrderByDescending(p => p.UpdatedAt)
+            .ThenBy(p => p.Name, StringComparer.OrdinalIgnoreCase),
+        "songs" => playlists
+            .OrderByDescending(p => p.TrackCount)
+            .ThenBy(p => p.Name, StringComparer.OrdinalIgnoreCase),
         _ => playlists.OrderBy(p => p.Name, StringComparer.OrdinalIgnoreCase)
     };
 
@@ -814,10 +856,12 @@ public partial class LibraryViewModel : BaseViewModel, IPlayTrackContext
                     ("songs", "Most songs")
                 },
                 _artistSort),
-            _ => ("Sort playlists",
+            _ => ("Sort lists",
                 new (string Key, string Label)[]
                 {
-                    ("name", "Name A–Z")
+                    ("name", "Name A–Z"),
+                    ("updated", "Recently updated"),
+                    ("songs", "Most songs")
                 },
                 _playlistSort)
         };

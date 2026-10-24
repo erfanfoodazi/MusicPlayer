@@ -43,7 +43,7 @@
                 MinimumHeightRequest="36"
                 Padding="20,0"
                 CornerRadius="18"
-                BackgroundColor="{StaticResource Primary}"
+                BackgroundColor="{DynamicResource Primary}"
                 TextColor="White"
                 Command="{Binding SaveCommand}" />
         </Grid>
@@ -84,6 +84,6 @@
             IsVisible="{Binding HasStatus}"
             FontFamily="Inter"
             FontSize="12"
-            TextColor="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource PrimaryDark}}" />
+            TextColor="{DynamicResource AccentColor}" />
     </Grid>
 </ContentPage>

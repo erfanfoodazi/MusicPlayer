@@ -25,7 +25,7 @@
                 HeightRequest="150"
                 VerticalOptions="Start"
                 InputTransparent="True"
-                Background="{StaticResource HeaderWash}" />
+                Background="{DynamicResource HeaderWash}" />
 
             <!-- ===== Header ===== -->
             <VerticalStackLayout x:Name="HeaderBlock" Grid.Row="0" Padding="20,10,20,8" Spacing="12">
@@ -105,7 +105,7 @@
                                 Text="&#xe8b6;"
                                 FontFamily="MaterialIcons"
                                 FontSize="26"
-                                TextColor="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource PrimaryDark}}"
+                                TextColor="{DynamicResource AccentColor}"
                                 HorizontalOptions="Center"
                                 VerticalOptions="Center" />
                         </Border>
@@ -176,13 +176,15 @@
                             <Label Text="PLAYLISTS" Style="{StaticResource SectionLabelText}" VerticalOptions="Center" />
                             <Label Grid.Column="1" Text="{Binding PlaylistResults.Count}" Style="{StaticResource SectionLabelText}" TextColor="{AppThemeBinding Light={StaticResource FaintOnLight}, Dark={StaticResource FaintOnDark}}" />
                         </Grid>
-                        <VerticalStackLayout BindableLayout.ItemsSource="{Binding PlaylistResults}" Spacing="0">
+                        <FlexLayout Wrap="Wrap" Direction="Row" JustifyContent="Start" BindableLayout.ItemsSource="{Binding PlaylistResults}">
                             <BindableLayout.ItemTemplate>
                                 <DataTemplate x:DataType="models:Playlist">
-                                    <controls:PlaylistItem Playlist="{Binding .}" />
+                                    <Grid WidthRequest="170" Margin="0,0,6,18">
+                                        <controls:PlaylistItem Playlist="{Binding .}" />
+                                    </Grid>
                                 </DataTemplate>
                             </BindableLayout.ItemTemplate>
-                        </VerticalStackLayout>
+                        </FlexLayout>
                     </VerticalStackLayout>
                 </VerticalStackLayout>
             </ScrollView>

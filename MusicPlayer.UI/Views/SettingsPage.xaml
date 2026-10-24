@@ -26,6 +26,28 @@
                         <Label Text="Settings" Style="{StaticResource DisplayText}" />
                     </VerticalStackLayout>
 
+                    <!-- Top navigation: Library / Search / Settings (replaces the bottom tab bar) -->
+                    <Border Style="{StaticResource SegmentTrack}">
+                        <Grid ColumnDefinitions="*,*,*">
+                            <Button
+                                Grid.Column="0"
+                                Text="Library"
+                                Style="{StaticResource SegmentButton}"
+                                Clicked="OnNavLibraryClicked" />
+                            <Button
+                                Grid.Column="1"
+                                Text="Search"
+                                Style="{StaticResource SegmentButton}"
+                                Clicked="OnNavSearchClicked" />
+                            <Button
+                                Grid.Column="2"
+                                Text="Settings"
+                                Style="{StaticResource SegmentButton}"
+                                BackgroundColor="{AppThemeBinding Light={StaticResource SurfaceLight}, Dark={StaticResource SurfaceDarkElevated}}"
+                                TextColor="{AppThemeBinding Light={StaticResource TextOnLight}, Dark={StaticResource TextOnDark}}" />
+                        </Grid>
+                    </Border>
+
                     <Border
                         IsVisible="{Binding HasStatus}"
                         BackgroundColor="{AppThemeBinding Light={StaticResource AccentSoftLight}, Dark={StaticResource AccentSoftDark}}"

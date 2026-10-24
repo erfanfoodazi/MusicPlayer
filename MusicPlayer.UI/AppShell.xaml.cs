@@ -8,8 +8,10 @@ public partial class AppShell : Shell
     {
         InitializeComponent();
 
-        // Settings and Search are tab roots (see AppShell.xaml); everything else is pushed
-        // on top of the active tab.
+        // Library is the root shell content (see AppShell.xaml). Search and Settings are
+        // reachable by absolute route from the top navigation bar on each page.
+        Routing.RegisterRoute(Routes.Search, typeof(SearchPage));
+        Routing.RegisterRoute(Routes.Settings, typeof(SettingsPage));
         Routing.RegisterRoute(Routes.NowPlaying, typeof(NowPlayingPage));
         Routing.RegisterRoute(Routes.LockScreen, typeof(LockScreenPage));
         Routing.RegisterRoute(Routes.Lyrics, typeof(LyricsPage));
@@ -25,6 +27,7 @@ public partial class AppShell : Shell
 public static class Routes
 {
     /// <summary>Tab route - navigate with "//settings" so the tab bar stays in sync.</summary>
+    public const string Search = "//search";
     public const string Settings = "//settings";
     public const string NowPlaying = "nowplaying";
     public const string LockScreen = "lockscreen";

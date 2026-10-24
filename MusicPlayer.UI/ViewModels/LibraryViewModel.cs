@@ -275,12 +275,43 @@ public partial class LibraryViewModel : BaseViewModel, IPlayTrackContext
                     _artworkThumbnailer.EnsureThumbnail(artwork!);
                 }
 
-                await MainThread.InvokeOnMainThreadAsync(
-                    async () => await _snapshotStore.SaveAsync(_library.CreateSnapshot()));
+                // Once thumbnails exist, promote each album's cover path to the downscaled
+                // thumbnail and rebind the Albums tab so covers appear (and stay sharp).
+                await MainThread.InvokeOnMainThreadAsync(() =>
+                {
+                    // Promote every album's cover to the downscaled thumbnail so the
+                    // Albums tab shows sharp covers (not the placeholder). Setting
+                    // ArtworkPath raises PropertyChanged so each tile rebinds.
+                    var updated = 0;
+                    for (var i = 0; i < Albums.Count; i++)
+                    {
+                        var album = Albums[i];
+                        var thumb = album.Tracks
+                            .Select(t => t.Artwork?.ThumbnailPath)
+                            .FirstOrDefault(p => !string.IsNullOrWhiteSpace(p));
+
+                        if (!string.IsNullOrWhiteSpace(thumb) && album.ArtworkPath != thumb)
+                        {
+                            album.ArtworkPath = thumb;
+                            updated++;
+                        }
+                    }
+
+                    // Replace the collection so the CollectionView re-realizes every tile
+                    // with the new cover paths.
+                    Albums = new ObservableCollection<Album>(Albums);
+
+                    if (updated > 0)
+                    {
+                        StatusMessage = $"Covers ready for {updated} album{(updated == 1 ? "" : "s")}.";
+                    }
+
+                    return _snapshotStore.SaveAsync(_library.CreateSnapshot());
+                });
             }
             catch
             {
-                // A missing or unreadable cover is cosmetic; the 512 px fallback still works.
+                // A missing or unreadable cover is cosmetic; the extracted file path still works.
             }
         });
     }

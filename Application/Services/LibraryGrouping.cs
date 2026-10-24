@@ -66,16 +66,25 @@ public static class LibraryGrouping
                     albumsByKey[key] = album;
                 }
 
-                // The first track in an album may not have embedded art while a later one
-                // does; promote the first available cover to the album.
+                if (!album.Tracks.Contains(track))
+                {
+                    album.Tracks.Add(track);
+                }
+
+                // Promote the first available cover to the album so the Albums tab
+                // shows artwork immediately (extracted file path), then the thumbnail
+                // path once the scanner downsizes it a few seconds later.
                 if (string.IsNullOrEmpty(album.ArtworkPath))
                 {
                     album.ArtworkPath = track.ArtworkPath;
                 }
 
-                if (!album.Tracks.Contains(track))
+                // Promote the first available cover to the album so the Albums tab
+                // shows artwork immediately (extracted file path), then the thumbnail
+                // path once the scanner downsizes it a few seconds later.
+                if (string.IsNullOrEmpty(album.ArtworkPath))
                 {
-                    album.Tracks.Add(track);
+                    album.ArtworkPath = track.ArtworkPath;
                 }
 
                 track.Album = album; // point every track at the shared instance

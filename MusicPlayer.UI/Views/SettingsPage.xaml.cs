@@ -50,4 +50,14 @@ public partial class SettingsPage : ContentPage
             FileAccessSection,
             AdvancedSection);
     }
+
+    private async void OnNavLibraryClicked(object? sender, EventArgs e)
+    {
+        await Shell.Current.GoToAsync("..");
+    }
+
+    private async void OnNavSearchClicked(object? sender, EventArgs e)
+    {
+        await Shell.Current.GoToAsync(Routes.Search);
+    }
 }

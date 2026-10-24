@@ -75,4 +75,14 @@ public partial class SearchPage : ContentPage
 
         QueryEntry.Unfocus();
     }
+
+    private async void OnNavLibraryClicked(object? sender, EventArgs e)
+    {
+        await Shell.Current.GoToAsync("..");
+    }
+
+    private async void OnNavSettingsClicked(object? sender, EventArgs e)
+    {
+        await Shell.Current.GoToAsync(Routes.Settings);
+    }
 }

@@ -15,198 +15,198 @@
 
     <ContentPage.Resources>
         <converters:ArtworkToImageSourceConverter x:Key="ArtworkToImageSourceConverter" />
+        <converters:StringIsNullOrEmptyConverter x:Key="StringIsNullOrEmptyConverter" />
     </ContentPage.Resources>
 
-    <Grid RowDefinitions="Auto,*,Auto">
+    <Grid RowDefinitions="*,Auto">
 
-        <!-- A colour wash taken from the sleeve. It replaces the flat page background and
-             carries the album's identity down the page without competing with the tracklist. -->
-        <Grid
-            x:Name="AmbientBackdrop"
-            Grid.RowSpan="3"
-            InputTransparent="True" />
+        <Grid Grid.Row="0" RowDefinitions="Auto,*">
 
-        <!-- ===== Top bar ===== -->
-        <Grid x:Name="PageHeader" Grid.Row="0" ColumnDefinitions="Auto,*,Auto" Padding="8,6,8,0">
-            <Button
-                Grid.Column="0"
-                Text="&#xe5c4;"
-                Style="{StaticResource IconButton}"
-                FontSize="23"
-                Clicked="OnBackClicked"
-                SemanticProperties.Description="Back" />
-            <Label
-                Grid.Column="1"
-                Text="ALBUM"
-                Style="{StaticResource OverlineText}"
-                CharacterSpacing="2.2"
-                HorizontalTextAlignment="Center"
-                VerticalTextAlignment="Center" />
-            <BoxView Grid.Column="2" WidthRequest="40" HeightRequest="40" Color="Transparent" />
-        </Grid>
+            <!-- Soft wash behind the header, same as Library / Search / Settings. -->
+            <BoxView
+                Grid.Row="0"
+                HeightRequest="200"
+                VerticalOptions="Start"
+                InputTransparent="True"
+                Background="{StaticResource HeaderWash}" />
 
-        <!-- ===== Sleeve + tracks ===== -->
-        <CollectionView
-            x:Name="AlbumContent"
-            Grid.Row="1"
-            ItemsSource="{Binding Tracks}"
-            SelectionMode="None"
-            VerticalScrollBarVisibility="Never">
-            <CollectionView.Header>
-                <VerticalStackLayout x:DataType="viewmodels:AlbumDetailViewModel" Spacing="0" Padding="20,6,20,0">
+            <!-- ===== Header ===== -->
+            <VerticalStackLayout x:Name="HeaderBlock" Grid.Row="0" Padding="20,10,20,8" Spacing="12">
 
-                    <!-- Record sleeve -->
+                <!-- Back button + album title -->
+                <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="4">
+                    <Button
+                        Grid.Column="0"
+                        Text="&#xe5c4;"
+                        Style="{StaticResource IconButton}"
+                        FontSize="23"
+                        Clicked="OnBackClicked"
+                        SemanticProperties.Description="Back" />
+                    <VerticalStackLayout Grid.Column="1" Spacing="1" VerticalOptions="Center">
+                        <Label
+                            Text="ALBUM"
+                            Style="{StaticResource OverlineText}"
+                            CharacterSpacing="2.2"
+                            HorizontalTextAlignment="Center" />
+                        <Label
+                            Text="{Binding Album.Title}"
+                            FontFamily="InterBold"
+                            FontSize="26"
+                            CharacterSpacing="-0.5"
+                            HorizontalTextAlignment="Center"
+                            LineBreakMode="WordWrap"
+                            MaxLines="2"
+                            TextColor="{AppThemeBinding Light={StaticResource TextOnLight}, Dark={StaticResource TextOnDark}}" />
+                    </VerticalStackLayout>
+                    <BoxView Grid.Column="2" WidthRequest="40" HeightRequest="40" Color="Transparent" />
+                </Grid>
+
+                <!-- Record sleeve: large square cover. -->
+                <Border
+                    WidthRequest="260"
+                    HeightRequest="260"
+                    HorizontalOptions="Center"
+                    StrokeThickness="1"
+                    Stroke="{AppThemeBinding Light=#14000000, Dark=#26FFFFFF}"
+                    StrokeShape="RoundRectangle 24"
+                    Background="{StaticResource ArtworkPlaceholderGradient}"
+                    Margin="0,6,0,0">
+                    <Grid>
+                        <Label
+                            Text="&#xe019;"
+                            FontFamily="MaterialIcons"
+                            FontSize="60"
+                            TextColor="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource PrimaryDark}}"
+                            HorizontalOptions="Center"
+                            VerticalOptions="Center" />
+                        <Image
+                            Source="{Binding AlbumArtworkPath, Converter={StaticResource ArtworkToImageSourceConverter}}"
+                            Aspect="AspectFill"
+                            IsVisible="{Binding AlbumArtworkPath, Converter={StaticResource StringIsNullOrEmptyConverter}, ConverterParameter=inverse}" />
+                    </Grid>
+                </Border>
+
+                <!-- Album artist -->
+                <Label
+                    Text="{Binding Album.AlbumArtist}"
+                    FontFamily="InterMedium"
+                    FontSize="15"
+                    HorizontalTextAlignment="Center"
+                    LineBreakMode="TailTruncation"
+                    Margin="0,6,0,0"
+                    TextColor="{AppThemeBinding Light={StaticResource MutedOnLight}, Dark={StaticResource MutedOnDark}}" />
+
+                <!-- Meta: year · tracks · duration -->
+                <Label
+                    Text="{Binding AlbumMetaText}"
+                    Style="{StaticResource CaptionText}"
+                    FontSize="12"
+                    HorizontalTextAlignment="Center"
+                    Margin="0,6,0,0"
+                    IsVisible="{Binding AlbumMetaText, Converter={StaticResource StringIsNullOrEmptyConverter}}" />
+
+                <!-- Primary actions: Play album + Shuffle -->
+                <Grid ColumnDefinitions="*,52" ColumnSpacing="10" Margin="0,20,0,0">
                     <Border
-                        WidthRequest="228"
-                        HeightRequest="228"
-                        HorizontalOptions="Center"
-                        StrokeThickness="1"
-                        Stroke="{AppThemeBinding Light=#14000000, Dark=#26FFFFFF}"
-                        StrokeShape="RoundRectangle 22"
-                        Background="{StaticResource ArtworkPlaceholderGradient}">
-                        <Border.Shadow>
-                            <Shadow Brush="#000000" Offset="0,16" Radius="34" Opacity="0.4" />
-                        </Border.Shadow>
-                        <Grid>
+                        Grid.Column="0"
+                        HeightRequest="52"
+                        StrokeThickness="0"
+                        StrokeShape="RoundRectangle 16"
+                        Background="{StaticResource AccentGradientHorizontal}">
+                        <Border.GestureRecognizers>
+                            <TapGestureRecognizer Command="{Binding PlayAlbumCommand}" />
+                        </Border.GestureRecognizers>
+                        <HorizontalStackLayout
+                            Spacing="8"
+                            HorizontalOptions="Center"
+                            VerticalOptions="Center">
                             <Label
-                                Text="&#xe019;"
-                                FontFamily="MaterialIcons"
-                                FontSize="58"
-                                TextColor="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource PrimaryDark}}"
-                                HorizontalOptions="Center"
-                                VerticalOptions="Center" />
-                            <Image
-                                Source="{Binding Album.ArtworkPath, Converter={StaticResource ArtworkToImageSourceConverter}}"
-                                Aspect="AspectFill"
-                                WidthRequest="228"
-                                HeightRequest="228"
-                                IsVisible="{Binding Album.ArtworkPath, Converter={StaticResource StringNotEmptyConverter}}" />
-                        </Grid>
-                    </Border>
-
-                    <Label
-                        Text="{Binding Album.Title}"
-                        FontFamily="InterBold"
-                        FontSize="26"
-                        CharacterSpacing="-0.5"
-                        HorizontalTextAlignment="Center"
-                        LineBreakMode="WordWrap"
-                        MaxLines="2"
-                        Margin="0,22,0,0"
-                        TextColor="{AppThemeBinding Light={StaticResource TextOnLight}, Dark={StaticResource TextOnDark}}" />
-
-                    <Label
-                        Text="{Binding Album.AlbumArtist}"
-                        FontFamily="InterMedium"
-                        FontSize="14"
-                        HorizontalTextAlignment="Center"
-                        LineBreakMode="TailTruncation"
-                        Margin="0,5,0,0"
-                        TextColor="{AppThemeBinding Light={StaticResource MutedOnLight}, Dark={StaticResource MutedOnDark}}" />
-
-                    <Label
-                        Text="{Binding AlbumMetaText}"
-                        Style="{StaticResource CaptionText}"
-                        FontSize="11.5"
-                        HorizontalTextAlignment="Center"
-                        Margin="0,5,0,0"
-                        IsVisible="{Binding AlbumMetaText, Converter={StaticResource StringNotEmptyConverter}}" />
-
-                    <!-- Primary actions: one clear play surface, one quiet shuffle control. -->
-                    <Grid ColumnDefinitions="*,52" ColumnSpacing="10" Margin="0,20,0,0">
-                        <Border
-                            Grid.Column="0"
-                            HeightRequest="52"
-                            StrokeThickness="0"
-                            StrokeShape="RoundRectangle 16"
-                            Background="{StaticResource AccentGradientHorizontal}">
-                            <Border.Shadow>
-                                <Shadow Brush="#55000000" Offset="0,8" Radius="20" Opacity="0.45" />
-                            </Border.Shadow>
-                            <Border.GestureRecognizers>
-                                <TapGestureRecognizer Command="{Binding PlayAlbumCommand}" />
-                            </Border.GestureRecognizers>
-                            <HorizontalStackLayout
-                                Spacing="8"
-                                HorizontalOptions="Center"
-                                VerticalOptions="Center">
-                                <Label
-                                    Text="&#xe037;"
-                                    FontFamily="MaterialIcons"
-                                    FontSize="21"
-                                    TextColor="White"
-                                    VerticalOptions="Center" />
-                                <Label
-                                    Text="Play album"
-                                    FontFamily="InterSemiBold"
-                                    FontSize="14.5"
-                                    TextColor="White"
-                                    VerticalOptions="Center" />
-                            </HorizontalStackLayout>
-                        </Border>
-
-                        <Border
-                            Grid.Column="1"
-                            WidthRequest="52"
-                            HeightRequest="52"
-                            StrokeThickness="1"
-                            Stroke="{AppThemeBinding Light={StaticResource OutlineLight}, Dark={StaticResource OutlineDark}}"
-                            StrokeShape="RoundRectangle 16"
-                            BackgroundColor="{AppThemeBinding Light={StaticResource SurfaceLight}, Dark={StaticResource SurfaceDarkAlt}}">
-                            <Border.GestureRecognizers>
-                                <TapGestureRecognizer Command="{Binding ShufflePlayCommand}" />
-                            </Border.GestureRecognizers>
-                            <Label
-                                Text="&#xe043;"
+                                Text="&#xe037;"
                                 FontFamily="MaterialIcons"
                                 FontSize="21"
-                                HorizontalOptions="Center"
-                                VerticalOptions="Center"
-                                TextColor="{AppThemeBinding Light={StaticResource TextOnLight}, Dark={StaticResource TextOnDark}}"
-                                SemanticProperties.Description="Shuffle album" />
-                        </Border>
-                    </Grid>
+                                TextColor="White"
+                                VerticalOptions="Center" />
+                            <Label
+                                Text="Play album"
+                                FontFamily="InterSemiBold"
+                                FontSize="14.5"
+                                TextColor="White"
+                                VerticalOptions="Center" />
+                        </HorizontalStackLayout>
+                    </Border>
 
-                    <Grid ColumnDefinitions="*,Auto" Margin="2,28,2,8">
-                        <Label Text="TRACKS" Style="{StaticResource SectionLabelText}" VerticalOptions="Center" />
+                    <Border
+                        Grid.Column="1"
+                        WidthRequest="52"
+                        HeightRequest="52"
+                        StrokeThickness="1"
+                        Stroke="{AppThemeBinding Light={StaticResource OutlineLight}, Dark={StaticResource OutlineDark}}"
+                        StrokeShape="RoundRectangle 16"
+                        BackgroundColor="{AppThemeBinding Light={StaticResource SurfaceLight}, Dark={StaticResource SurfaceDarkAlt}}">
+                        <Border.GestureRecognizers>
+                            <TapGestureRecognizer Command="{Binding ShufflePlayCommand}" />
+                        </Border.GestureRecognizers>
                         <Label
-                            Grid.Column="1"
-                            Text="Tap to play · hold the menu for more"
-                            Style="{StaticResource CaptionText}"
-                            FontSize="10"
-                            TextColor="{AppThemeBinding Light={StaticResource FaintOnLight}, Dark={StaticResource FaintOnDark}}"
-                            VerticalOptions="Center" />
-                    </Grid>
-                </VerticalStackLayout>
-            </CollectionView.Header>
+                            Text="&#xe043;"
+                            FontFamily="MaterialIcons"
+                            FontSize="21"
+                            HorizontalOptions="Center"
+                            VerticalOptions="Center"
+                            TextColor="{AppThemeBinding Light={StaticResource TextOnLight}, Dark={StaticResource TextOnDark}}"
+                            SemanticProperties.Description="Shuffle album" />
+                    </Border>
+                </Grid>
 
-            <CollectionView.EmptyView>
-                <VerticalStackLayout Padding="32,24" Spacing="8">
-                    <Label Text="No tracks in this album" Style="{StaticResource SectionTitleText}" HorizontalTextAlignment="Center" />
-                    <Label Text="Rescan the library if the album was moved or deleted." Style="{StaticResource CaptionText}" HorizontalTextAlignment="Center" />
-                </VerticalStackLayout>
-            </CollectionView.EmptyView>
+                <!-- Tracks section label -->
+                <Grid ColumnDefinitions="*,Auto" Margin="2,28,2,8">
+                    <Label Text="TRACKS" Style="{StaticResource SectionLabelText}" VerticalOptions="Center" />
+                    <Label
+                        Grid.Column="1"
+                        Text="Tap to play · hold the menu for more"
+                        Style="{StaticResource CaptionText}"
+                        FontSize="10"
+                        TextColor="{AppThemeBinding Light={StaticResource FaintOnLight}, Dark={StaticResource FaintOnDark}}"
+                        VerticalOptions="Center" />
+                </Grid>
+            </VerticalStackLayout>
 
-            <CollectionView.Footer>
-                <BoxView HeightRequest="12" Color="Transparent" />
-            </CollectionView.Footer>
-
-            <CollectionView.ItemTemplate>
-                <DataTemplate x:DataType="models:Music">
-                    <Grid Margin="20,0,16,0" RowDefinitions="Auto,Auto">
-                        <controls:TrackItem Track="{Binding .}" ShowTrackNumber="True" />
-                        <BoxView
-                            Grid.Row="1"
-                            HeightRequest="1"
-                            Margin="38,0,0,0"
-                            Color="{AppThemeBinding Light={StaticResource OutlineLight}, Dark={StaticResource OutlineDark}}"
-                            Opacity="0.55" />
-                    </Grid>
-                </DataTemplate>
-            </CollectionView.ItemTemplate>
-        </CollectionView>
+            <!-- ===== Track list (content area) ===== -->
+            <CollectionView
+                x:Name="TracksList"
+                Grid.Row="1"
+                ItemsSource="{Binding Tracks}"
+                SelectionMode="None"
+                VerticalScrollBarVisibility="Never"
+                ItemSizingStrategy="MeasureFirstItem">
+                <CollectionView.Header>
+                    <BoxView HeightRequest="6" Color="Transparent" />
+                </CollectionView.Header>
+                <CollectionView.EmptyView>
+                    <VerticalStackLayout Padding="26,46" Spacing="10" HorizontalOptions="Center" VerticalOptions="Center">
+                        <Label Text="No tracks in this album" Style="{StaticResource SectionTitleText}" HorizontalTextAlignment="Center" Margin="0,4,0,0" />
+                        <Label Text="Rescan the library if the album was moved or deleted." Style="{StaticResource CaptionText}" HorizontalTextAlignment="Center" />
+                    </VerticalStackLayout>
+                </CollectionView.EmptyView>
+                <CollectionView.Footer>
+                    <BoxView HeightRequest="14" Color="Transparent" />
+                </CollectionView.Footer>
+                <CollectionView.ItemTemplate>
+                    <DataTemplate x:DataType="models:Music">
+                        <Grid Margin="20,0,16,0" RowDefinitions="Auto,Auto">
+                            <controls:TrackItem Track="{Binding .}" ShowTrackNumber="True" />
+                            <BoxView
+                                Grid.Row="1"
+                                HeightRequest="1"
+                                Margin="38,0,0,0"
+                                Color="{AppThemeBinding Light={StaticResource OutlineLight}, Dark={StaticResource OutlineDark}}"
+                                Opacity="0.55" />
+                        </Grid>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+        </Grid>
 
         <!-- Docked mini player -->
-        <controls:MiniPlayer Grid.Row="2" />
+        <controls:MiniPlayer Grid.Row="1" VerticalOptions="End" />
     </Grid>
 </ContentPage>

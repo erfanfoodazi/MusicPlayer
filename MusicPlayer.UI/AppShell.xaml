@@ -9,44 +9,8 @@
     Shell.NavBarIsVisible="True"
     BackgroundColor="{AppThemeBinding Light={StaticResource AppBackgroundLight}, Dark={StaticResource AppBackgroundDark}}">
 
-    <TabBar>
-        <ShellContent
-            Title="Library"
-            Route="library"
-            ContentTemplate="{DataTemplate views:LibraryPage}">
-            <ShellContent.Icon>
-                <FontImageSource
-                    FontFamily="MaterialIcons"
-                    Glyph="&#xe030;"
-                    Size="23"
-                    Color="{AppThemeBinding Light=#5E5E76, Dark=#9C9CB2}" />
-            </ShellContent.Icon>
-        </ShellContent>
-
-        <ShellContent
-            Title="Search"
-            Route="search"
-            ContentTemplate="{DataTemplate views:SearchPage}">
-            <ShellContent.Icon>
-                <FontImageSource
-                    FontFamily="MaterialIcons"
-                    Glyph="&#xe8b6;"
-                    Size="23"
-                    Color="{AppThemeBinding Light=#5E5E76, Dark=#9C9CB2}" />
-            </ShellContent.Icon>
-        </ShellContent>
-
-        <ShellContent
-            Title="Settings"
-            Route="settings"
-            ContentTemplate="{DataTemplate views:SettingsPage}">
-            <ShellContent.Icon>
-                <FontImageSource
-                    FontFamily="MaterialIcons"
-                    Glyph="&#xe8b8;"
-                    Size="23"
-                    Color="{AppThemeBinding Light=#5E5E76, Dark=#9C9CB2}" />
-            </ShellContent.Icon>
-        </ShellContent>
-    </TabBar>
+    <ShellContent
+        Title="Library"
+        Route="library"
+        ContentTemplate="{DataTemplate views:LibraryPage}" />
 </Shell>

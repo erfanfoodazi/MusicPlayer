@@ -84,6 +84,18 @@ public partial class LibraryPage : ContentPage
         await Shell.Current.GoToAsync(Routes.Settings);
     }
 
+    private async void OnNavSearchClicked(object? sender, EventArgs e)
+    {
+        Haptics.Tap();
+        await Shell.Current.GoToAsync(Routes.Search);
+    }
+
+    private async void OnNavSettingsClicked(object? sender, EventArgs e)
+    {
+        Haptics.Tap();
+        await Shell.Current.GoToAsync(Routes.Settings);
+    }
+
     private void OnViewModelPropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
         if (e.PropertyName != nameof(LibraryViewModel.SelectedTabIndex) ||

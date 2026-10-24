@@ -66,6 +66,28 @@
                         SemanticProperties.Description="Open settings" />
                 </Grid>
 
+                <!-- Top navigation: Library / Search / Settings (replaces the bottom tab bar) -->
+                <Border Style="{StaticResource SegmentTrack}">
+                    <Grid ColumnDefinitions="*,*,*">
+                        <Button
+                            Grid.Column="0"
+                            Text="Library"
+                            Style="{StaticResource SegmentButton}"
+                            BackgroundColor="{AppThemeBinding Light={StaticResource SurfaceLight}, Dark={StaticResource SurfaceDarkElevated}}"
+                            TextColor="{AppThemeBinding Light={StaticResource TextOnLight}, Dark={StaticResource TextOnDark}}" />
+                        <Button
+                            Grid.Column="1"
+                            Text="Search"
+                            Style="{StaticResource SegmentButton}"
+                            Clicked="OnNavSearchClicked" />
+                        <Button
+                            Grid.Column="2"
+                            Text="Settings"
+                            Style="{StaticResource SegmentButton}"
+                            Clicked="OnNavSettingsClicked" />
+                    </Grid>
+                </Border>
+
                 <!-- Search pill -->
                 <Border Style="{StaticResource SearchPillBorder}">
                     <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="8">
@@ -280,8 +302,7 @@
                     IsVisible="{Binding IsAlbumsTab}">
                     <CollectionView
                         ItemsSource="{Binding Albums}"
-                        SelectionMode="None"
-                        ItemSizingStrategy="MeasureFirstItem">
+                        SelectionMode="None">
                         <CollectionView.ItemsLayout>
                             <GridItemsLayout Orientation="Vertical" Span="2" HorizontalItemSpacing="14" VerticalItemSpacing="18" />
                         </CollectionView.ItemsLayout>

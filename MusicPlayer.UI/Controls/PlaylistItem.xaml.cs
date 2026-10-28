@@ -69,6 +69,8 @@ public partial class PlaylistItem : Grid
                 new AppSheetAction { Label = "Add songs", Glyph = "\ue145", Description = "Pick several tracks and add them at once" },
                 new AppSheetAction { Label = "Play", Glyph = "\ue037", Description = "Start from the first track" },
                 new AppSheetAction { Label = "Shuffle", Glyph = "\ue043", Description = "Play in a random order" },
+                new AppSheetAction { Label = "Change cover", Glyph = "\ue412", Description = "Use a picture from this device" },
+                new AppSheetAction { Label = "Reset cover", Glyph = "\ue166", Description = "Go back to the first song's artwork" },
                 new AppSheetAction { Label = "Rename", Glyph = "\ue3c9", Description = "Give this list a new name" },
                 new AppSheetAction { Label = "Delete playlist", Glyph = "\ue872", IsDestructive = true, Description = "Remove the list only; files stay on the device" },
             ],
@@ -86,9 +88,15 @@ public partial class PlaylistItem : Grid
 
                 return;
             case 3:
-                await RenameAsync(page, library);
+                await PlaylistArtworkService.PickAndApplyAsync(page, Playlist, library);
                 return;
             case 4:
+                PlaylistArtworkService.Reset(Playlist, library);
+                return;
+            case 5:
+                await RenameAsync(page, library);
+                return;
+            case 6:
                 await DeleteAsync(page, library);
                 return;
         }

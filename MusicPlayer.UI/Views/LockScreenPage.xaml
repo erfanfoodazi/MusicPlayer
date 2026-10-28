@@ -4,55 +4,74 @@
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
     xmlns:viewmodels="clr-namespace:MusicPlayer.UI.ViewModels"
+    xmlns:converters="clr-namespace:MusicPlayer.UI.Converters"
+    xmlns:controls="clr-namespace:MusicPlayer.UI.Controls"
     xmlns:behaviors="clr-namespace:MusicPlayer.UI.Behaviors"
     x:DataType="viewmodels:LyricsViewModel"
     Title="Lock Screen"
     Shell.TabBarIsVisible="False"
     Shell.NavBarIsVisible="False"
-    BackgroundColor="#08080C">
+    BackgroundColor="#07070C">
 
-    <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto,*">
+    <ContentPage.Resources>
+        <converters:ArtworkToImageSourceConverter x:Key="ArtworkToImageSourceConverter" />
+        <converters:TimeSpanToStringConverter x:Key="TimeSpanToStringConverter" />
 
-        <!-- Full-bleed artwork wash. -->
+        <!-- Same keys as Now Playing: the code-behind swaps them for the current cover's
+             palette so both players always look identical. -->
+        <Color x:Key="AccentColor">#B7A7FF</Color>
+        <Color x:Key="AccentSoftColor">#1A1533</Color>
+        <Color x:Key="AccentMutedColor">#8E82C8</Color>
+        <Color x:Key="AccentBorderColor">#4DB7A7FF</Color>
+        <Color x:Key="PanelColor">#121019</Color>
+        <Color x:Key="PlayButtonColor">#CDE7E2</Color>
+        <LinearGradientBrush x:Key="AccentGradient" StartPoint="0,0" EndPoint="1,1">
+            <GradientStop Color="#B7A7FF" Offset="0.0" />
+            <GradientStop Color="#7C5CFF" Offset="1.0" />
+        </LinearGradientBrush>
+    </ContentPage.Resources>
+
+    <Grid x:Name="RootLayout" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,*">
+
+        <!-- Full-bleed artwork wash: the cover itself, dimmed into the background. -->
         <Image
-            Grid.RowSpan="6"
+            Grid.RowSpan="8"
             Source="{Binding ArtworkSource}"
             Aspect="AspectFill"
-            Opacity="0.16"
+            Opacity="0.2"
             InputTransparent="True" />
 
-        <BoxView Grid.RowSpan="6" InputTransparent="True">
+        <BoxView x:Name="BackdropWash" Grid.RowSpan="8" Opacity="1" InputTransparent="True">
             <BoxView.Background>
                 <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
-                    <GradientStop Color="#B308080C" Offset="0.0" />
-                    <GradientStop Color="#A608080C" Offset="0.34" />
-                    <GradientStop Color="#E608080C" Offset="0.68" />
-                    <GradientStop Color="#FF08080C" Offset="1.0" />
+                    <GradientStop Color="#0B0B12" Offset="0.0" />
+                    <GradientStop Color="#0A0A10" Offset="0.55" />
+                    <GradientStop Color="#09090F" Offset="1.0" />
                 </LinearGradientBrush>
             </BoxView.Background>
         </BoxView>
 
-        <!-- Header -->
-        <Grid x:Name="LockHeader" Grid.Row="0" ColumnDefinitions="Auto,*,Auto" Padding="22,8,10,0">
+        <!-- ===== Header ===== -->
+        <Grid x:Name="LockHeader" Grid.Row="0" ColumnDefinitions="Auto,*,Auto" Padding="22,6,12,0">
             <HorizontalStackLayout Grid.Column="0" Spacing="7" VerticalOptions="Center">
                 <Label
                     Text="&#xe897;"
                     FontFamily="MaterialIcons"
-                    FontSize="16"
-                    TextColor="#A78BFF"
+                    FontSize="15"
+                    TextColor="{DynamicResource AccentColor}"
                     VerticalTextAlignment="Center" />
                 <Label
-                    Text="LOCK SCREEN"
+                    Text="AURALIS"
                     FontFamily="InterSemiBold"
                     FontSize="10"
-                    CharacterSpacing="2.4"
+                    CharacterSpacing="2.6"
                     TextColor="#A7A7BA"
                     VerticalTextAlignment="Center" />
             </HorizontalStackLayout>
 
             <Button
                 Grid.Column="2"
-                Text="&#xe5c4;"
+                Text="&#xe313;"
                 FontFamily="MaterialIcons"
                 FontSize="22"
                 WidthRequest="40"
@@ -61,72 +80,112 @@
                 MinimumHeightRequest="40"
                 Padding="0"
                 CornerRadius="20"
-                BackgroundColor="#33101018"
-                TextColor="#F4F4F9"
+                BackgroundColor="{StaticResource GlassTintDark}"
+                TextColor="{DynamicResource AccentColor}"
                 Clicked="OnCloseClicked"
                 SemanticProperties.Description="Leave lock-screen player" />
         </Grid>
 
-        <!-- Artwork -->
+        <!-- ===== Clock ===== -->
+        <VerticalStackLayout
+            x:Name="ClockBlock"
+            Grid.Row="1"
+            Spacing="0"
+            Padding="0,0,0,8">
+            <VerticalStackLayout.GestureRecognizers>
+                <PanGestureRecognizer PanUpdated="OnDragPanUpdated" />
+            </VerticalStackLayout.GestureRecognizers>
+
+            <Label
+                x:Name="ClockTimeLabel"
+                Text="--:--"
+                FontFamily="InterBold"
+                FontSize="52"
+                CharacterSpacing="-2.2"
+                HorizontalTextAlignment="Center"
+                TextColor="#F6F6FB" />
+            <Label
+                x:Name="ClockDateLabel"
+                Text=""
+                FontFamily="InterSemiBold"
+                FontSize="10"
+                CharacterSpacing="2.0"
+                HorizontalTextAlignment="Center"
+                TextColor="#8C8CA3" />
+        </VerticalStackLayout>
+
+        <!-- ===== Artwork ===== -->
         <Border
             x:Name="ArtworkCard"
-            Grid.Row="1"
-            WidthRequest="180"
-            HeightRequest="180"
-            Margin="0,8,0,0"
+            Grid.Row="2"
+            WidthRequest="208"
+            HeightRequest="208"
             HorizontalOptions="Center"
-            StrokeThickness="0"
-            StrokeShape="RoundRectangle 24"
+            StrokeThickness="1"
+            Stroke="#14FFFFFF"
+            StrokeShape="RoundRectangle 26"
             Background="{StaticResource ArtworkPlaceholderGradient}">
             <Border.Shadow>
-                <Shadow Brush="#000000" Offset="0,14" Radius="32" Opacity="0.55" />
+                <Shadow Brush="#000000" Offset="0,16" Radius="34" Opacity="0.55" />
             </Border.Shadow>
+            <Border.GestureRecognizers>
+                <PanGestureRecognizer PanUpdated="OnDragPanUpdated" />
+            </Border.GestureRecognizers>
             <Grid>
                 <Label
                     Text="&#xe405;"
                     FontFamily="MaterialIcons"
-                    FontSize="42"
-                    TextColor="#A78BFF"
+                    FontSize="46"
+                    TextColor="{DynamicResource AccentColor}"
                     HorizontalOptions="Center"
                     VerticalOptions="Center" />
                 <Image
                     Source="{Binding ArtworkSource}"
                     Aspect="AspectFill"
-                    WidthRequest="180"
-                    HeightRequest="180" />
+                    WidthRequest="208"
+                    HeightRequest="208" />
             </Grid>
         </Border>
 
-        <!-- Track -->
-        <VerticalStackLayout x:Name="TrackBlock" Grid.Row="2" Spacing="3" Padding="12,14,12,0">
-            <Label
+        <!-- ===== Track ===== -->
+        <VerticalStackLayout
+            x:Name="TrackBlock"
+            Grid.Row="3"
+            Spacing="4"
+            Padding="26,14,26,0">
+            <VerticalStackLayout.GestureRecognizers>
+                <PanGestureRecognizer PanUpdated="OnDragPanUpdated" />
+            </VerticalStackLayout.GestureRecognizers>
+
+            <controls:MarqueeLabel
+                x:Name="TrackTitleMarquee"
                 Text="{Binding TrackTitle}"
                 FontFamily="InterBold"
-                FontSize="21"
-                CharacterSpacing="-0.3"
-                HorizontalTextAlignment="Center"
-                LineBreakMode="TailTruncation"
-                TextColor="#F4F4F9" />
+                FontSize="25"
+                CharacterSpacing="-0.6"
+                TextAlignment="Center"
+                TextColor="#F6F6FB" />
             <Label
                 Text="{Binding TrackArtist}"
                 FontFamily="Inter"
-                FontSize="13"
+                FontSize="13.5"
                 HorizontalTextAlignment="Center"
                 LineBreakMode="TailTruncation"
+                MaxLines="1"
                 TextColor="#A7A7BA" />
         </VerticalStackLayout>
 
-        <!-- Seek -->
-        <Grid x:Name="SeekBlock" Grid.Row="3" RowDefinitions="Auto,Auto" Padding="22,4,22,0">
+        <!-- ===== Seek ===== -->
+        <Grid x:Name="SeekBlock" Grid.Row="4" RowDefinitions="Auto,Auto" Padding="22,0,22,0">
             <Slider
                 x:Name="SeekSlider"
                 Grid.Row="0"
                 Minimum="0"
                 Maximum="1"
-                Margin="0,8,-2,-7"
-                MinimumTrackColor="#A78BFF"
+                Margin="0,4,-2,-8"
+                MinimumTrackColor="{DynamicResource AccentColor}"
                 MaximumTrackColor="#2C2C3A"
-                ThumbColor="#FFFFFF"
+                ThumbColor="{DynamicResource AccentColor}"
                 DragStarted="OnSeekDragStarted"
                 DragCompleted="OnSeekDragCompleted"
                 ValueChanged="OnSeekValueChanged" />
@@ -149,126 +208,304 @@
             </Grid>
         </Grid>
 
-        <!-- Transport -->
-        <Grid x:Name="TransportGrid" Grid.Row="4" ColumnDefinitions="*,*,*,*,*" Padding="8,2,8,0">
-            <Button
-                x:Name="ShuffleButton"
-                Grid.Column="0"
-                Text="&#xe043;"
-                FontFamily="MaterialIcons"
-                FontSize="19"
-                WidthRequest="42"
-                HeightRequest="42"
-                MinimumWidthRequest="42"
-                MinimumHeightRequest="42"
-                Padding="0"
-                CornerRadius="21"
-                BackgroundColor="Transparent"
-                HorizontalOptions="Center"
-                Clicked="OnShuffleClicked"
-                SemanticProperties.Description="Shuffle" />
+        <!-- ===== Transport: three oversized tiles, play in the cover's pastel tone ===== -->
+        <Grid
+            x:Name="TransportGrid"
+            Grid.Row="5"
+            ColumnDefinitions="*,1.14*,*"
+            ColumnSpacing="10"
+            Padding="20,4,20,0">
 
             <Button
-                Grid.Column="1"
+                Grid.Column="0"
                 Text="&#xe045;"
                 FontFamily="MaterialIcons"
-                FontSize="28"
-                WidthRequest="48"
-                HeightRequest="48"
-                MinimumWidthRequest="48"
-                MinimumHeightRequest="48"
+                FontSize="27"
+                HeightRequest="76"
                 Padding="0"
                 CornerRadius="24"
-                BackgroundColor="Transparent"
-                TextColor="#F4F4F9"
-                HorizontalOptions="Center"
+                BackgroundColor="{AppThemeBinding Light=#1A000000, Dark=#1AFFFFFF}"
+                TextColor="{AppThemeBinding Light={StaticResource TextOnLight}, Dark={StaticResource TextOnDark}}"
                 Clicked="OnPreviousClicked"
                 SemanticProperties.Description="Previous track or restart" />
 
             <Button
                 x:Name="PlayPauseButton"
-                Grid.Column="2"
+                Grid.Column="1"
                 Text="&#xe037;"
-                Style="{StaticResource PlayButton}"
-                HorizontalOptions="Center"
+                FontFamily="MaterialIcons"
+                FontSize="31"
+                HeightRequest="76"
+                Padding="0"
+                CornerRadius="24"
+                BackgroundColor="{DynamicResource PlayButtonColor}"
+                TextColor="#0D1215"
                 Clicked="OnPlayPauseClicked"
                 SemanticProperties.Description="Play or pause" />
 
             <Button
-                Grid.Column="3"
+                Grid.Column="2"
                 Text="&#xe044;"
                 FontFamily="MaterialIcons"
-                FontSize="28"
-                WidthRequest="48"
-                HeightRequest="48"
-                MinimumWidthRequest="48"
-                MinimumHeightRequest="48"
+                FontSize="27"
+                HeightRequest="76"
                 Padding="0"
                 CornerRadius="24"
-                BackgroundColor="Transparent"
-                TextColor="#F4F4F9"
-                HorizontalOptions="Center"
+                BackgroundColor="{AppThemeBinding Light=#1A000000, Dark=#1AFFFFFF}"
+                TextColor="{AppThemeBinding Light={StaticResource TextOnLight}, Dark={StaticResource TextOnDark}}"
                 Clicked="OnNextClicked"
                 SemanticProperties.Description="Next track" />
+        </Grid>
+
+        <!-- ===== Volume + shuffle / repeat ===== -->
+        <Grid Grid.Row="6" ColumnDefinitions="*,48,48" ColumnSpacing="8" Margin="20,10,20,0">
+
+            <Border
+                Grid.Column="0"
+                HeightRequest="48"
+                StrokeThickness="1"
+                Stroke="{AppThemeBinding Light={StaticResource GlassStrokeLight}, Dark={StaticResource GlassStrokeDark}}"
+                StrokeShape="RoundRectangle 16"
+                Background="{AppThemeBinding Light={StaticResource GlassFillLight}, Dark={StaticResource GlassFillDark}}">
+                <Grid ColumnDefinitions="Auto,*" ColumnSpacing="2" Padding="6,0">
+                    <Button
+                        x:Name="MuteButton"
+                        Grid.Column="0"
+                        Text="&#xe050;"
+                        FontFamily="MaterialIcons"
+                        FontSize="18"
+                        WidthRequest="34"
+                        HeightRequest="34"
+                        MinimumWidthRequest="34"
+                        MinimumHeightRequest="34"
+                        Padding="0"
+                        CornerRadius="17"
+                        BackgroundColor="Transparent"
+                        VerticalOptions="Center"
+                        TextColor="{AppThemeBinding Light={StaticResource MutedOnLight}, Dark={StaticResource MutedOnDark}}"
+                        Clicked="OnMuteClicked"
+                        SemanticProperties.Description="Mute" />
+                    <Slider
+                        x:Name="VolumeSlider"
+                        Grid.Column="1"
+                        Minimum="0"
+                        Maximum="1"
+                        HeightRequest="30"
+                        VerticalOptions="Center"
+                        MinimumTrackColor="{DynamicResource AccentColor}"
+                        MaximumTrackColor="{AppThemeBinding Light=#24000000, Dark=#24FFFFFF}"
+                        ThumbColor="{DynamicResource AccentColor}"
+                        ValueChanged="OnVolumeChanged"
+                        SemanticProperties.Description="Volume" />
+                </Grid>
+            </Border>
+
+            <Button
+                x:Name="ShuffleButton"
+                Grid.Column="1"
+                Text="&#xe043;"
+                FontFamily="MaterialIcons"
+                FontSize="20"
+                HeightRequest="48"
+                Padding="0"
+                CornerRadius="16"
+                BorderWidth="1"
+                BorderColor="{AppThemeBinding Light={StaticResource GlassStrokeLight}, Dark={StaticResource GlassStrokeDark}}"
+                BackgroundColor="{AppThemeBinding Light=#14000000, Dark=#1FFFFFFF}"
+                TextColor="{DynamicResource AccentMutedColor}"
+                Clicked="OnShuffleClicked"
+                SemanticProperties.Description="Shuffle" />
 
             <Button
                 x:Name="RepeatButton"
-                Grid.Column="4"
+                Grid.Column="2"
                 Text="&#xe040;"
                 FontFamily="MaterialIcons"
-                FontSize="19"
-                WidthRequest="42"
-                HeightRequest="42"
-                MinimumWidthRequest="42"
-                MinimumHeightRequest="42"
+                FontSize="20"
+                HeightRequest="48"
                 Padding="0"
-                CornerRadius="21"
-                BackgroundColor="Transparent"
-                HorizontalOptions="Center"
+                CornerRadius="16"
+                BorderWidth="1"
+                BorderColor="{AppThemeBinding Light={StaticResource GlassStrokeLight}, Dark={StaticResource GlassStrokeDark}}"
+                BackgroundColor="{AppThemeBinding Light=#14000000, Dark=#1FFFFFFF}"
+                TextColor="{DynamicResource AccentMutedColor}"
                 Clicked="OnRepeatClicked"
                 SemanticProperties.Description="Repeat mode" />
         </Grid>
 
-        <!-- Lyrics -->
-        <Border
-            x:Name="LyricsCard"
-            Grid.Row="5"
-            Margin="16,10,16,14"
-            Padding="4,12,4,5"
-            StrokeThickness="1"
-            Stroke="#242432"
-            StrokeShape="RoundRectangle 22"
-            BackgroundColor="#B30B0B11">
-            <Grid RowDefinitions="Auto,*">
+        <!-- ===== Queue + lyrics entry points ===== -->
+        <Grid
+            x:Name="LyricsBar"
+            Grid.Row="7"
+            ColumnDefinitions="58,*"
+            ColumnSpacing="10"
+            VerticalOptions="End"
+            Margin="18,0,18,26">
 
-                <Grid Grid.Row="0" ColumnDefinitions="*,Auto" Padding="14,0,14,7">
-                    <HorizontalStackLayout Grid.Column="0" Spacing="7" VerticalOptions="Center">
+            <Border
+                HeightRequest="58"
+                StrokeThickness="1"
+                Stroke="{AppThemeBinding Light={StaticResource GlassStrokeLight}, Dark={StaticResource GlassStrokeDark}}"
+                StrokeShape="RoundRectangle 20"
+                Background="{AppThemeBinding Light={StaticResource GlassFillLight}, Dark={StaticResource GlassFillDark}}"
+                SemanticProperties.Description="Show playing queue">
+                <Border.GestureRecognizers>
+                    <TapGestureRecognizer Tapped="OnQueueTapped" />
+                </Border.GestureRecognizers>
+                <Label
+                    Text="&#xe03d;"
+                    FontFamily="MaterialIcons"
+                    FontSize="22"
+                    TextColor="{DynamicResource AccentColor}"
+                    HorizontalOptions="Center"
+                    VerticalOptions="Center" />
+            </Border>
+
+            <Border
+                Grid.Column="1"
+                HeightRequest="58"
+                StrokeThickness="1"
+                Stroke="{AppThemeBinding Light={StaticResource GlassStrokeLight}, Dark={StaticResource GlassStrokeDark}}"
+                StrokeShape="RoundRectangle 20"
+                Background="{AppThemeBinding Light={StaticResource GlassFillLight}, Dark={StaticResource GlassFillDark}}">
+                <Border.GestureRecognizers>
+                    <TapGestureRecognizer Tapped="OnLyricsTapped" />
+                </Border.GestureRecognizers>
+                <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="12" Padding="12,0">
+                    <Border
+                        Grid.Column="0"
+                        WidthRequest="36"
+                        HeightRequest="36"
+                        StrokeThickness="0"
+                        StrokeShape="RoundRectangle 12"
+                        BackgroundColor="{DynamicResource AccentSoftColor}"
+                        VerticalOptions="Center">
                         <Label
                             Text="&#xec0b;"
                             FontFamily="MaterialIcons"
-                            FontSize="14"
-                            TextColor="#A78BFF"
-                            VerticalTextAlignment="Center" />
+                            FontSize="17"
+                            TextColor="{DynamicResource AccentColor}"
+                            HorizontalOptions="Center"
+                            VerticalOptions="Center" />
+                    </Border>
+
+                    <VerticalStackLayout Grid.Column="1" Spacing="1" VerticalOptions="Center">
                         <Label
-                            Text="LYRICS"
+                            Text="Lyrics"
                             FontFamily="InterSemiBold"
-                            FontSize="9"
-                            CharacterSpacing="2.2"
-                            TextColor="#A7A7BA"
-                            VerticalTextAlignment="Center" />
-                    </HorizontalStackLayout>
+                            FontSize="14"
+                            TextColor="{AppThemeBinding Light={StaticResource TextOnLight}, Dark={StaticResource TextOnDark}}" />
+                        <Label
+                            Text="{Binding SourceLabel}"
+                            IsVisible="{Binding HasLyrics}"
+                            FontFamily="Inter"
+                            FontSize="10.5"
+                            MaxLines="1"
+                            LineBreakMode="TailTruncation"
+                            TextColor="{AppThemeBinding Light={StaticResource MutedOnLight}, Dark={StaticResource MutedOnDark}}" />
+                        <Label
+                            Text="View the words for this song"
+                            IsVisible="{Binding ShowEmptyState}"
+                            FontFamily="Inter"
+                            FontSize="10.5"
+                            MaxLines="1"
+                            LineBreakMode="TailTruncation"
+                            TextColor="{AppThemeBinding Light={StaticResource MutedOnLight}, Dark={StaticResource MutedOnDark}}" />
+                    </VerticalStackLayout>
+
+                    <Label
+                        Grid.Column="2"
+                        Text="&#xe5cc;"
+                        FontFamily="MaterialIcons"
+                        FontSize="19"
+                        TextColor="{AppThemeBinding Light={StaticResource MutedOnLight}, Dark={StaticResource MutedOnDark}}"
+                        VerticalOptions="Center" />
+                </Grid>
+            </Border>
+        </Grid>
+
+        <!-- ===== Full-screen lyrics, opened by the bar above ===== -->
+        <Grid
+            x:Name="LyricsOverlay"
+            Grid.RowSpan="8"
+            IsVisible="False"
+            Opacity="0"
+            BackgroundColor="#07070C">
+
+            <Image
+                Source="{Binding ArtworkSource}"
+                Aspect="AspectFill"
+                Opacity="0.16"
+                InputTransparent="True" />
+            <BoxView InputTransparent="True">
+                <BoxView.Background>
+                    <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                        <GradientStop Color="#E607070C" Offset="0.0" />
+                        <GradientStop Color="#F507070C" Offset="0.45" />
+                        <GradientStop Color="#07070C" Offset="1.0" />
+                    </LinearGradientBrush>
+                </BoxView.Background>
+            </BoxView>
+
+            <Grid RowDefinitions="Auto,Auto,*">
+                <Grid Grid.Row="0" ColumnDefinitions="Auto,*,Auto" Padding="12,8,16,0" ColumnSpacing="8">
+                    <Button
+                        Text="&#xe5c4;"
+                        FontFamily="MaterialIcons"
+                        FontSize="22"
+                        WidthRequest="40"
+                        HeightRequest="40"
+                        MinimumWidthRequest="40"
+                        MinimumHeightRequest="40"
+                        Padding="0"
+                        CornerRadius="20"
+                        BackgroundColor="{StaticResource GlassTintDark}"
+                        TextColor="{DynamicResource AccentColor}"
+                        Clicked="OnLyricsCloseClicked"
+                        SemanticProperties.Description="Close lyrics" />
 
                     <Label
                         Grid.Column="1"
+                        Text="LYRICS"
+                        FontFamily="InterSemiBold"
+                        FontSize="10"
+                        CharacterSpacing="2.6"
+                        HorizontalTextAlignment="Center"
+                        VerticalTextAlignment="Center"
+                        TextColor="#A7A7BA" />
+
+                    <Label
+                        Grid.Column="2"
                         Text="{Binding SourceLabel}"
                         FontFamily="InterMedium"
                         FontSize="9"
-                        TextColor="#77778C"
                         VerticalTextAlignment="Center"
-                        LineBreakMode="TailTruncation" />
+                        LineBreakMode="TailTruncation"
+                        MaximumWidthRequest="150"
+                        TextColor="#77778C" />
                 </Grid>
 
-                <Grid Grid.Row="1">
+                <VerticalStackLayout Grid.Row="1" Padding="24,10,24,4" Spacing="3">
+                    <Label
+                        Text="{Binding TrackTitle}"
+                        FontFamily="InterBold"
+                        FontSize="19"
+                        CharacterSpacing="-0.4"
+                        HorizontalTextAlignment="Center"
+                        LineBreakMode="TailTruncation"
+                        MaxLines="1"
+                        TextColor="#F6F6FB" />
+                    <Label
+                        Text="{Binding TrackArtist}"
+                        FontFamily="Inter"
+                        FontSize="12"
+                        HorizontalTextAlignment="Center"
+                        LineBreakMode="TailTruncation"
+                        MaxLines="1"
+                        TextColor="#8C8CA3" />
+                </VerticalStackLayout>
+
+                <Grid Grid.Row="2">
 
                     <CollectionView
                         x:Name="LyricsList"
@@ -278,37 +515,60 @@
                         ItemSizingStrategy="MeasureAllItems"
                         VerticalScrollBarVisibility="Never">
                         <CollectionView.Header>
-                            <BoxView HeightRequest="6" Color="Transparent" />
+                            <BoxView HeightRequest="24" Color="Transparent" />
                         </CollectionView.Header>
                         <CollectionView.Footer>
-                            <BoxView HeightRequest="40" Color="Transparent" />
+                            <BoxView HeightRequest="120" Color="Transparent" />
                         </CollectionView.Footer>
                         <CollectionView.ItemTemplate>
                             <DataTemplate x:DataType="viewmodels:LyricsLineViewModel">
                                 <Grid
-                                    Padding="10,1"
+                                    Padding="24,2"
                                     Opacity="0.42"
                                     behaviors:LyricLineAnimation.IsActive="{Binding IsActive}">
                                     <Grid.GestureRecognizers>
                                         <TapGestureRecognizer Tapped="OnLyricLineTapped" />
                                     </Grid.GestureRecognizers>
-                                    <Border
-                                        Padding="14,7"
-                                        HorizontalOptions="Center"
-                                        MaximumWidthRequest="600"
-                                        StrokeThickness="0"
-                                        StrokeShape="RoundRectangle 16"
-                                        BackgroundColor="Transparent"
-                                        behaviors:LockScreenLyricHighlight.IsActive="{Binding IsActive}">
+                                    <VerticalStackLayout Spacing="2" HorizontalOptions="Fill">
                                         <Label
                                             Text="{Binding Text}"
+                                            IsVisible="{Binding ShowPlainText}"
                                             FontFamily="InterMedium"
-                                            FontSize="17"
+                                            FontSize="19"
                                             HorizontalTextAlignment="Center"
                                             LineBreakMode="WordWrap"
-                                            TextColor="#B7B7C8"
-                                            behaviors:LockScreenLyricTextColor.IsActive="{Binding IsActive}" />
-                                    </Border>
+                                            TextColor="#B7B7C8">
+                                            <Label.Triggers>
+                                                <DataTrigger TargetType="Label" Binding="{Binding IsActive}" Value="True">
+                                                    <Setter Property="FontFamily" Value="InterBold" />
+                                                    <Setter Property="TextColor" Value="#FFFFFF" />
+                                                </DataTrigger>
+                                            </Label.Triggers>
+                                        </Label>
+
+                                        <FlexLayout
+                                            Wrap="Wrap"
+                                            JustifyContent="Center"
+                                            IsVisible="{Binding HasWords}"
+                                            BindableLayout.ItemsSource="{Binding Words}">
+                                            <BindableLayout.ItemTemplate>
+                                                <DataTemplate x:DataType="viewmodels:LyricsWordViewModel">
+                                                    <Label
+                                                        Text="{Binding Text}"
+                                                        FontFamily="InterSemiBold"
+                                                        FontSize="19"
+                                                        Margin="0,0,6,0"
+                                                        TextColor="#B7B7C8">
+                                                        <Label.Triggers>
+                                                            <DataTrigger TargetType="Label" Binding="{Binding IsActive}" Value="True">
+                                                                <Setter Property="TextColor" Value="#FFFFFF" />
+                                                            </DataTrigger>
+                                                        </Label.Triggers>
+                                                    </Label>
+                                                </DataTemplate>
+                                            </BindableLayout.ItemTemplate>
+                                        </FlexLayout>
+                                    </VerticalStackLayout>
                                 </Grid>
                             </DataTemplate>
                         </CollectionView.ItemTemplate>
@@ -318,10 +578,10 @@
                         <Label
                             Text="{Binding PlainText}"
                             FontFamily="Inter"
-                            FontSize="15"
-                            LineHeight="1.5"
+                            FontSize="16"
+                            LineHeight="1.55"
                             HorizontalTextAlignment="Center"
-                            Padding="20,8,20,36"
+                            Padding="24,10,24,40"
                             TextColor="#C7C7D6" />
                     </ScrollView>
 
@@ -329,7 +589,7 @@
                         IsVisible="{Binding ShowEmptyState}"
                         VerticalOptions="Center"
                         HorizontalOptions="Center"
-                        Padding="22"
+                        Padding="26"
                         Spacing="8">
                         <Label
                             Text="&#xec0b;"
@@ -355,11 +615,311 @@
                     <ActivityIndicator
                         IsRunning="{Binding IsBusy}"
                         IsVisible="{Binding IsBusy}"
-                        Color="#A78BFF"
+                        Color="{DynamicResource AccentColor}"
                         HorizontalOptions="Center"
                         VerticalOptions="Center" />
+
+                    <BoxView InputTransparent="True" HeightRequest="44" VerticalOptions="Start">
+                        <BoxView.Background>
+                            <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                                <GradientStop Color="#07070C" Offset="0.0" />
+                                <GradientStop Color="#0007070C" Offset="1.0" />
+                            </LinearGradientBrush>
+                        </BoxView.Background>
+                    </BoxView>
+
+                    <BoxView InputTransparent="True" HeightRequest="96" VerticalOptions="End">
+                        <BoxView.Background>
+                            <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                                <GradientStop Color="#0007070C" Offset="0.0" />
+                                <GradientStop Color="#07070C" Offset="1.0" />
+                            </LinearGradientBrush>
+                        </BoxView.Background>
+                    </BoxView>
                 </Grid>
             </Grid>
-        </Border>
+        </Grid>
+
+        <!-- ===== Playing queue sheet ===== -->
+        <Grid
+            x:Name="QueueOverlay"
+            x:DataType="viewmodels:NowPlayingViewModel"
+            Grid.RowSpan="8"
+            IsVisible="False">
+
+            <BoxView x:Name="QueueScrim" Color="#99000000" Opacity="0">
+                <BoxView.GestureRecognizers>
+                    <TapGestureRecognizer Tapped="OnQueueScrimTapped" />
+                </BoxView.GestureRecognizers>
+            </BoxView>
+
+            <Border
+                x:Name="QueueSheet"
+                VerticalOptions="End"
+                MaximumHeightRequest="580"
+                Padding="18,10,18,16"
+                StrokeThickness="1"
+                Stroke="#2EFFFFFF"
+                StrokeShape="RoundRectangle 24,24,0,0"
+                Background="#FA0B0B12">
+                <Border.Shadow>
+                    <Shadow Brush="#000000" Offset="0,-8" Radius="24" Opacity="0.45" />
+                </Border.Shadow>
+
+                <Grid RowDefinitions="Auto,Auto,Auto,Auto,*" RowSpacing="10">
+                    <Border
+                        Grid.Row="0"
+                        WidthRequest="36"
+                        HeightRequest="4"
+                        HorizontalOptions="Center"
+                        StrokeThickness="0"
+                        StrokeShape="RoundRectangle 2"
+                        BackgroundColor="#2EFFFFFF" />
+
+                    <Grid Grid.Row="1" ColumnDefinitions="*,Auto,Auto" ColumnSpacing="6">
+                        <VerticalStackLayout Spacing="1" VerticalOptions="Center">
+                            <Label
+                                Text="Queue"
+                                FontFamily="InterBold"
+                                FontSize="19"
+                                CharacterSpacing="-0.3"
+                                TextColor="#F6F6FB" />
+                            <Label
+                                Text="{Binding QueueCountText}"
+                                FontFamily="Inter"
+                                FontSize="11"
+                                TextColor="#8C8CA3" />
+                        </VerticalStackLayout>
+
+                        <Button
+                            Grid.Column="1"
+                            Text="Clear"
+                            FontFamily="InterSemiBold"
+                            FontSize="12"
+                            HeightRequest="34"
+                            MinimumHeightRequest="34"
+                            Padding="14,0"
+                            CornerRadius="17"
+                            BackgroundColor="#1FFFFFFF"
+                            TextColor="#F6F6FB"
+                            VerticalOptions="Center"
+                            Clicked="OnClearQueueClicked" />
+
+                        <Button
+                            Grid.Column="2"
+                            Text="&#xe5cd;"
+                            FontFamily="MaterialIcons"
+                            FontSize="20"
+                            WidthRequest="34"
+                            HeightRequest="34"
+                            MinimumWidthRequest="34"
+                            MinimumHeightRequest="34"
+                            Padding="0"
+                            CornerRadius="17"
+                            BackgroundColor="#1FFFFFFF"
+                            TextColor="#A7A7BA"
+                            VerticalOptions="Center"
+                            Clicked="OnQueueCloseClicked"
+                            SemanticProperties.Description="Close queue" />
+                    </Grid>
+
+                    <BoxView Grid.Row="2" HeightRequest="1" Color="#14FFFFFF" />
+
+                    <!-- The song currently playing, always pinned above the session list. -->
+                    <Border
+                        Grid.Row="3"
+                        Padding="10,9"
+                        StrokeThickness="0"
+                        StrokeShape="RoundRectangle 14"
+                        BackgroundColor="{DynamicResource AccentSoftColor}"
+                        IsVisible="{Binding HasCurrentTrack}">
+                        <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="12">
+                            <Border
+                                Grid.Column="0"
+                                WidthRequest="44"
+                                HeightRequest="44"
+                                StrokeThickness="0"
+                                StrokeShape="RoundRectangle 11"
+                                Background="{StaticResource ArtworkPlaceholderGradient}">
+                                <Image
+                                    Source="{Binding ArtworkSource}"
+                                    Aspect="AspectFill"
+                                    WidthRequest="44"
+                                    HeightRequest="44" />
+                            </Border>
+
+                            <VerticalStackLayout Grid.Column="1" VerticalOptions="Center" Spacing="0">
+                                <Label
+                                    Text="NOW PLAYING"
+                                    FontFamily="InterSemiBold"
+                                    FontSize="9"
+                                    CharacterSpacing="1.6"
+                                    TextColor="{DynamicResource AccentColor}" />
+                                <Label
+                                    Text="{Binding CurrentTrackDisplayName}"
+                                    FontFamily="InterSemiBold"
+                                    FontSize="14"
+                                    LineBreakMode="TailTruncation"
+                                    TextColor="#F6F6FB" />
+                                <Label
+                                    Text="{Binding CurrentTrackArtist}"
+                                    FontFamily="Inter"
+                                    FontSize="12"
+                                    LineBreakMode="TailTruncation"
+                                    TextColor="#A7A7BA" />
+                            </VerticalStackLayout>
+
+                            <Label
+                                Grid.Column="2"
+                                Text="&#xe1b8;"
+                                FontFamily="MaterialIcons"
+                                FontSize="22"
+                                VerticalOptions="Center"
+                                TextColor="{DynamicResource AccentColor}" />
+                        </Grid>
+                    </Border>
+
+                    <CollectionView
+                        Grid.Row="4"
+                        x:Name="QueueList"
+                        ItemsSource="{Binding QueueSections}"
+                        IsGrouped="True"
+                        SelectionMode="None"
+                        VerticalScrollBarVisibility="Never"
+                        ItemSizingStrategy="MeasureAllItems">
+                        <CollectionView.EmptyView>
+                            <VerticalStackLayout Padding="20,36" Spacing="8" HorizontalOptions="Center" VerticalOptions="Center">
+                                <Label
+                                    Text="&#xe03d;"
+                                    FontFamily="MaterialIcons"
+                                    FontSize="30"
+                                    TextColor="#55556A"
+                                    HorizontalOptions="Center" />
+                                <Label
+                                    Text="Nothing else in this session yet"
+                                    FontFamily="Inter"
+                                    FontSize="12"
+                                    TextColor="#8C8CA3"
+                                    HorizontalOptions="Center" />
+                            </VerticalStackLayout>
+                        </CollectionView.EmptyView>
+                        <CollectionView.Footer>
+                            <!-- Keeps the last row clear of the gesture navigation strip. -->
+                            <BoxView HeightRequest="26" Color="Transparent" />
+                        </CollectionView.Footer>
+
+                        <CollectionView.GroupHeaderTemplate>
+                            <DataTemplate x:DataType="viewmodels:QueueSection">
+                                <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8" Padding="2,14,2,5">
+                                    <Label
+                                        Text="{Binding Title}"
+                                        FontFamily="InterSemiBold"
+                                        FontSize="10.5"
+                                        CharacterSpacing="1.4"
+                                        TextColor="#8C8CA3"
+                                        VerticalOptions="Center" />
+                                    <Label
+                                        Grid.Column="1"
+                                        Text="{Binding CountLabel}"
+                                        FontFamily="Inter"
+                                        FontSize="10"
+                                        TextColor="#6E6E84"
+                                        VerticalOptions="Center" />
+                                </Grid>
+                            </DataTemplate>
+                        </CollectionView.GroupHeaderTemplate>
+
+                        <CollectionView.ItemTemplate>
+                            <DataTemplate x:DataType="viewmodels:QueueRow">
+                                <Grid ColumnDefinitions="Auto,*,Auto,Auto" ColumnSpacing="12" HeightRequest="64" Padding="2,0">
+                                    <Grid.GestureRecognizers>
+                                        <TapGestureRecognizer Tapped="OnQueueRowTapped" />
+                                    </Grid.GestureRecognizers>
+
+                                    <Border
+                                        Grid.Column="0"
+                                        WidthRequest="44"
+                                        HeightRequest="44"
+                                        StrokeThickness="0"
+                                        StrokeShape="RoundRectangle 12"
+                                        Background="{StaticResource ArtworkPlaceholderGradient}"
+                                        VerticalOptions="Center">
+                                        <Grid>
+                                            <Label
+                                                Text="&#xe405;"
+                                                FontFamily="MaterialIcons"
+                                                FontSize="17"
+                                                TextColor="{DynamicResource AccentColor}"
+                                                HorizontalOptions="Center"
+                                                VerticalOptions="Center" />
+                                            <Image
+                                                Source="{Binding Track.ListArtworkPath, Converter={StaticResource ArtworkToImageSourceConverter}}"
+                                                Aspect="AspectFill" />
+                                        </Grid>
+                                    </Border>
+
+                                    <VerticalStackLayout Grid.Column="1" VerticalOptions="Center" Spacing="0">
+                                        <Label
+                                            Text="{Binding Track.Name}"
+                                            FontFamily="InterSemiBold"
+                                            FontSize="13"
+                                            LineBreakMode="TailTruncation"
+                                            TextColor="#F6F6FB" />
+                                        <Label
+                                            Text="{Binding Track.ArtistName}"
+                                            FontFamily="Inter"
+                                            FontSize="11"
+                                            LineBreakMode="TailTruncation"
+                                            TextColor="#8C8CA3" />
+                                    </VerticalStackLayout>
+
+                                    <!-- Played rows get a check mark; upcoming rows show the runtime. -->
+                                    <Label
+                                        Grid.Column="2"
+                                        Text="&#xe5ca;"
+                                        FontFamily="MaterialIcons"
+                                        FontSize="15"
+                                        VerticalOptions="Center"
+                                        IsVisible="{Binding IsPlayed}"
+                                        TextColor="{DynamicResource AccentColor}" />
+
+                                    <Label
+                                        Grid.Column="2"
+                                        Text="{Binding Track.Duration, Converter={StaticResource TimeSpanToStringConverter}}"
+                                        FontFamily="Inter"
+                                        FontSize="11"
+                                        TextColor="#6E6E84"
+                                        VerticalOptions="Center"
+                                        IsVisible="{Binding IsUpNext}" />
+
+                                    <Button
+                                        Grid.Column="3"
+                                        Text="&#xe5cd;"
+                                        FontFamily="MaterialIcons"
+                                        FontSize="18"
+                                        WidthRequest="34"
+                                        HeightRequest="34"
+                                        MinimumWidthRequest="34"
+                                        MinimumHeightRequest="34"
+                                        Padding="0"
+                                        CornerRadius="17"
+                                        BackgroundColor="Transparent"
+                                        TextColor="#6E6E84"
+                                        CommandParameter="{Binding Track}"
+                                        Clicked="OnRemoveQueueItemClicked"
+                                        SemanticProperties.Description="Remove from queue" />
+
+                                    <Grid.Triggers>
+                                        <DataTrigger TargetType="Grid" Binding="{Binding IsPlayed}" Value="True">
+                                            <Setter Property="Opacity" Value="0.62" />
+                                        </DataTrigger>
+                                    </Grid.Triggers>
+                                </Grid>
+                            </DataTemplate>
+                        </CollectionView.ItemTemplate>
+                    </CollectionView>
+                </Grid>
+            </Border>
+        </Grid>
     </Grid>
 </ContentPage>

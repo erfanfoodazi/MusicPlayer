@@ -18,8 +18,10 @@ public partial class NowPlayingViewModel : BaseViewModel
     [NotifyPropertyChangedFor(nameof(CurrentTrackDisplayName))]
     [NotifyPropertyChangedFor(nameof(CurrentTrackArtist))]
     [NotifyPropertyChangedFor(nameof(CurrentAlbumTitle))]
+    [NotifyPropertyChangedFor(nameof(CurrentMetaLine))]
     [NotifyPropertyChangedFor(nameof(HasAlbum))]
     [NotifyPropertyChangedFor(nameof(ArtworkSource))]
+    [NotifyPropertyChangedFor(nameof(QueueCountText))]
     private Music? _currentTrack;
 
     [ObservableProperty]
@@ -65,6 +67,12 @@ public partial class NowPlayingViewModel : BaseViewModel
 
     public bool HasQueueItems => QueueSections.Count > 0;
 
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasNextTrack))]
+    private Music? _nextTrack;
+
+    public bool HasNextTrack => NextTrack is not null;
+
     public bool HasCurrentTrack => CurrentTrack is not null;
 
     public string CurrentTrackDisplayName => CurrentTrack?.Name ?? "Nothing playing";
@@ -72,6 +80,34 @@ public partial class NowPlayingViewModel : BaseViewModel
     public string CurrentTrackArtist => CurrentTrack?.ArtistName ?? "Choose a song from your library";
 
     public string CurrentAlbumTitle => CurrentTrack?.Album?.Title ?? string.Empty;
+
+    /// <summary>Artist · album · year, the single meta line under the player title.</summary>
+    public string CurrentMetaLine
+    {
+        get
+        {
+            if (CurrentTrack is not { } track)
+            {
+                return string.Empty;
+            }
+
+            var parts = new List<string>(3) { track.ArtistName };
+
+            if (!string.IsNullOrWhiteSpace(track.Album?.Title))
+            {
+                parts.Add(track.Album!.Title);
+            }
+
+            if (track.Year is > 0)
+            {
+                // Some files store a full date (20260327) instead of the year.
+                var year = track.Year.Value;
+                parts.Add(year > 9999 ? (year / 10000).ToString() : year.ToString());
+            }
+
+            return string.Join("  ·  ", parts);
+        }
+    }
 
     public bool HasAlbum => !string.IsNullOrWhiteSpace(CurrentAlbumTitle);
 
@@ -112,23 +148,21 @@ public partial class NowPlayingViewModel : BaseViewModel
         {
             var played = QueueSections.FirstOrDefault(section => section.IsPlayed)?.Count ?? 0;
             var upNext = QueueSections.FirstOrDefault(section => !section.IsPlayed)?.Count ?? 0;
+            var total = played + upNext + (HasCurrentTrack ? 1 : 0);
 
-            if (played == 0 && upNext == 0)
+            if (total == 0)
             {
                 return "Nothing in the queue";
             }
 
-            if (played == 0)
+            if (total == 1)
             {
-                return upNext == 1 ? "1 song up next" : $"{upNext} songs up next";
+                return "1 song in queue";
             }
 
-            if (upNext == 0)
-            {
-                return played == 1 ? "1 played song" : $"{played} played songs";
-            }
-
-            return $"{played} played · {upNext} up next";
+            return played > 0
+                ? $"{total} songs in session · {played} played"
+                : $"{total} songs in queue";
         }
     }
 
@@ -287,6 +321,7 @@ public partial class NowPlayingViewModel : BaseViewModel
         }
 
         QueueSections = sections;
+        NextTrack = upNext.FirstOrDefault();
         OnPropertyChanged(nameof(QueueCountText));
     }
 

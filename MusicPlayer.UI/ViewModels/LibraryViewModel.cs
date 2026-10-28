@@ -29,6 +29,7 @@ public partial class LibraryViewModel : BaseViewModel, IPlayTrackContext
     private readonly IArtworkThumbnailer _artworkThumbnailer;
     private CancellationTokenSource? _scanCts;
     private CancellationTokenSource? _filterDebounceCts;
+    private CancellationTokenSource? _recentsSaveCts;
     private bool _artworkUpgradeStarted;
     private bool _refreshRunning;
     private int _lastTrackCount = -1;
@@ -54,6 +55,18 @@ public partial class LibraryViewModel : BaseViewModel, IPlayTrackContext
 
     [ObservableProperty]
     private ObservableCollection<PlaylistRow> _playlistRows = [];
+
+    [ObservableProperty]
+    private ObservableCollection<Music> _recentlyPlayed = [];
+
+    [ObservableProperty]
+    private ObservableCollection<Music> _recentlyAdded = [];
+
+    [ObservableProperty]
+    private bool _showRecentlyPlayed;
+
+    [ObservableProperty]
+    private bool _showRecentlyAdded;
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(HasSearchText))]
@@ -118,6 +131,7 @@ public partial class LibraryViewModel : BaseViewModel, IPlayTrackContext
             "album" => "Album",
             "year" => "Year",
             "duration" => "Duration",
+            "modified" => "Modified",
             "recent" => "Recent",
             _ => "Title"
         },
@@ -171,7 +185,66 @@ public partial class LibraryViewModel : BaseViewModel, IPlayTrackContext
         _playlistSort = Preferences.Default.Get(PlaylistSortKey, "name");
 
         _library.LibraryChanged += OnLibraryChanged;
+        _playerService.PropertyChanged += OnPlayerPropertyChanged;
         SyncFromLibrary();
+    }
+
+    /// <summary>
+    /// The player stamps LastPlayedAt as a track starts. Refresh the shelf in place and save
+    /// the snapshot a few seconds later so short skips only cost one write.
+    /// </summary>
+    private void OnPlayerPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName != nameof(PlayerService.CurrentTrack))
+        {
+            return;
+        }
+
+        if (MainThread.IsMainThread)
+        {
+            HandleTrackStarted();
+        }
+        else
+        {
+            MainThread.BeginInvokeOnMainThread(HandleTrackStarted);
+        }
+    }
+
+    private void HandleTrackStarted()
+    {
+        UpdateRecents(showShelves: !HasSearchText);
+        ScheduleRecentsSave();
+    }
+
+    private void ScheduleRecentsSave()
+    {
+        _recentsSaveCts?.Cancel();
+        _recentsSaveCts?.Dispose();
+        _recentsSaveCts = new CancellationTokenSource();
+        _ = SaveRecentsAsync(_recentsSaveCts.Token);
+    }
+
+    private async Task SaveRecentsAsync(CancellationToken token)
+    {
+        try
+        {
+            await Task.Delay(3000, token);
+
+            if (IsBusy)
+            {
+                // A running scan persists its own snapshot when it finishes.
+                return;
+            }
+
+            await _snapshotStore.SaveAsync(_library.CreateSnapshot());
+        }
+        catch (OperationCanceledException)
+        {
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            // A missed save only costs the shelf until the next play.
+        }
     }
 
     private void OnLibraryChanged(object? sender, EventArgs e)
@@ -211,8 +284,6 @@ public partial class LibraryViewModel : BaseViewModel, IPlayTrackContext
             {
                 Preferences.Default.Set(LastFolderPreferenceKey, snapshot.FolderPath);
             }
-
-            StatusMessage = $"{snapshot.Tracks.Count} tracks loaded.";
 
             // Snapshots created before small thumbnails existed still point every list row
             // at a 512 px cover. Generate the tiny copies in the background and persist them;
@@ -410,7 +481,7 @@ public partial class LibraryViewModel : BaseViewModel, IPlayTrackContext
             SyncFromLibrary();
             StatusMessage = _library.Tracks.Count == 0
                 ? "No tracks loaded. Tap Rescan to choose a folder."
-                : "Library is up to date. Tap Rescan to look for new files.";
+                : string.Empty;
 
             // A short hold gives the pull gesture a visible response, then the spinner closes
             // even if the user keeps dragging.
@@ -486,7 +557,6 @@ public partial class LibraryViewModel : BaseViewModel, IPlayTrackContext
             });
 
             var sourcePath = folder;
-            var sourceLabel = Path.GetFileName(folder);
             var allFiles = new List<string>();
 
             // Android's media index is the one place that reliably sees Music, Download,
@@ -505,7 +575,6 @@ public partial class LibraryViewModel : BaseViewModel, IPlayTrackContext
                 if (discoveredFiles.Count > 0)
                 {
                     sourcePath = _fileDiscovery.SourcePath;
-                    sourceLabel = _fileDiscovery.SourceLabel;
                     allFiles.AddRange(discoveredFiles);
                 }
             }
@@ -540,9 +609,11 @@ public partial class LibraryViewModel : BaseViewModel, IPlayTrackContext
             }
             else
             {
+                // The header already shows the song count, so only unreadable files need a
+                // line of their own after a successful scan.
                 StatusMessage = result.Errors.Count == 0
-                    ? $"{result.Tracks.Count} tracks loaded from {sourceLabel}."
-                    : $"{result.Tracks.Count} tracks loaded from {sourceLabel}, {result.Errors.Count} file(s) could not be read.";
+                    ? string.Empty
+                    : $"{result.Errors.Count} file(s) could not be read.";
             }
         }
         catch (OperationCanceledException)
@@ -571,7 +642,7 @@ public partial class LibraryViewModel : BaseViewModel, IPlayTrackContext
         var trackCount = _library.Tracks.Count;
         if (!IsBusy && _lastTrackCount >= 0 && trackCount != _lastTrackCount && HasStatus)
         {
-            StatusMessage = trackCount == 0 ? "No tracks loaded." : $"{trackCount} tracks loaded.";
+            StatusMessage = trackCount == 0 ? "No tracks loaded." : string.Empty;
         }
 
         _lastTrackCount = trackCount;
@@ -659,6 +730,35 @@ public partial class LibraryViewModel : BaseViewModel, IPlayTrackContext
                 }));
         VisibleTrackCount = Tracks.Count;
         OnPropertyChanged(nameof(TabCountText));
+
+        UpdateRecents(showShelves: string.IsNullOrEmpty(query));
+    }
+
+    /// <summary>
+    /// Home shelves above the full track list. They are hidden while the user searches so the
+    /// filtered rows stay the only thing on screen.
+    /// </summary>
+    private void UpdateRecents(bool showShelves)
+    {
+        List<Music> played = showShelves
+            ? _library.Tracks
+                .Where(track => track.LastPlayedAt.HasValue)
+                .OrderByDescending(track => track.LastPlayedAt)
+                .Take(10)
+                .ToList()
+            : [];
+
+        List<Music> added = showShelves
+            ? _library.Tracks
+                .OrderByDescending(track => track.DateAdded)
+                .Take(10)
+                .ToList()
+            : [];
+
+        RecentlyPlayed = new ObservableCollection<Music>(played);
+        RecentlyAdded = new ObservableCollection<Music>(added);
+        ShowRecentlyPlayed = played.Count > 0;
+        ShowRecentlyAdded = added.Count > 0;
     }
 
     private IEnumerable<Music> SortTracks(IEnumerable<Music> tracks) => _trackSort switch
@@ -681,6 +781,9 @@ public partial class LibraryViewModel : BaseViewModel, IPlayTrackContext
             .ThenBy(t => t.TrackNumber ?? 0),
         "duration" => tracks
             .OrderByDescending(t => t.Duration)
+            .ThenBy(t => t.Name, StringComparer.OrdinalIgnoreCase),
+        "modified" => tracks
+            .OrderByDescending(t => t.DateModified ?? t.DateAdded)
             .ThenBy(t => t.Name, StringComparer.OrdinalIgnoreCase),
         "recent" => tracks
             .OrderByDescending(t => t.DateAdded)
@@ -838,6 +941,7 @@ public partial class LibraryViewModel : BaseViewModel, IPlayTrackContext
                     ("album", "Album"),
                     ("year", "Year"),
                     ("duration", "Duration"),
+                    ("modified", "Date modified"),
                     ("recent", "Recently added")
                 },
                 _trackSort),

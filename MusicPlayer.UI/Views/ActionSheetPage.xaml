@@ -21,9 +21,10 @@
             x:Name="Sheet"
             Grid.Row="1"
             MaximumHeightRequest="560"
-            StrokeThickness="0"
+            StrokeThickness="1"
+            Stroke="{AppThemeBinding Light={StaticResource GlassStrokeLight}, Dark={StaticResource GlassStrokeDark}}"
             StrokeShape="RoundRectangle 28"
-            BackgroundColor="{AppThemeBinding Light={StaticResource SurfaceLight}, Dark={StaticResource SurfaceDark}}">
+            Background="{AppThemeBinding Light={StaticResource GlassFillStrongLight}, Dark={StaticResource GlassFillStrongDark}}">
             <Border.Shadow>
                 <Shadow Brush="#000000" Offset="0,-8" Radius="24" Opacity="0.45" />
             </Border.Shadow>

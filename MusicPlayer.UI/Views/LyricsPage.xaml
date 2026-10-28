@@ -105,9 +105,9 @@
                     Grid.Column="0"
                     IsVisible="{Binding HasSyncedLyrics}"
                     StrokeThickness="1"
-                    Stroke="{AppThemeBinding Light={StaticResource OutlineLight}, Dark={StaticResource OutlineDark}}"
+                    Stroke="{AppThemeBinding Light={StaticResource GlassStrokeLight}, Dark={StaticResource GlassStrokeDark}}"
                     StrokeShape="RoundRectangle 16"
-                    BackgroundColor="{AppThemeBinding Light={StaticResource SurfaceLight}, Dark={StaticResource SurfaceDark}}"
+                    Background="{AppThemeBinding Light={StaticResource GlassFillLight}, Dark={StaticResource GlassFillDark}}"
                     Padding="12,7">
                     <Border.GestureRecognizers>
                         <TapGestureRecognizer Command="{Binding ToggleModeCommand}" />
@@ -198,44 +198,46 @@
                             <Grid.GestureRecognizers>
                                 <TapGestureRecognizer Tapped="OnLyricLineTapped" />
                             </Grid.GestureRecognizers>
-                            <Border
-                                Padding="18,10"
-                                HorizontalOptions="Center"
-                                MaximumWidthRequest="620"
-                                StrokeThickness="0"
-                                StrokeShape="RoundRectangle 18"
-                                BackgroundColor="Transparent"
-                                behaviors:LyricHighlightAnimation.IsActive="{Binding IsActive}">
-                                <VerticalStackLayout Spacing="2" HorizontalOptions="Center">
-                                    <Label
-                                        Text="{Binding Text}"
-                                        IsVisible="{Binding ShowPlainText}"
-                                        FontFamily="InterMedium"
-                                        FontSize="19"
-                                        HorizontalTextAlignment="Center"
-                                        LineBreakMode="WordWrap"
-                                        behaviors:LyricTextColorAnimation.IsActive="{Binding IsActive}"
-                                        TextColor="{AppThemeBinding Light={StaticResource MutedOnLight}, Dark={StaticResource MutedOnDark}}" />
+                            <VerticalStackLayout Spacing="2" HorizontalOptions="Fill">
+                                <Label
+                                    Text="{Binding Text}"
+                                    IsVisible="{Binding ShowPlainText}"
+                                    FontFamily="InterMedium"
+                                    FontSize="19"
+                                    HorizontalTextAlignment="Center"
+                                    LineBreakMode="WordWrap"
+                                    TextColor="{AppThemeBinding Light={StaticResource MutedOnLight}, Dark={StaticResource MutedOnDark}}">
+                                    <Label.Triggers>
+                                        <DataTrigger TargetType="Label" Binding="{Binding IsActive}" Value="True">
+                                            <Setter Property="FontFamily" Value="InterBold" />
+                                            <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource TextOnLight}, Dark={StaticResource TextOnDark}}" />
+                                        </DataTrigger>
+                                    </Label.Triggers>
+                                </Label>
 
-                                    <FlexLayout
-                                        Wrap="Wrap"
-                                        JustifyContent="Center"
-                                        IsVisible="{Binding HasWords}"
-                                        BindableLayout.ItemsSource="{Binding Words}">
-                                        <BindableLayout.ItemTemplate>
-                                            <DataTemplate x:DataType="viewmodels:LyricsWordViewModel">
-                                                <Label
-                                                    Text="{Binding Text}"
-                                                    FontFamily="InterMedium"
-                                                    FontSize="19"
-                                                    Margin="0,0,6,0"
-                                                    behaviors:LyricTextColorAnimation.IsActive="{Binding IsActive}"
-                                                    TextColor="{AppThemeBinding Light={StaticResource MutedOnLight}, Dark={StaticResource MutedOnDark}}" />
-                                            </DataTemplate>
-                                        </BindableLayout.ItemTemplate>
-                                    </FlexLayout>
-                                </VerticalStackLayout>
-                            </Border>
+                                <FlexLayout
+                                    Wrap="Wrap"
+                                    JustifyContent="Center"
+                                    IsVisible="{Binding HasWords}"
+                                    BindableLayout.ItemsSource="{Binding Words}">
+                                    <BindableLayout.ItemTemplate>
+                                        <DataTemplate x:DataType="viewmodels:LyricsWordViewModel">
+                                            <Label
+                                                Text="{Binding Text}"
+                                                FontFamily="InterSemiBold"
+                                                FontSize="19"
+                                                Margin="0,0,6,0"
+                                                TextColor="{AppThemeBinding Light={StaticResource MutedOnLight}, Dark={StaticResource MutedOnDark}}">
+                                                <Label.Triggers>
+                                                    <DataTrigger TargetType="Label" Binding="{Binding IsActive}" Value="True">
+                                                        <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource TextOnLight}, Dark={StaticResource TextOnDark}}" />
+                                                    </DataTrigger>
+                                                </Label.Triggers>
+                                            </Label>
+                                        </DataTemplate>
+                                    </BindableLayout.ItemTemplate>
+                                </FlexLayout>
+                            </VerticalStackLayout>
                         </Grid>
                     </DataTemplate>
                 </CollectionView.ItemTemplate>
@@ -337,8 +339,9 @@
             <Border
                 VerticalOptions="End"
                 MaximumHeightRequest="600"
-                BackgroundColor="{AppThemeBinding Light={StaticResource SurfaceLight}, Dark={StaticResource SurfaceDark}}"
-                StrokeThickness="0"
+                Background="{AppThemeBinding Light={StaticResource GlassFillStrongLight}, Dark={StaticResource GlassFillStrongDark}}"
+                StrokeThickness="1"
+                Stroke="{AppThemeBinding Light={StaticResource GlassStrokeLight}, Dark={StaticResource GlassStrokeDark}}"
                 StrokeShape="RoundRectangle 28,28,0,0"
                 Padding="18,10,18,16">
                 <Border.Shadow>

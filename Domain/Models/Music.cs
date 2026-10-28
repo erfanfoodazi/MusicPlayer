@@ -39,6 +39,10 @@ public class Music
 
     // Library information
     public DateTime DateAdded { get; set; } = DateTime.UtcNow;
+
+    /// <summary>File system last-write time (UTC); null when the file could not be read.</summary>
+    public DateTime? DateModified { get; set; }
+
     public DateTime? LastPlayedAt { get; set; }
 
     // Derived display helpers (read-only) used by list UI such as TrackItem.

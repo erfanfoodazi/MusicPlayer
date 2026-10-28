@@ -25,6 +25,9 @@ public partial class PlayerService : ObservableObject
     private readonly Queue<Music> _playQueue = [];
     private readonly Stack<Music> _history = [];
     private Music? _currentTrack;
+    private Music? _gaplessNextTrack;
+    private Music? _gaplessArmedBefore;
+    private bool _engineReady;
     private IDispatcherTimer? _positionTimer;
     private CancellationTokenSource? _loadCancellation;
     private System.Threading.Timer? _sleepTimer;
@@ -32,6 +35,10 @@ public partial class PlayerService : ObservableObject
     private bool _sleepAtEndOfTrack;
     private int _queueCycleLength;
     private int _tracksPlayedInCycle;
+
+    // Set when Android took audio focus, so a transient loss can be resumed afterwards
+    // without overriding a pause the user asked for.
+    private bool _pausedByAudioFocus;
 
     // After a manual seek the decoder keeps reporting the old position for a moment. Ignoring
     // the engine clock briefly keeps the seek lines from snapping back to where they were.
@@ -180,8 +187,11 @@ public partial class PlayerService : ObservableObject
 #endif
 
         _audioPlayer.PlaybackEnded += OnAudioPlayerPlaybackEnded;
+        _audioPlayer.GaplessTrackStarted += OnAudioPlayerGaplessTrackStarted;
         _audioPlayer.Failed += OnAudioPlayerFailed;
         _audioPlayer.AudioDeviceDisconnected += OnAudioDeviceDisconnected;
+        _audioPlayer.AudioFocusLost += OnAudioFocusLost;
+        _audioPlayer.AudioFocusGained += OnAudioFocusGained;
         _audioPlayer.SetVolume(Volume);
 
         TogglePlayPauseCommand = new RelayCommand(TogglePlayPause);
@@ -575,6 +585,7 @@ public partial class PlayerService : ObservableObject
     {
         if (State != PlaybackState.Playing) return;
 
+        _pausedByAudioFocus = false;
         State = PlaybackState.Paused;
         _ = SafeEngineCallAsync(() => _audioPlayer.PauseAsync());
     }
@@ -600,6 +611,10 @@ public partial class PlayerService : ObservableObject
     public void Stop()
     {
         _loadCancellation?.Cancel();
+        _pausedByAudioFocus = false;
+        _engineReady = false;
+        _gaplessNextTrack = null;
+        _gaplessArmedBefore = null;
         State = PlaybackState.Stopped;
         Position = 0;
         _ = SafeEngineCallAsync(() => _audioPlayer.StopAsync());
@@ -677,12 +692,14 @@ public partial class PlayerService : ObservableObject
         {
             _sleepAtEndOfTrack = true;
             SleepTimerDisplay = "End of track";
+            ArmGaplessNext();
             return;
         }
 
         if (duration is null || duration <= TimeSpan.Zero)
         {
             SleepTimerDisplay = "Off";
+            ArmGaplessNext();
             return;
         }
 
@@ -694,6 +711,7 @@ public partial class PlayerService : ObservableObject
             Timeout.InfiniteTimeSpan);
 
         UpdateSleepTimerDisplay();
+        ArmGaplessNext();
     }
 
     private void OnSleepTimerElapsed()
@@ -755,6 +773,11 @@ public partial class PlayerService : ObservableObject
 
     private async Task LoadTrackAsync(Music track, bool autoPlay, bool addToHistory)
     {
+        _pausedByAudioFocus = false;
+        _engineReady = false;
+        _gaplessNextTrack = null;
+        _gaplessArmedBefore = null;
+
         if (addToHistory && CurrentTrack is not null && !ReferenceEquals(CurrentTrack, track))
         {
             _history.Push(CurrentTrack);
@@ -769,6 +792,10 @@ public partial class PlayerService : ObservableObject
         previousCancellation?.Cancel();
 
         CurrentTrack = track;
+
+        // Drives the "Recently played" shelf; the snapshot persists it on the next save.
+        track.LastPlayedAt = DateTime.UtcNow;
+
         State = PlaybackState.Buffering;
         PlaybackError = null;
         Position = 0;
@@ -804,6 +831,16 @@ public partial class PlayerService : ObservableObject
             }
 
             State = autoPlay ? PlaybackState.Playing : PlaybackState.Paused;
+
+            // Focus can be refused while the decoder is still preparing (a call is active),
+            // in which case the engine stayed silent even though autoPlay was requested.
+            if (autoPlay && _pausedByAudioFocus)
+            {
+                State = PlaybackState.Paused;
+            }
+
+            _engineReady = true;
+            ArmGaplessNext();
         }
         catch (OperationCanceledException)
         {
@@ -811,6 +848,7 @@ public partial class PlayerService : ObservableObject
         }
         catch (Exception ex)
         {
+            _engineReady = false;
             HandleAudioFailure(ex);
         }
         finally
@@ -843,6 +881,9 @@ public partial class PlayerService : ObservableObject
     private void HandleAudioFailure(Exception exception)
     {
         System.Diagnostics.Debug.WriteLine(exception);
+
+        _engineReady = false;
+        _gaplessNextTrack = null;
 
         PlaybackError = CurrentTrack is null
             ? "Playback failed."
@@ -879,6 +920,50 @@ public partial class PlayerService : ObservableObject
                 case PlaybackState.Buffering:
                     Stop();
                     break;
+            }
+        });
+    }
+
+    /// <summary>
+    /// Another app took audio focus: a phone call, the assistant, or a video in another app.
+    /// The engine has already paused; mirror that here so the UI and notification agree.
+    /// </summary>
+    private void OnAudioFocusLost(object? sender, EventArgs e)
+    {
+        MainThread.BeginInvokeOnMainThread(() =>
+        {
+            switch (State)
+            {
+                case PlaybackState.Playing:
+                    _pausedByAudioFocus = true;
+                    State = PlaybackState.Paused;
+                    break;
+                case PlaybackState.Buffering:
+                    // LoadTrackAsync honours this flag when it finishes opening the file.
+                    _pausedByAudioFocus = true;
+                    break;
+            }
+        });
+    }
+
+    /// <summary>
+    /// A transient focus loss ended (the call or clip finished). The engine restarted the
+    /// same track, so only the service/UI state has to catch up.
+    /// </summary>
+    private void OnAudioFocusGained(object? sender, EventArgs e)
+    {
+        MainThread.BeginInvokeOnMainThread(() =>
+        {
+            if (!_pausedByAudioFocus)
+            {
+                return;
+            }
+
+            _pausedByAudioFocus = false;
+
+            if (CurrentTrack is not null && State == PlaybackState.Paused)
+            {
+                State = PlaybackState.Playing;
             }
         });
     }
@@ -932,6 +1017,150 @@ public partial class PlayerService : ObservableObject
 
         PlayNext();
     }
+
+    // ------------------------------------------------------------- gapless queue
+
+    /// <summary>
+    /// Queues the track that will follow the current one at the end of the file. The engine
+    /// starts it itself, so the decoder never restarts between songs that run into each
+    /// other (live albums, DJ sets, medleys).
+    /// </summary>
+    private void ArmGaplessNext()
+    {
+        if (CurrentTrack is null || !_engineReady)
+        {
+            _gaplessNextTrack = null;
+            _gaplessArmedBefore = null;
+            _audioPlayer.SetNextTrack(null);
+            return;
+        }
+
+        var next = GetGaplessNextTrack();
+
+        if (!ReferenceEquals(_gaplessNextTrack, next))
+        {
+            _gaplessArmedBefore = _gaplessNextTrack;
+        }
+
+        _gaplessNextTrack = next;
+        _audioPlayer.SetNextTrack(next?.FilePath);
+    }
+
+    /// <summary>
+    /// The track the end-of-track logic would play next, or null when that logic has to run
+    /// instead (repeat one, sleep at end of track, end of a non-looping queue).
+    /// </summary>
+    private Music? GetGaplessNextTrack()
+    {
+        if (CurrentTrack is null || _playQueue.Count == 0)
+        {
+            return null;
+        }
+
+        if (RepeatMode == RepeatMode.One || _sleepAtEndOfTrack)
+        {
+            return null;
+        }
+
+        if (RepeatMode == RepeatMode.Off &&
+            _queueCycleLength > 0 &&
+            _tracksPlayedInCycle >= _queueCycleLength)
+        {
+            return null;
+        }
+
+        var next = _playQueue.Peek();
+        return IsSameTrack(next, CurrentTrack) ? null : next;
+    }
+
+    private void OnAudioPlayerGaplessTrackStarted(object? sender, GaplessTransitionEventArgs e)
+    {
+        var filePath = e.FilePath;
+        MainThread.BeginInvokeOnMainThread(() => HandleGaplessTrackStarted(filePath));
+    }
+
+    /// <summary>
+    /// Mirrors <see cref="PlayNext()"/> after the engine has already crossed into the next
+    /// file: queue rotation, history and UI all catch up while the audio keeps playing.
+    /// </summary>
+    private void HandleGaplessTrackStarted(string filePath)
+    {
+        var next = ResolveGaplessTrack(filePath);
+        var previous = CurrentTrack;
+
+        if (next is null || previous is null)
+        {
+            ArmGaplessNext();
+            return;
+        }
+
+        _gaplessNextTrack = null;
+        _gaplessArmedBefore = null;
+
+        if (_playQueue.Count > 0 && IsSameTrack(_playQueue.Peek(), next))
+        {
+            _playQueue.Dequeue();
+            _playQueue.Enqueue(next);
+
+            if (_queueCycleLength > 0)
+            {
+                _tracksPlayedInCycle++;
+            }
+        }
+
+        _history.Push(previous);
+        OnPropertyChanged(nameof(PlayHistory));
+
+        CurrentTrack = next;
+        next.LastPlayedAt = DateTime.UtcNow;
+        _pausedByAudioFocus = false;
+        PlaybackError = null;
+        Position = 0;
+        _positionTrustedFrom = DateTime.MinValue;
+
+        var reportedDuration = _audioPlayer.DurationSeconds;
+        Duration = reportedDuration > 0
+            ? reportedDuration
+            : Math.Max(0, next.Duration.TotalSeconds);
+
+        // A pause that raced with the crossover must win over the engine's state.
+        if (State != PlaybackState.Paused)
+        {
+            State = PlaybackState.Playing;
+        }
+
+        TrackChanged?.Invoke(next);
+        OnQueueChanged();
+    }
+
+    /// <summary>
+    /// The engine reports the file it crossed into. The armed slot normally matches, but a
+    /// queue edit made during the crossover can already have replaced it, so the previous
+    /// arming and the queue itself are checked as well.
+    /// </summary>
+    private Music? ResolveGaplessTrack(string filePath)
+    {
+        if (string.IsNullOrWhiteSpace(filePath))
+        {
+            return _gaplessNextTrack;
+        }
+
+        if (MatchesPath(_gaplessNextTrack, filePath))
+        {
+            return _gaplessNextTrack;
+        }
+
+        if (MatchesPath(_gaplessArmedBefore, filePath))
+        {
+            return _gaplessArmedBefore;
+        }
+
+        return _playQueue.FirstOrDefault(track => MatchesPath(track, filePath));
+    }
+
+    private static bool MatchesPath(Music? track, string filePath) =>
+        track is not null &&
+        string.Equals(track.FilePath, filePath, StringComparison.OrdinalIgnoreCase);
 
     private void StartPositionTimer()
     {
@@ -1004,6 +1233,7 @@ public partial class PlayerService : ObservableObject
         OnPropertyChanged(nameof(PlayQueue));
         OnPropertyChanged(nameof(PlayHistory));
         QueueChanged?.Invoke();
+        ArmGaplessNext();
     }
 
     partial void OnPlaybackErrorChanged(string? value)
@@ -1080,6 +1310,7 @@ public partial class PlayerService : ObservableObject
     partial void OnRepeatModeChanged(RepeatMode value)
     {
         OnPropertyChanged(nameof(RepeatGlyph));
+        ArmGaplessNext();
     }
 }
 

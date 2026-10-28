@@ -20,6 +20,25 @@ public partial class TrackItem : Grid
             false,
             propertyChanged: OnShowTrackNumberChanged);
 
+    /// <summary>
+    /// Playlist rows can be long-pressed and dragged. The gestures live on the row itself
+    /// because its tap recognizer consumes touches before a wrapping container sees them.
+    /// </summary>
+    public static readonly BindableProperty IsReorderableProperty =
+        BindableProperty.Create(
+            nameof(IsReorderable),
+            typeof(bool),
+            typeof(TrackItem),
+            false,
+            propertyChanged: OnIsReorderableChanged);
+
+    public event EventHandler<DragStartingEventArgs>? RowDragStarting;
+    public event EventHandler<DropCompletedEventArgs>? RowDragCompleted;
+    public event EventHandler<DropEventArgs>? RowDrop;
+
+    private readonly DragGestureRecognizer _drag;
+    private readonly DropGestureRecognizer _drop;
+
     private readonly PlayerService _playerService = PlayerService.Instance;
     private bool _subscribed;
 
@@ -35,19 +54,49 @@ public partial class TrackItem : Grid
         set => SetValue(ShowTrackNumberProperty, value);
     }
 
+    public bool IsReorderable
+    {
+        get => (bool)GetValue(IsReorderableProperty);
+        set => SetValue(IsReorderableProperty, value);
+    }
+
     public TrackItem()
     {
         InitializeComponent();
+
+        _drag = new DragGestureRecognizer { CanDrag = false };
+        _drag.DragStarting += (_, e) => RowDragStarting?.Invoke(this, e);
+        _drag.DropCompleted += (_, e) => RowDragCompleted?.Invoke(this, e);
+
+        _drop = new DropGestureRecognizer { AllowDrop = false };
+        _drop.Drop += (_, e) => RowDrop?.Invoke(this, e);
+
+        GestureRecognizers.Add(_drag);
+        GestureRecognizers.Add(_drop);
+
         UpdateTrackNumberVisibility();
         Loaded += OnLoaded;
         Unloaded += OnUnloaded;
+    }
+
+    private static void OnIsReorderableChanged(BindableObject bindable, object oldValue, object newValue)
+    {
+        if (bindable is TrackItem item)
+        {
+            var enabled = (bool)newValue;
+            item._drag.CanDrag = enabled;
+            item._drop.AllowDrop = enabled;
+        }
     }
 
     private static void OnTrackChanged(BindableObject bindable, object oldValue, object newValue)
     {
         if (bindable is TrackItem item)
         {
-            item.BindingContext = newValue;
+            // Never assign BindingContext here. CollectionView recycles these rows and an
+            // explicit local context sticks to the first track, so recycled rows keep
+            // showing the old song. The inherited context (the item itself) drives the
+            // labels; this callback only refreshes the non-binding visuals.
             item.UpdateTrackNumberVisibility();
             item.UpdateCurrentState();
         }
@@ -194,34 +243,76 @@ public partial class TrackItem : Grid
         var page = Shell.Current?.CurrentPage;
         if (page is null) return;
 
-        var choice = await AppDialogs.ShowActionsAsync(
-            page,
-            Track.Name,
-            [
-                new AppSheetAction { Label = "Play now", Glyph = "\ue037", Description = "Start playing this track" },
-                new AppSheetAction { Label = "Add to queue", Glyph = "\ue03d", Description = "Play it after the current song" },
-                new AppSheetAction { Label = "Add to playlist", Glyph = "\ue03b", Description = "Put it into a list you made" },
-                new AppSheetAction { Label = "Edit tags", Glyph = "\ue3c9", Description = "Title, artist, album, cover and more" },
-                new AppSheetAction { Label = "Delete from device", Glyph = "\ue872", IsDestructive = true, Description = "Permanently remove the audio file" },
-            ],
-            Track.ArtistName);
+        // The row can be recycled while the sheet is open, so keep a snapshot.
+        var track = Track;
+
+        var actions = new List<AppSheetAction>
+        {
+            new() { Label = "Play now", Glyph = "\ue037", Description = "Start playing this track" },
+            new() { Label = "Add to queue", Glyph = "\ue03d", Description = "Play it after the current song" },
+            new() { Label = "Add to playlist", Glyph = "\ue03b", Description = "Put it into a list you made" },
+        };
+
+        // Only a playlist page can take a track out of its list.
+        var removeCommand = (page.BindingContext as IPlaylistTrackContext)?.RemoveTrackCommand;
+        var removeIndex = -1;
+        if (removeCommand is not null)
+        {
+            removeIndex = actions.Count;
+            actions.Add(new AppSheetAction
+            {
+                Label = "Remove from playlist",
+                Glyph = "\ue15c",
+                IsDestructive = true,
+                Description = "Take it out of this list only",
+            });
+        }
+
+        var tagIndex = actions.Count;
+        actions.Add(new AppSheetAction { Label = "Edit tags", Glyph = "\ue3c9", Description = "Title, artist, album, cover and more" });
+
+        var deleteIndex = actions.Count;
+        actions.Add(new AppSheetAction { Label = "Delete from device", Glyph = "\ue872", IsDestructive = true, Description = "Permanently remove the audio file" });
+
+        var choice = await AppDialogs.ShowActionsAsync(page, track.Name, actions, track.ArtistName);
+        if (choice < 0)
+        {
+            return;
+        }
+
+        if (choice == removeIndex)
+        {
+            if (removeCommand!.CanExecute(track))
+            {
+                removeCommand.Execute(track);
+                Haptics.Tap();
+            }
+
+            return;
+        }
+
+        if (choice == tagIndex)
+        {
+            OpenTagEditor(track);
+            return;
+        }
+
+        if (choice == deleteIndex)
+        {
+            await DeleteTrackAsync(page, track);
+            return;
+        }
 
         switch (choice)
         {
             case 0:
-                PlayTrack(Track);
+                PlayTrack(track);
                 break;
             case 1:
-                PlayerService.Instance.AddToQueue(Track);
+                PlayerService.Instance.AddToQueue(track);
                 break;
             case 2:
-                await AddToPlaylistAsync(page);
-                break;
-            case 3:
-                OpenTagEditor();
-                break;
-            case 4:
-                await DeleteTrackAsync(page);
+                await AddToPlaylistAsync(page, track);
                 break;
         }
     }
@@ -230,15 +321,9 @@ public partial class TrackItem : Grid
     /// "Add to playlist": picks an existing list (or creates one right there), because an
     /// empty library of lists would otherwise be a dead end.
     /// </summary>
-    private async Task AddToPlaylistAsync(Page page)
+    private async Task AddToPlaylistAsync(Page page, Music track)
     {
-        if (Track is null)
-        {
-            return;
-        }
-
         var library = ServiceHelper.GetRequiredService<LibraryService>();
-        var track = Track;
 
         var actions = library.Playlists
             .Select(playlist => new AppSheetAction
@@ -293,10 +378,10 @@ public partial class TrackItem : Grid
         }
     }
 
-    private void OpenTagEditor()
+    private void OpenTagEditor(Music track)
     {
         var session = ServiceHelper.GetRequiredService<TagEditorSession>();
-        session.Track = Track;
+        session.Track = track;
 
         var shell = Shell.Current;
         if (shell is not null)
@@ -305,13 +390,8 @@ public partial class TrackItem : Grid
         }
     }
 
-    private async Task DeleteTrackAsync(Page page)
+    private async Task DeleteTrackAsync(Page page, Music track)
     {
-        if (Track is null) return;
-
-        // Captured before the async work because the row may be recycled once the list
-        // rebuilds after the deletion.
-        var track = Track;
         var fileService = ServiceHelper.GetRequiredService<MusicFileService>();
 
         // Android needs "All files access" to delete files by path; offer it before failing.

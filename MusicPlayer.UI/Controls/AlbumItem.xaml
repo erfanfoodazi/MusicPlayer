@@ -6,12 +6,13 @@
     xmlns:models="clr-namespace:Domain.Models;assembly=Domain"
     xmlns:converters="clr-namespace:MusicPlayer.UI.Converters"
     x:DataType="models:Album"
-    RowDefinitions="Auto,Auto"
+    RowDefinitions="Auto,Auto,Auto"
     BackgroundColor="Transparent"
-    HeightRequest="240">
+    HeightRequest="246">
 
     <Grid.Resources>
         <converters:ArtworkToImageSourceConverter x:Key="ArtworkToImageSourceConverter" />
+        <converters:StringIsNullOrEmptyConverter x:Key="StringIsNullOrEmptyConverter" />
     </Grid.Resources>
 
     <Grid.GestureRecognizers>
@@ -60,7 +61,7 @@
         </Grid>
     </Border>
 
-    <!-- Album name under the cover. -->
+    <!-- Album name and artist under the cover. -->
     <Label
         Grid.Row="1"
         Text="{Binding Title}"
@@ -69,6 +70,17 @@
         CharacterSpacing="-0.15"
         TextColor="{AppThemeBinding Light={StaticResource TextOnLight}, Dark={StaticResource TextOnDark}}"
         LineBreakMode="TailTruncation"
-        MaxLines="2"
+        MaxLines="1"
         Margin="2,10,2,0" />
+
+    <Label
+        Grid.Row="2"
+        Text="{Binding AlbumArtist}"
+        FontFamily="Inter"
+        FontSize="11.5"
+        TextColor="{AppThemeBinding Light={StaticResource MutedOnLight}, Dark={StaticResource MutedOnDark}}"
+        LineBreakMode="TailTruncation"
+        MaxLines="1"
+        Margin="2,2,2,0"
+        IsVisible="{Binding AlbumArtist, Converter={StaticResource StringIsNullOrEmptyConverter}, ConverterParameter=inverse}" />
 </Grid>

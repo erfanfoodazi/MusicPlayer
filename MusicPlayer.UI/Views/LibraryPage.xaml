@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <ContentPage
     x:Class="MusicPlayer.UI.Views.LibraryPage"
+    x:Name="LibraryRoot"
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
     xmlns:viewmodels="clr-namespace:MusicPlayer.UI.ViewModels"
@@ -14,6 +15,7 @@
 
     <ContentPage.Resources>
         <converters:IsNotNullConverter x:Key="IsNotNullConverter" />
+        <converters:ArtworkToImageSourceConverter x:Key="ArtworkToImageSourceConverter" />
     </ContentPage.Resources>
 
     <Grid RowDefinitions="*,Auto">
@@ -23,16 +25,16 @@
             <!-- A single, very soft accent wash behind the header. -->
             <BoxView
                 Grid.Row="0"
-                HeightRequest="196"
+                HeightRequest="224"
                 VerticalOptions="Start"
                 InputTransparent="True"
                 Background="{DynamicResource HeaderWash}" />
 
             <!-- ===== Header ===== -->
-            <VerticalStackLayout x:Name="HeaderBlock" Grid.Row="0" Padding="20,10,20,8" Spacing="12">
+            <VerticalStackLayout x:Name="HeaderBlock" Grid.Row="0" Padding="20,12,20,10" Spacing="14">
 
-                <Grid ColumnDefinitions="*,Auto,Auto,Auto,Auto" ColumnSpacing="4">
-                    <VerticalStackLayout Spacing="1" VerticalOptions="Center">
+                <Grid ColumnDefinitions="*,Auto,Auto,Auto" ColumnSpacing="6">
+                    <VerticalStackLayout Spacing="2" VerticalOptions="Center">
                         <Label
                             Text="AURALIS"
                             Style="{StaticResource OverlineText}"
@@ -40,6 +42,11 @@
                             CharacterSpacing="2.4"
                             TextColor="{DynamicResource AccentColor}" />
                         <Label Text="Library" Style="{StaticResource DisplayText}" />
+                        <Label
+                            Text="{Binding LibrarySummary}"
+                            Style="{StaticResource CaptionText}"
+                            FontSize="11.5"
+                            Margin="1,2,0,0" />
                     </VerticalStackLayout>
 
                     <Button
@@ -62,36 +69,7 @@
                         Style="{StaticResource IconButtonSurface}"
                         Command="{Binding PickFolderCommand}"
                         SemanticProperties.Description="Choose music folder" />
-
-                    <Button
-                        Grid.Column="4"
-                        Text="&#xe8b8;"
-                        Style="{StaticResource IconButtonSurface}"
-                        Clicked="OnSettingsClicked"
-                        SemanticProperties.Description="Open settings" />
                 </Grid>
-
-                <!-- Top navigation: Library / Search / Settings (replaces the bottom tab bar) -->
-                <Border Style="{StaticResource SegmentTrack}">
-                    <Grid ColumnDefinitions="*,*,*">
-                        <Button
-                            Grid.Column="0"
-                            Text="Library"
-                            Style="{StaticResource SegmentButton}"
-                            BackgroundColor="{AppThemeBinding Light={StaticResource SurfaceLight}, Dark={StaticResource SurfaceDarkElevated}}"
-                            TextColor="{AppThemeBinding Light={StaticResource TextOnLight}, Dark={StaticResource TextOnDark}}" />
-                        <Button
-                            Grid.Column="1"
-                            Text="Search"
-                            Style="{StaticResource SegmentButton}"
-                            Clicked="OnNavSearchClicked" />
-                        <Button
-                            Grid.Column="2"
-                            Text="Settings"
-                            Style="{StaticResource SegmentButton}"
-                            Clicked="OnNavSettingsClicked" />
-                    </Grid>
-                </Border>
 
                 <!-- Search pill -->
                 <Border Style="{StaticResource SearchPillBorder}">
@@ -143,7 +121,7 @@
                             CommandParameter="0">
                             <Button.Triggers>
                                 <DataTrigger TargetType="Button" Binding="{Binding IsTracksTab}" Value="True">
-                                    <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource SurfaceLight}, Dark={StaticResource SurfaceDarkElevated}}" />
+                                    <Setter Property="BackgroundColor" Value="{AppThemeBinding Light=#F2FFFFFF, Dark=#29FFFFFF}" />
                                     <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource TextOnLight}, Dark={StaticResource TextOnDark}}" />
                                 </DataTrigger>
                             </Button.Triggers>
@@ -157,7 +135,7 @@
                             CommandParameter="1">
                             <Button.Triggers>
                                 <DataTrigger TargetType="Button" Binding="{Binding IsAlbumsTab}" Value="True">
-                                    <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource SurfaceLight}, Dark={StaticResource SurfaceDarkElevated}}" />
+                                    <Setter Property="BackgroundColor" Value="{AppThemeBinding Light=#F2FFFFFF, Dark=#29FFFFFF}" />
                                     <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource TextOnLight}, Dark={StaticResource TextOnDark}}" />
                                 </DataTrigger>
                             </Button.Triggers>
@@ -171,7 +149,7 @@
                             CommandParameter="2">
                             <Button.Triggers>
                                 <DataTrigger TargetType="Button" Binding="{Binding IsArtistsTab}" Value="True">
-                                    <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource SurfaceLight}, Dark={StaticResource SurfaceDarkElevated}}" />
+                                    <Setter Property="BackgroundColor" Value="{AppThemeBinding Light=#F2FFFFFF, Dark=#29FFFFFF}" />
                                     <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource TextOnLight}, Dark={StaticResource TextOnDark}}" />
                                 </DataTrigger>
                             </Button.Triggers>
@@ -185,7 +163,7 @@
                             CommandParameter="3">
                             <Button.Triggers>
                                 <DataTrigger TargetType="Button" Binding="{Binding IsPlaylistsTab}" Value="True">
-                                    <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource SurfaceLight}, Dark={StaticResource SurfaceDarkElevated}}" />
+                                    <Setter Property="BackgroundColor" Value="{AppThemeBinding Light=#F2FFFFFF, Dark=#29FFFFFF}" />
                                     <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource TextOnLight}, Dark={StaticResource TextOnDark}}" />
                                 </DataTrigger>
                             </Button.Triggers>
@@ -202,10 +180,11 @@
 
                     <Border
                         Grid.Column="1"
-                        Padding="10,6"
-                        StrokeThickness="0"
+                        Padding="10,5"
+                        StrokeThickness="1"
+                        Stroke="{AppThemeBinding Light={StaticResource GlassStrokeLight}, Dark={StaticResource GlassStrokeDark}}"
                         StrokeShape="RoundRectangle 14"
-                        BackgroundColor="Transparent">
+                        Background="{AppThemeBinding Light={StaticResource GlassFillLight}, Dark={StaticResource GlassFillDark}}">
                         <Border.GestureRecognizers>
                             <TapGestureRecognizer Command="{Binding ShowSortCommand}" />
                         </Border.GestureRecognizers>
@@ -213,19 +192,19 @@
                             <Label
                                 Text="&#xe164;"
                                 FontFamily="MaterialIcons"
-                                FontSize="15"
+                                FontSize="14"
                                 TextColor="{AppThemeBinding Light={StaticResource MutedOnLight}, Dark={StaticResource MutedOnDark}}"
                                 VerticalOptions="Center" />
                             <Label
                                 Text="{Binding SortDisplayName}"
                                 FontFamily="InterMedium"
-                                FontSize="12"
+                                FontSize="11.5"
                                 TextColor="{AppThemeBinding Light={StaticResource TextOnLight}, Dark={StaticResource TextOnDark}}"
                                 VerticalOptions="Center" />
                             <Label
                                 Text="&#xe5cf;"
                                 FontFamily="MaterialIcons"
-                                FontSize="16"
+                                FontSize="15"
                                 TextColor="{AppThemeBinding Light={StaticResource FaintOnLight}, Dark={StaticResource FaintOnDark}}"
                                 VerticalOptions="Center" />
                         </HorizontalStackLayout>
@@ -236,7 +215,7 @@
                     Text="{Binding StatusMessage}"
                     Style="{StaticResource CaptionText}"
                     FontSize="11"
-                    Margin="0,-6,0,0"
+                    Margin="0,-8,0,0"
                     LineBreakMode="TailTruncation"
                     IsVisible="{Binding HasStatus}">
                     <Label.Triggers>
@@ -266,7 +245,175 @@
                         SelectionMode="None"
                         ItemSizingStrategy="MeasureFirstItem">
                         <CollectionView.Header>
-                            <BoxView HeightRequest="6" Color="Transparent" />
+                            <VerticalStackLayout Padding="0,2,0,14" Spacing="20">
+
+                                <!-- Recently played -->
+                                <VerticalStackLayout IsVisible="{Binding ShowRecentlyPlayed}" Spacing="10">
+                                    <Grid ColumnDefinitions="*,Auto" Padding="2,0">
+                                        <Label
+                                            Text="Recently played"
+                                            Style="{StaticResource SectionTitleText}"
+                                            FontSize="15"
+                                            VerticalOptions="Center" />
+                                        <Label
+                                            Grid.Column="1"
+                                            Text="&#xe1b8;"
+                                            FontFamily="MaterialIcons"
+                                            FontSize="16"
+                                            TextColor="{DynamicResource AccentColor}"
+                                            VerticalOptions="Center" />
+                                    </Grid>
+
+                                    <ScrollView
+                                        Orientation="Horizontal"
+                                        HorizontalScrollBarVisibility="Never"
+                                        Margin="0,0,-18,0">
+                                        <HorizontalStackLayout
+                                            Spacing="12"
+                                            Padding="0,0,18,0"
+                                            BindableLayout.ItemsSource="{Binding RecentlyPlayed}">
+                                            <BindableLayout.ItemTemplate>
+                                                <DataTemplate x:DataType="models:Music">
+                                                    <VerticalStackLayout WidthRequest="126" Spacing="7">
+                                                        <VerticalStackLayout.GestureRecognizers>
+                                                            <TapGestureRecognizer Tapped="OnRecentTrackTapped" />
+                                                        </VerticalStackLayout.GestureRecognizers>
+
+                                                        <Border
+                                                            WidthRequest="126"
+                                                            HeightRequest="126"
+                                                            StrokeThickness="0"
+                                                            StrokeShape="RoundRectangle 18"
+                                                            Background="{StaticResource ArtworkPlaceholderGradient}">
+                                                            <Grid>
+                                                                <Label
+                                                                    Text="&#xe405;"
+                                                                    FontFamily="MaterialIcons"
+                                                                    FontSize="30"
+                                                                    TextColor="{DynamicResource AccentColor}"
+                                                                    HorizontalOptions="Center"
+                                                                    VerticalOptions="Center" />
+                                                                <Image
+                                                                    Source="{Binding ListArtworkPath, Converter={StaticResource ArtworkToImageSourceConverter}}"
+                                                                    Aspect="AspectFill"
+                                                                    WidthRequest="126"
+                                                                    HeightRequest="126" />
+                                                                <Border
+                                                                    StrokeThickness="0"
+                                                                    StrokeShape="RoundRectangle 0,0,18,18"
+                                                                    Background="{StaticResource ArtworkSheen}"
+                                                                    InputTransparent="True" />
+                                                            </Grid>
+                                                        </Border>
+
+                                                        <Label
+                                                            Text="{Binding Name}"
+                                                            FontFamily="InterSemiBold"
+                                                            FontSize="12.5"
+                                                            CharacterSpacing="-0.1"
+                                                            MaxLines="1"
+                                                            LineBreakMode="TailTruncation"
+                                                            TextColor="{AppThemeBinding Light={StaticResource TextOnLight}, Dark={StaticResource TextOnDark}}" />
+                                                        <Label
+                                                            Text="{Binding ArtistName}"
+                                                            FontFamily="Inter"
+                                                            FontSize="11"
+                                                            MaxLines="1"
+                                                            LineBreakMode="TailTruncation"
+                                                            TextColor="{AppThemeBinding Light={StaticResource MutedOnLight}, Dark={StaticResource MutedOnDark}}" />
+                                                    </VerticalStackLayout>
+                                                </DataTemplate>
+                                            </BindableLayout.ItemTemplate>
+                                        </HorizontalStackLayout>
+                                    </ScrollView>
+                                </VerticalStackLayout>
+
+                                <!-- Recently added -->
+                                <VerticalStackLayout IsVisible="{Binding ShowRecentlyAdded}" Spacing="10">
+                                    <Grid ColumnDefinitions="*,Auto" Padding="2,0">
+                                        <Label
+                                            Text="Recently added"
+                                            Style="{StaticResource SectionTitleText}"
+                                            FontSize="15"
+                                            VerticalOptions="Center" />
+                                        <Label
+                                            Grid.Column="1"
+                                            Text="&#xe145;"
+                                            FontFamily="MaterialIcons"
+                                            FontSize="16"
+                                            TextColor="{AppThemeBinding Light={StaticResource FaintOnLight}, Dark={StaticResource FaintOnDark}}"
+                                            VerticalOptions="Center" />
+                                    </Grid>
+
+                                    <ScrollView
+                                        Orientation="Horizontal"
+                                        HorizontalScrollBarVisibility="Never"
+                                        Margin="0,0,-18,0">
+                                        <HorizontalStackLayout
+                                            Spacing="12"
+                                            Padding="0,0,18,0"
+                                            BindableLayout.ItemsSource="{Binding RecentlyAdded}">
+                                            <BindableLayout.ItemTemplate>
+                                                <DataTemplate x:DataType="models:Music">
+                                                    <VerticalStackLayout WidthRequest="126" Spacing="7">
+                                                        <VerticalStackLayout.GestureRecognizers>
+                                                            <TapGestureRecognizer Tapped="OnRecentTrackTapped" />
+                                                        </VerticalStackLayout.GestureRecognizers>
+
+                                                        <Border
+                                                            WidthRequest="126"
+                                                            HeightRequest="126"
+                                                            StrokeThickness="0"
+                                                            StrokeShape="RoundRectangle 18"
+                                                            Background="{StaticResource ArtworkPlaceholderGradient}">
+                                                            <Grid>
+                                                                <Label
+                                                                    Text="&#xe405;"
+                                                                    FontFamily="MaterialIcons"
+                                                                    FontSize="30"
+                                                                    TextColor="{DynamicResource AccentColor}"
+                                                                    HorizontalOptions="Center"
+                                                                    VerticalOptions="Center" />
+                                                                <Image
+                                                                    Source="{Binding ListArtworkPath, Converter={StaticResource ArtworkToImageSourceConverter}}"
+                                                                    Aspect="AspectFill"
+                                                                    WidthRequest="126"
+                                                                    HeightRequest="126" />
+                                                                <Border
+                                                                    StrokeThickness="0"
+                                                                    StrokeShape="RoundRectangle 0,0,18,18"
+                                                                    Background="{StaticResource ArtworkSheen}"
+                                                                    InputTransparent="True" />
+                                                            </Grid>
+                                                        </Border>
+
+                                                        <Label
+                                                            Text="{Binding Name}"
+                                                            FontFamily="InterSemiBold"
+                                                            FontSize="12.5"
+                                                            CharacterSpacing="-0.1"
+                                                            MaxLines="1"
+                                                            LineBreakMode="TailTruncation"
+                                                            TextColor="{AppThemeBinding Light={StaticResource TextOnLight}, Dark={StaticResource TextOnDark}}" />
+                                                        <Label
+                                                            Text="{Binding ArtistName}"
+                                                            FontFamily="Inter"
+                                                            FontSize="11"
+                                                            MaxLines="1"
+                                                            LineBreakMode="TailTruncation"
+                                                            TextColor="{AppThemeBinding Light={StaticResource MutedOnLight}, Dark={StaticResource MutedOnDark}}" />
+                                                    </VerticalStackLayout>
+                                                </DataTemplate>
+                                            </BindableLayout.ItemTemplate>
+                                        </HorizontalStackLayout>
+                                    </ScrollView>
+                                </VerticalStackLayout>
+
+                                <Label
+                                    Text="ALL TRACKS"
+                                    Style="{StaticResource SectionLabelText}"
+                                    Margin="3,0,0,-8" />
+                            </VerticalStackLayout>
                         </CollectionView.Header>
                         <CollectionView.EmptyView>
                             <VerticalStackLayout Padding="26,46" Spacing="10" HorizontalOptions="Center" VerticalOptions="Center">
@@ -519,7 +666,7 @@
             </Grid>
         </Grid>
 
-        <!-- Docked mini player -->
+        <!-- Floating mini player -->
         <controls:MiniPlayer Grid.Row="1" VerticalOptions="End" />
     </Grid>
 </ContentPage>

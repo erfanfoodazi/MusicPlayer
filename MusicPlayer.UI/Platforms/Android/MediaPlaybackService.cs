@@ -30,9 +30,7 @@ public sealed class MediaPlaybackService : Service
     public const string ActionPlayPause = "com.musicplayer.app.PLAY_PAUSE";
     public const string ActionNext = "com.musicplayer.app.NEXT";
 
-    private const string LockPageChannelId = "auralis_lock_page";
     private const int NotificationId = 2201;
-    private const int LockPageNotificationId = 2202;
     private const int ContentIntentRequestCode = 100;
     private const int LockScreenIntentRequestCode = 101;
     private const int ArtworkSize = 512;
@@ -63,7 +61,6 @@ public sealed class MediaPlaybackService : Service
 
         Instance = this;
         CreateNotificationChannel();
-        CreateLockPageChannel();
         RegisterScreenReceiver();
 
         _player = PlayerService.Instance;
@@ -96,6 +93,8 @@ public sealed class MediaPlaybackService : Service
 
     public override void OnDestroy()
     {
+        UnregisterScreenReceiver();
+
         if (_subscribed && _player is not null)
         {
             _player.PropertyChanged -= OnPlayerPropertyChanged;
@@ -121,24 +120,22 @@ public sealed class MediaPlaybackService : Service
 
         _session = null;
 
-        UnregisterScreenReceiver();
-        DismissLockPageNotification();
         ReleaseArtwork();
         Instance = null;
         base.OnDestroy();
     }
 
     /// <summary>
-    /// Watches for the screen switching off. With music playing, that is the moment the
-    /// full-screen player should take over the keyguard - the user no longer has to tap a
-    /// lock button inside the app first.
+    /// Listens for the display coming up so the player can be the surface the user lands on.
+    /// The broadcast arrives after the screen is already on, and nothing below touches the
+    /// power state, so the app can never wake a sleeping phone by itself.
     /// </summary>
     private void RegisterScreenReceiver()
     {
         try
         {
-            _screenReceiver = new ScreenStateReceiver();
-            var filter = new IntentFilter(Intent.ActionScreenOff);
+            _screenReceiver = new ScreenStateReceiver(OnScreenTurnedOn);
+            var filter = new IntentFilter(Intent.ActionScreenOn);
 
             AndroidX.Core.Content.ContextCompat.RegisterReceiver(
                 this,
@@ -173,110 +170,65 @@ public sealed class MediaPlaybackService : Service
         }
     }
 
-    /// <summary>Brings the player up over the keyguard when the phone is locked mid-song.</summary>
-    internal void OnScreenTurnedOff()
+    private void OnScreenTurnedOn()
     {
-        var player = PlayerService.Instance;
-        if (player.CurrentTrack is null || player.State != PlaybackState.Playing)
+        if (!HasPlayableTrack())
         {
             return;
         }
 
-        OpenLockPage(player.CurrentTrack);
+        // The keyguard is reported a beat after the display comes up. Asking too early would
+        // open the player over a phone that is still unlocking itself.
+        MainThread.BeginInvokeOnMainThread(async () =>
+        {
+            await Task.Delay(400);
+
+            if (!IsLockedAndAwake() || !HasPlayableTrack())
+            {
+                return;
+            }
+
+            OpenLockPage();
+        });
+    }
+
+    private static bool HasPlayableTrack()
+    {
+        var player = PlayerService.Instance;
+        return player.CurrentTrack is not null
+               && player.State is PlaybackState.Playing or PlaybackState.Paused;
+    }
+
+    private bool IsLockedAndAwake()
+    {
+        var keyguard = (KeyguardManager?)GetSystemService(KeyguardService);
+        if (keyguard?.IsKeyguardLocked != true)
+        {
+            return false;
+        }
+
+        var power = (PowerManager?)GetSystemService(PowerService);
+        return power?.IsInteractive == true;
     }
 
     /// <summary>
-    /// Two attempts on purpose: a direct activity start works on older releases and most OEM
-    /// builds, while the full-screen-intent notification is what Android 10+ accepts when it
-    /// refuses background activity starts. Both land on the same page.
+    /// The screen is already on, so the activity only has to draw over the keyguard that is
+    /// showing. No notification, wake lock or turn-screen-on flag is involved.
     /// </summary>
-    private void OpenLockPage(Music track)
+    private void OpenLockPage()
     {
         try
         {
-            var direct = BuildLockPageIntent();
-            if (direct is not null)
-            {
-                StartActivity(direct);
-            }
+            var intent = new Intent(this, typeof(MusicPlayer.UI.MainActivity))
+                .SetAction(MusicPlayer.UI.MainActivity.ActionOpenLockScreen)
+                .PutExtra(MusicPlayer.UI.MainActivity.ExtraOpenLockScreen, true)
+                .SetFlags(ActivityFlags.NewTask | ActivityFlags.SingleTop | ActivityFlags.ClearTop);
+
+            StartActivity(intent);
         }
         catch (Exception ex)
         {
             System.Diagnostics.Debug.WriteLine(ex);
-        }
-
-        PostLockPageNotification(track);
-    }
-
-    private Intent? BuildLockPageIntent()
-    {
-        var intent = new Intent(this, typeof(MusicPlayer.UI.MainActivity))
-            .SetAction(MusicPlayer.UI.MainActivity.ActionOpenLockScreen)
-            .PutExtra(MusicPlayer.UI.MainActivity.ExtraOpenLockScreen, true)
-            .SetFlags(ActivityFlags.NewTask | ActivityFlags.SingleTop | ActivityFlags.ClearTop);
-
-        return intent;
-    }
-
-    private void PostLockPageNotification(Music track)
-    {
-        try
-        {
-            var intent = BuildLockPageIntent();
-            if (intent is null)
-            {
-                return;
-            }
-
-            var pending = PendingIntent.GetActivity(this, LockScreenIntentRequestCode, intent, ImmutablePendingIntentFlags);
-            if (pending is null)
-            {
-                return;
-            }
-
-            var builder = OperatingSystem.IsAndroidVersionAtLeast(26)
-                ? new Notification.Builder(this, LockPageChannelId)
-                : new Notification.Builder(this);
-
-            builder
-                .SetSmallIcon(Resource.Drawable.ic_stat_music)
-                .SetContentTitle(track.Name)
-                .SetContentText(track.ArtistName)
-                .SetContentIntent(pending)
-                .SetFullScreenIntent(pending, true)
-                .SetAutoCancel(true)
-                .SetOnlyAlertOnce(true)
-                .SetOngoing(false)
-                .SetShowWhen(false)
-                .SetVisibility(NotificationVisibility.Public);
-
-            if (!OperatingSystem.IsAndroidVersionAtLeast(26))
-            {
-#pragma warning disable CA1422 // Priority is the pre-channel equivalent of high importance.
-                builder.SetPriority((int)NotificationPriority.High);
-#pragma warning restore CA1422
-            }
-
-            var manager = (NotificationManager?)GetSystemService(NotificationService);
-            manager?.Notify(LockPageNotificationId, builder.Build());
-        }
-        catch (Exception ex)
-        {
-            System.Diagnostics.Debug.WriteLine(ex);
-        }
-    }
-
-    /// <summary>Removes the launch notification once the player page is actually on screen.</summary>
-    internal void DismissLockPageNotification()
-    {
-        try
-        {
-            var manager = (NotificationManager?)GetSystemService(NotificationService);
-            manager?.Cancel(LockPageNotificationId);
-        }
-        catch
-        {
-            // Nothing to dismiss.
         }
     }
 
@@ -738,38 +690,6 @@ public sealed class MediaPlaybackService : Service
         manager.CreateNotificationChannel(channel);
     }
 
-    /// <summary>
-    /// Silent high-importance channel: full-screen intents are only launched from a channel
-    /// that can post heads-up notifications, but the launch itself must not make a sound.
-    /// </summary>
-    private void CreateLockPageChannel()
-    {
-        if (!OperatingSystem.IsAndroidVersionAtLeast(26))
-        {
-            return;
-        }
-
-        var manager = (NotificationManager?)GetSystemService(NotificationService);
-        if (manager is null)
-        {
-            return;
-        }
-
-        var channel = new NotificationChannel(
-            LockPageChannelId,
-            "Lock screen player",
-            NotificationImportance.High)
-        {
-            Description = "Shows the player over the lock screen while music is playing",
-            LockscreenVisibility = NotificationVisibility.Public,
-        };
-
-        channel.SetSound(null, null);
-        channel.EnableVibration(false);
-        channel.SetShowBadge(false);
-        manager.CreateNotificationChannel(channel);
-    }
-
     private void ReleaseArtwork()
     {
         var artwork = _artwork;
@@ -802,20 +722,6 @@ public sealed class MediaPlaybackService : Service
         }
 
         bitmap.Dispose();
-    }
-
-    /// <summary>Delivers the screen-off broadcast while playback keeps the service alive.</summary>
-    private sealed class ScreenStateReceiver : BroadcastReceiver
-    {
-        public override void OnReceive(Context? context, Intent? intent)
-        {
-            if (!string.Equals(intent?.Action, Intent.ActionScreenOff, StringComparison.Ordinal))
-            {
-                return;
-            }
-
-            MediaPlaybackService.Instance?.OnScreenTurnedOff();
-        }
     }
 
     private sealed class SessionCallback : MediaSession.Callback

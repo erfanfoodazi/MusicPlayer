@@ -60,6 +60,37 @@
         <GradientStop Color="#B3000000" Offset="1.0" />
     </LinearGradientBrush>
 
+    <!-- ============ Glass layers ============ -->
+    <!--
+        Translucent fills that let the page wash or the cover artwork show through. The
+        brightest stop sits top-left so every panel carries a soft angled sheen instead of
+        reading as a flat grey rectangle.
+    -->
+    <LinearGradientBrush x:Key="GlassFillLight" StartPoint="0,0" EndPoint="1,1">
+        <GradientStop Color="#E0FFFFFF" Offset="0.0" />
+        <GradientStop Color="#BFFFFFFF" Offset="0.55" />
+        <GradientStop Color="#ADFFFFFF" Offset="1.0" />
+    </LinearGradientBrush>
+
+    <LinearGradientBrush x:Key="GlassFillDark" StartPoint="0,0" EndPoint="1,1">
+        <GradientStop Color="#2BFFFFFF" Offset="0.0" />
+        <GradientStop Color="#17FFFFFF" Offset="0.55" />
+        <GradientStop Color="#0BFFFFFF" Offset="1.0" />
+    </LinearGradientBrush>
+
+    <!-- Heavier pane for sheets and fields where text must stay crisp. -->
+    <LinearGradientBrush x:Key="GlassFillStrongLight" StartPoint="0,0" EndPoint="1,1">
+        <GradientStop Color="#FAFFFFFF" Offset="0.0" />
+        <GradientStop Color="#F6FFFFFF" Offset="0.55" />
+        <GradientStop Color="#F2FFFFFF" Offset="1.0" />
+    </LinearGradientBrush>
+
+    <LinearGradientBrush x:Key="GlassFillStrongDark" StartPoint="0,0" EndPoint="1,1">
+        <GradientStop Color="#F22A2A36" Offset="0.0" />
+        <GradientStop Color="#EE1D1D27" Offset="0.55" />
+        <GradientStop Color="#EA16161E" Offset="1.0" />
+    </LinearGradientBrush>
+
     <!-- ============ Typography ============ -->
     <Style x:Key="DisplayText" TargetType="Label">
         <Setter Property="FontFamily" Value="InterBold" />
@@ -155,8 +186,8 @@
     </Style>
 
     <Style x:Key="IconButtonSurface" TargetType="Button" BasedOn="{StaticResource IconButton}">
-        <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource SurfaceLight}, Dark={StaticResource SurfaceDarkAlt}}" />
-        <Setter Property="BorderColor" Value="{AppThemeBinding Light={StaticResource OutlineLight}, Dark={StaticResource OutlineDark}}" />
+        <Setter Property="Background" Value="{AppThemeBinding Light={StaticResource GlassFillLight}, Dark={StaticResource GlassFillDark}}" />
+        <Setter Property="BorderColor" Value="{AppThemeBinding Light={StaticResource GlassStrokeLight}, Dark={StaticResource GlassStrokeDark}}" />
         <Setter Property="BorderWidth" Value="1" />
     </Style>
 
@@ -196,11 +227,11 @@
         <Setter Property="FontSize" Value="30" />
         <Setter Property="TextColor" Value="White" />
         <Setter Property="Background" Value="{DynamicResource AccentGradient}" />
-        <Setter Property="WidthRequest" Value="64" />
-        <Setter Property="HeightRequest" Value="64" />
-        <Setter Property="MinimumWidthRequest" Value="64" />
-        <Setter Property="MinimumHeightRequest" Value="64" />
-        <Setter Property="CornerRadius" Value="32" />
+        <Setter Property="WidthRequest" Value="68" />
+        <Setter Property="HeightRequest" Value="68" />
+        <Setter Property="MinimumWidthRequest" Value="68" />
+        <Setter Property="MinimumHeightRequest" Value="68" />
+        <Setter Property="CornerRadius" Value="34" />
         <Setter Property="Padding" Value="0" />
         <Setter Property="BorderWidth" Value="0" />
     </Style>
@@ -233,23 +264,23 @@
     <!-- ============ Surfaces ============ -->
     <!-- Grouped content card. One per section, never nested. -->
     <Style x:Key="CardBorder" TargetType="Border">
-        <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource SurfaceLight}, Dark={StaticResource SurfaceDark}}" />
-        <Setter Property="Stroke" Value="{AppThemeBinding Light={StaticResource OutlineLight}, Dark={StaticResource OutlineDark}}" />
+        <Setter Property="Background" Value="{AppThemeBinding Light={StaticResource GlassFillLight}, Dark={StaticResource GlassFillDark}}" />
+        <Setter Property="Stroke" Value="{AppThemeBinding Light={StaticResource GlassStrokeLight}, Dark={StaticResource GlassStrokeDark}}" />
         <Setter Property="StrokeThickness" Value="1" />
         <Setter Property="StrokeShape" Value="RoundRectangle 20" />
     </Style>
 
     <Style x:Key="PillBorder" TargetType="Border">
-        <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource SurfaceLightAlt}, Dark={StaticResource SurfaceDarkAlt}}" />
+        <Setter Property="Background" Value="{AppThemeBinding Light={StaticResource GlassFillLight}, Dark={StaticResource GlassFillDark}}" />
         <Setter Property="StrokeThickness" Value="1" />
-        <Setter Property="Stroke" Value="{AppThemeBinding Light={StaticResource OutlineLight}, Dark={StaticResource OutlineDark}}" />
+        <Setter Property="Stroke" Value="{AppThemeBinding Light={StaticResource GlassStrokeLight}, Dark={StaticResource GlassStrokeDark}}" />
         <Setter Property="StrokeShape" Value="RoundRectangle 22" />
     </Style>
 
     <Style x:Key="SearchPillBorder" TargetType="Border">
-        <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource SurfaceLight}, Dark={StaticResource SurfaceDarkAlt}}" />
+        <Setter Property="Background" Value="{AppThemeBinding Light={StaticResource GlassFillStrongLight}, Dark={StaticResource GlassFillStrongDark}}" />
         <Setter Property="StrokeThickness" Value="1" />
-        <Setter Property="Stroke" Value="{AppThemeBinding Light={StaticResource OutlineLight}, Dark={StaticResource OutlineDark}}" />
+        <Setter Property="Stroke" Value="{AppThemeBinding Light={StaticResource GlassStrokeLight}, Dark={StaticResource GlassStrokeDark}}" />
         <Setter Property="StrokeShape" Value="RoundRectangle 14" />
         <Setter Property="Padding" Value="12,0" />
         <Setter Property="HeightRequest" Value="46" />
@@ -257,9 +288,9 @@
 
     <!-- Text field container for editors. -->
     <Style x:Key="FieldBorder" TargetType="Border">
-        <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource SurfaceLight}, Dark={StaticResource SurfaceDarkAlt}}" />
+        <Setter Property="Background" Value="{AppThemeBinding Light={StaticResource GlassFillStrongLight}, Dark={StaticResource GlassFillStrongDark}}" />
         <Setter Property="StrokeThickness" Value="1" />
-        <Setter Property="Stroke" Value="{AppThemeBinding Light={StaticResource OutlineLight}, Dark={StaticResource OutlineDark}}" />
+        <Setter Property="Stroke" Value="{AppThemeBinding Light={StaticResource GlassStrokeLight}, Dark={StaticResource GlassStrokeDark}}" />
         <Setter Property="StrokeShape" Value="RoundRectangle 12" />
         <Setter Property="Padding" Value="12,0" />
         <Setter Property="HeightRequest" Value="48" />
@@ -291,9 +322,9 @@
 
     <!-- Segmented control: the track that holds mutually exclusive options. -->
     <Style x:Key="SegmentTrack" TargetType="Border">
-        <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource SurfaceLightAlt}, Dark={StaticResource SurfaceDark}}" />
+        <Setter Property="Background" Value="{AppThemeBinding Light={StaticResource GlassFillLight}, Dark={StaticResource GlassFillDark}}" />
         <Setter Property="StrokeThickness" Value="1" />
-        <Setter Property="Stroke" Value="{AppThemeBinding Light={StaticResource OutlineLight}, Dark={StaticResource OutlineDark}}" />
+        <Setter Property="Stroke" Value="{AppThemeBinding Light={StaticResource GlassStrokeLight}, Dark={StaticResource GlassStrokeDark}}" />
         <Setter Property="StrokeShape" Value="RoundRectangle 12" />
         <Setter Property="Padding" Value="3" />
     </Style>
@@ -319,24 +350,33 @@
 
     <!-- Secondary panel: slightly recessed, used inside a card or as a standalone block. -->
     <Style x:Key="PanelBorder" TargetType="Border">
-        <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource SurfaceLightAlt}, Dark={StaticResource SurfaceDarkAlt}}" />
+        <Setter Property="Background" Value="{AppThemeBinding Light={StaticResource GlassFillLight}, Dark={StaticResource GlassFillDark}}" />
         <Setter Property="StrokeThickness" Value="1" />
-        <Setter Property="Stroke" Value="{AppThemeBinding Light={StaticResource OutlineLight}, Dark={StaticResource OutlineDark}}" />
+        <Setter Property="Stroke" Value="{AppThemeBinding Light={StaticResource GlassStrokeLight}, Dark={StaticResource GlassStrokeDark}}" />
         <Setter Property="StrokeShape" Value="RoundRectangle 18" />
+    </Style>
+
+    <!-- Floating pane that sits over content: mini player, sheets and player cards. -->
+    <Style x:Key="GlassPane" TargetType="Border">
+        <Setter Property="Background" Value="{AppThemeBinding Light={StaticResource GlassFillStrongLight}, Dark={StaticResource GlassFillStrongDark}}" />
+        <Setter Property="StrokeThickness" Value="1" />
+        <Setter Property="Stroke" Value="{AppThemeBinding Light={StaticResource GlassStrokeLight}, Dark={StaticResource GlassStrokeDark}}" />
+        <Setter Property="StrokeShape" Value="RoundRectangle 20" />
     </Style>
 
     <!-- Hairline-only row used for the grouped settings lists. -->
     <Style x:Key="RowCard" TargetType="Border">
-        <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource SurfaceLight}, Dark={StaticResource SurfaceDark}}" />
-        <Setter Property="StrokeThickness" Value="0" />
+        <Setter Property="Background" Value="{AppThemeBinding Light={StaticResource GlassFillLight}, Dark={StaticResource GlassFillDark}}" />
+        <Setter Property="StrokeThickness" Value="1" />
+        <Setter Property="Stroke" Value="{AppThemeBinding Light={StaticResource GlassStrokeLight}, Dark={StaticResource GlassStrokeDark}}" />
         <Setter Property="StrokeShape" Value="RoundRectangle 14" />
         <Setter Property="Padding" Value="14,12" />
     </Style>
 
     <Style x:Key="ChipBorder" TargetType="Border">
-        <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource SurfaceLightAlt}, Dark={StaticResource SurfaceDarkAlt}}" />
+        <Setter Property="Background" Value="{AppThemeBinding Light={StaticResource GlassFillLight}, Dark={StaticResource GlassFillDark}}" />
         <Setter Property="StrokeThickness" Value="1" />
-        <Setter Property="Stroke" Value="{AppThemeBinding Light={StaticResource OutlineLight}, Dark={StaticResource OutlineDark}}" />
+        <Setter Property="Stroke" Value="{AppThemeBinding Light={StaticResource GlassStrokeLight}, Dark={StaticResource GlassStrokeDark}}" />
         <Setter Property="StrokeShape" Value="RoundRectangle 12" />
         <Setter Property="Padding" Value="10,5" />
     </Style>

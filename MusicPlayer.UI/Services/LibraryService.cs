@@ -196,12 +196,22 @@ public sealed class LibraryService
                 .Where(path => !string.IsNullOrWhiteSpace(path)),
             StringComparer.OrdinalIgnoreCase);
 
+        var knownTracks = new HashSet<Music>(
+            playlist.Tracks.Select(entry => entry.Music).OfType<Music>());
+
         var nextEntryId = playlist.Tracks.Count == 0 ? 1 : playlist.Tracks.Max(t => t.Id) + 1;
         var added = 0;
 
         foreach (var track in tracks)
         {
             if (track is null || string.IsNullOrWhiteSpace(track.FilePath) || !knownPaths.Add(track.FilePath))
+            {
+                continue;
+            }
+
+            // The same live track can be reached through a different path spelling after a
+            // rescan; identity catches what the path check cannot.
+            if (!knownTracks.Add(track))
             {
                 continue;
             }
@@ -231,9 +241,44 @@ public sealed class LibraryService
         return added;
     }
 
-    public bool RemoveTrackFromPlaylist(Playlist playlist, Music track)
+    /// <summary>
+    /// Moves one track to <paramref name="newIndex"/> inside the playlist and rewrites every
+    /// order value, so the new sequence survives closing the app.
+    /// </summary>
+    public bool MovePlaylistTrack(Playlist playlist, Music track, int newIndex)
     {
         var entry = playlist.Tracks.FirstOrDefault(t =>
+            ReferenceEquals(t.Music, track) ||
+            string.Equals(t.Music?.FilePath ?? string.Empty, track.FilePath, StringComparison.OrdinalIgnoreCase));
+
+        if (entry is null)
+        {
+            return false;
+        }
+
+        var oldIndex = playlist.Tracks.IndexOf(entry);
+        var target = Math.Clamp(newIndex, 0, playlist.Tracks.Count - 1);
+        if (oldIndex == target)
+        {
+            return false;
+        }
+
+        playlist.Tracks.RemoveAt(oldIndex);
+        playlist.Tracks.Insert(target, entry);
+
+        for (var i = 0; i < playlist.Tracks.Count; i++)
+        {
+            playlist.Tracks[i].Order = i;
+        }
+
+        playlist.UpdatedAt = DateTime.UtcNow;
+        PersistPlaylists();
+        LibraryChanged?.Invoke(this, EventArgs.Empty);
+        return true;
+    }
+
+    public bool RemoveTrackFromPlaylist(Playlist playlist, Music track)
+    {        var entry = playlist.Tracks.FirstOrDefault(t =>
             ReferenceEquals(t.Music, track) ||
             string.Equals(t.Music?.FilePath ?? string.Empty, track.FilePath, StringComparison.OrdinalIgnoreCase));
 
@@ -326,26 +371,73 @@ public sealed class LibraryService
             }
         }
 
+        var changed = false;
+
         foreach (var playlist in Playlists)
         {
-            playlist.Tracks = playlist.Tracks
-                .Where(entry => !string.IsNullOrWhiteSpace(entry.Music?.FilePath) &&
-                                byPath.TryGetValue(entry.Music.FilePath, out _))
-                .ToList();
+            var seenPaths = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            var seenTracks = new HashSet<Music>();
+            var resolved = new List<PlaylistTrack>(playlist.Tracks.Count);
 
-            for (var i = 0; i < playlist.Tracks.Count; i++)
+            foreach (var entry in playlist.Tracks)
             {
-                var entry = playlist.Tracks[i];
-                entry.Music = byPath[entry.Music!.FilePath];
-                entry.MusicId = entry.Music.Id;
+                var path = entry.Music?.FilePath;
+                if (string.IsNullOrWhiteSpace(path) ||
+                    !byPath.TryGetValue(path, out var liveTrack) ||
+                    !seenPaths.Add(path) ||
+                    !seenTracks.Add(liveTrack))
+                {
+                    // A duplicate entry would render twice and play twice; keep the first.
+                    changed = true;
+                    continue;
+                }
+
+                entry.Music = liveTrack;
+                entry.MusicId = liveTrack.Id;
                 entry.PlaylistId = playlist.Id;
-                entry.Order = i;
+                entry.Order = resolved.Count;
+                resolved.Add(entry);
             }
+
+            changed |= resolved.Count != playlist.Tracks.Count;
+            playlist.Tracks = resolved;
 
             playlist.ArtworkPath ??= playlist.Tracks
                 .Select(t => t.Music?.ArtworkPath ?? t.Music?.Album?.ArtworkPath)
                 .FirstOrDefault(path => !string.IsNullOrWhiteSpace(path));
         }
+
+        if (changed)
+        {
+            // Rewrite the stored snapshot so the duplicates cannot come back on next launch.
+            PersistPlaylists();
+        }
+    }
+
+    /// <summary>
+    /// Points a playlist at a cover the user picked. Passing null clears the custom cover and
+    /// falls back to the first track's artwork, so the card never goes blank.
+    /// </summary>
+    public void SetPlaylistArtwork(Playlist playlist, string? artworkPath)
+    {
+        var next = artworkPath;
+
+        if (string.IsNullOrWhiteSpace(next))
+        {
+            next = playlist.Tracks
+                .Select(t => t.Music?.ArtworkPath ?? t.Music?.Album?.ArtworkPath)
+                .FirstOrDefault(path => !string.IsNullOrWhiteSpace(path));
+        }
+
+        if (string.Equals(playlist.ArtworkPath, next, StringComparison.Ordinal))
+        {
+            return;
+        }
+
+        playlist.ArtworkPath = next;
+        playlist.UpdatedAt = DateTime.UtcNow;
+        PersistPlaylists();
+        LibraryChanged?.Invoke(this, EventArgs.Empty);
     }
 
     /// <summary>

@@ -7,24 +7,50 @@
     Title="Auralis"
     FlyoutBehavior="Disabled"
     Shell.NavBarIsVisible="True"
-    Shell.TabBarIsVisible="False"
+    Shell.TabBarBackgroundColor="{AppThemeBinding Light={StaticResource AppBackgroundLight}, Dark={StaticResource AppBackgroundDark}}"
+    Shell.TabBarForegroundColor="{DynamicResource AccentColor}"
+    Shell.TabBarTitleColor="{DynamicResource AccentColor}"
+    Shell.TabBarUnselectedColor="{AppThemeBinding Light={StaticResource FaintOnLight}, Dark={StaticResource FaintOnDark}}"
     BackgroundColor="{AppThemeBinding Light={StaticResource AppBackgroundLight}, Dark={StaticResource AppBackgroundDark}}">
 
-    <!-- The footer tab bar stays hidden; navigation between the three roots happens through
-         the segmented control at the top of each page. The roots still have to exist in the
-         Shell hierarchy so absolute routes such as //search and //settings resolve. -->
-    <TabBar Shell.TabBarIsVisible="False">
+    <!-- The three library sections live in a persistent bottom bar; detail screens are
+         pushed on top of it and hide it again through Shell.TabBarIsVisible. -->
+    <TabBar>
         <ShellContent
             Title="Library"
             Route="library"
-            ContentTemplate="{DataTemplate views:LibraryPage}" />
+            ContentTemplate="{DataTemplate views:LibraryPage}">
+            <ShellContent.Icon>
+                <FontImageSource
+                    FontFamily="MaterialIcons"
+                    Glyph="&#xe405;"
+                    Size="22"
+                    Color="{AppThemeBinding Light={StaticResource FaintOnLight}, Dark={StaticResource FaintOnDark}}" />
+            </ShellContent.Icon>
+        </ShellContent>
         <ShellContent
             Title="Search"
             Route="search"
-            ContentTemplate="{DataTemplate views:SearchPage}" />
+            ContentTemplate="{DataTemplate views:SearchPage}">
+            <ShellContent.Icon>
+                <FontImageSource
+                    FontFamily="MaterialIcons"
+                    Glyph="&#xe8b6;"
+                    Size="22"
+                    Color="{AppThemeBinding Light={StaticResource FaintOnLight}, Dark={StaticResource FaintOnDark}}" />
+            </ShellContent.Icon>
+        </ShellContent>
         <ShellContent
             Title="Settings"
             Route="settings"
-            ContentTemplate="{DataTemplate views:SettingsPage}" />
+            ContentTemplate="{DataTemplate views:SettingsPage}">
+            <ShellContent.Icon>
+                <FontImageSource
+                    FontFamily="MaterialIcons"
+                    Glyph="&#xe8b8;"
+                    Size="22"
+                    Color="{AppThemeBinding Light={StaticResource FaintOnLight}, Dark={StaticResource FaintOnDark}}" />
+            </ShellContent.Icon>
+        </ShellContent>
     </TabBar>
 </Shell>

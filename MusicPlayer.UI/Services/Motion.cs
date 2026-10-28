@@ -196,4 +196,45 @@ public static class Motion
         Prepare(element, offsetY);
         await AnimateSectionAsync(element, 16);
     }
+
+    /// <summary>
+    /// Quick, low-key re-entry used when a root page becomes visible again (tab switch or
+    /// returning from a detail page). Shorter than a full intro so it never feels like the
+    /// page is reloading.
+    /// </summary>
+    public static async Task ReenterAsync(params VisualElement?[] sections)
+    {
+        var animations = new List<Task>(sections.Length);
+
+        foreach (var element in sections)
+        {
+            if (element is null || !element.IsVisible)
+            {
+                continue;
+            }
+
+            animations.Add(ReenterSectionAsync(element));
+        }
+
+        await Task.WhenAll(animations);
+    }
+
+    private static async Task ReenterSectionAsync(VisualElement element)
+    {
+        try
+        {
+            element.CancelAnimations();
+            element.Opacity = 0.55;
+            element.TranslationY = 6;
+
+            await Task.WhenAll(
+                element.FadeTo(1, Fast + 20, Easing.CubicOut),
+                element.TranslateTo(0, 0, Normal, Easing.CubicOut));
+        }
+        catch
+        {
+            element.Opacity = 1;
+            element.TranslationY = 0;
+        }
+    }
 }

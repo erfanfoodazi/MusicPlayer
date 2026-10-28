@@ -11,8 +11,11 @@ public sealed class NullAudioPlayer : IAudioPlayer
     public double DurationSeconds => 0;
 
     public event EventHandler? PlaybackEnded;
+    public event EventHandler<GaplessTransitionEventArgs>? GaplessTrackStarted;
     public event EventHandler<AudioPlayerFailureEventArgs>? Failed;
     public event EventHandler? AudioDeviceDisconnected;
+    public event EventHandler? AudioFocusLost;
+    public event EventHandler? AudioFocusGained;
 
     public Task<TimeSpan> LoadAsync(
         string filePath,

@@ -6,7 +6,7 @@ namespace MusicPlayer.UI.Controls;
 public partial class ArtistItem : Grid
 {
     public static readonly BindableProperty ArtistProperty =
-        BindableProperty.Create(nameof(Artist), typeof(Artist), typeof(ArtistItem), propertyChanged: OnArtistChanged);
+        BindableProperty.Create(nameof(Artist), typeof(Artist), typeof(ArtistItem));
 
     public Artist? Artist
     {
@@ -17,14 +17,6 @@ public partial class ArtistItem : Grid
     public ArtistItem()
     {
         InitializeComponent();
-    }
-
-    private static void OnArtistChanged(BindableObject bindable, object oldValue, object newValue)
-    {
-        if (bindable is ArtistItem item && newValue is Artist artist)
-        {
-            item.BindingContext = artist;
-        }
     }
 
     private async void OnArtistTapped(object? sender, TappedEventArgs e)

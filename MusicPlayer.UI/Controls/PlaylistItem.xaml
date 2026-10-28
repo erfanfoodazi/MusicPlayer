@@ -83,7 +83,7 @@
 
     <Label
         Grid.Row="2"
-        Text="{Binding TrackCount, StringFormat='{0} songs'}"
+        Text="{Binding TrackCountText}"
         FontFamily="Inter"
         FontSize="11.5"
         TextColor="{AppThemeBinding Light={StaticResource MutedOnLight}, Dark={StaticResource MutedOnDark}}"

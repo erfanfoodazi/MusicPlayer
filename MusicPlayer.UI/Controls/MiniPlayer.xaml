@@ -6,149 +6,162 @@
     xmlns:converters="clr-namespace:MusicPlayer.UI.Converters"
     xmlns:services="clr-namespace:MusicPlayer.UI.Services"
     x:DataType="services:PlayerService"
-    RowDefinitions="32,56"
-    BackgroundColor="{AppThemeBinding Light={StaticResource SurfaceLight}, Dark={StaticResource SurfaceDark}}"
+    Padding="10,0,10,8"
+    BackgroundColor="Transparent"
     IsVisible="{Binding HasCurrentTrack}">
 
     <Grid.Resources>
         <converters:ArtworkToImageSourceConverter x:Key="ArtworkToImageSourceConverter" />
     </Grid.Resources>
 
-    <!-- Hairline separates the dock from the scrolling content above it. -->
-    <BoxView
-        Grid.RowSpan="2"
-        HeightRequest="1"
-        VerticalOptions="Start"
-        Color="{AppThemeBinding Light={StaticResource OutlineLight}, Dark={StaticResource OutlineDark}}"
-        InputTransparent="True" />
+    <!-- Floating card: the player sits slightly above the tab bar so it reads as a layer,
+         not as part of the page background. -->
+    <Border Style="{StaticResource GlassPane}">
+        <Border.Shadow>
+            <Shadow Brush="#000000" Offset="0,8" Radius="22" Opacity="0.32" />
+        </Border.Shadow>
 
-    <!-- Seek row: elapsed time, a draggable progress line, and total time. -->
-    <Grid
-        Grid.Row="0"
-        ColumnDefinitions="44,*,44"
-        ColumnSpacing="8"
-        Padding="14,0,14,0">
+        <Grid RowDefinitions="56,24">
 
-        <Label
-            x:Name="PositionLabel"
-            Grid.Column="0"
-            Text="0:00"
-            FontFamily="InterMedium"
-            FontSize="11"
-            VerticalTextAlignment="Center"
-            TextColor="{AppThemeBinding Light={StaticResource MutedOnLight}, Dark={StaticResource MutedOnDark}}" />
+            <Grid
+                x:Name="ControlsGrid"
+                Grid.Row="0"
+                ColumnDefinitions="Auto,*,Auto,Auto,Auto"
+                ColumnSpacing="4"
+                Padding="10,0,6,0">
 
-        <!-- A native slider: it measures, drags and taps its own track, so the line and the
-             elapsed time can never drift out of sync with each other. -->
-        <Slider
-            x:Name="SeekSlider"
-            Grid.Column="1"
-            Minimum="0"
-            Maximum="1"
-            HeightRequest="32"
-            Margin="0,-6"
-            MinimumTrackColor="{DynamicResource AccentColor}"
-            MaximumTrackColor="{AppThemeBinding Light={StaticResource Gray200}, Dark={StaticResource SurfaceDarkElevated}}"
-            ThumbColor="{AppThemeBinding Light={DynamicResource Primary}, Dark={StaticResource White}}"
-            DragStarted="OnSeekDragStarted"
-            DragCompleted="OnSeekDragCompleted"
-            ValueChanged="OnSeekValueChanged"
-            SemanticProperties.Description="Playback position. Tap or drag to seek." />
+                <Border
+                    Grid.Column="0"
+                    WidthRequest="42"
+                    HeightRequest="42"
+                    StrokeThickness="0"
+                    StrokeShape="RoundRectangle 12"
+                    Background="{StaticResource ArtworkPlaceholderGradient}"
+                    VerticalOptions="Center">
+                    <Grid.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnMiniPlayerTapped" />
+                    </Grid.GestureRecognizers>
+                    <Image
+                        Source="{Binding CurrentTrackListArtwork, Converter={StaticResource ArtworkToImageSourceConverter}}"
+                        Aspect="AspectFill"
+                        WidthRequest="42"
+                        HeightRequest="42" />
+                </Border>
 
-        <Label
-            x:Name="DurationLabel"
-            Grid.Column="2"
-            Text="0:00"
-            FontFamily="InterMedium"
-            FontSize="11"
-            HorizontalTextAlignment="End"
-            VerticalTextAlignment="Center"
-            TextColor="{AppThemeBinding Light={StaticResource MutedOnLight}, Dark={StaticResource MutedOnDark}}" />
-    </Grid>
+                <VerticalStackLayout
+                    Grid.Column="1"
+                    VerticalOptions="Center"
+                    Spacing="1"
+                    Padding="8,0,0,0">
+                    <VerticalStackLayout.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnMiniPlayerTapped" />
+                    </VerticalStackLayout.GestureRecognizers>
+                    <Label
+                        Text="{Binding CurrentTrackDisplayName}"
+                        FontFamily="InterSemiBold"
+                        FontSize="14"
+                        CharacterSpacing="-0.1"
+                        TextColor="{AppThemeBinding Light={StaticResource TextOnLight}, Dark={StaticResource TextOnDark}}"
+                        LineBreakMode="TailTruncation" />
+                    <Label
+                        Text="{Binding CurrentTrackArtist}"
+                        FontFamily="Inter"
+                        FontSize="11.5"
+                        TextColor="{AppThemeBinding Light={StaticResource MutedOnLight}, Dark={StaticResource MutedOnDark}}"
+                        LineBreakMode="TailTruncation" />
+                </VerticalStackLayout>
 
-    <Grid
-        x:Name="ControlsGrid"
-        Grid.Row="1"
-        ColumnDefinitions="Auto,*,Auto,Auto,Auto"
-        ColumnSpacing="6"
-        Padding="16,0,10,4">
+                <Button
+                    Grid.Column="2"
+                    Text="&#xe045;"
+                    Style="{StaticResource IconButton}"
+                    FontSize="19"
+                    WidthRequest="34"
+                    HeightRequest="34"
+                    MinimumWidthRequest="34"
+                    MinimumHeightRequest="34"
+                    CornerRadius="17"
+                    TextColor="{AppThemeBinding Light={StaticResource MutedOnLight}, Dark={StaticResource MutedOnDark}}"
+                    VerticalOptions="Center"
+                    Command="{Binding PlayPreviousCommand}"
+                    SemanticProperties.Description="Previous track or restart" />
 
-        <Border
-            Grid.Column="0"
-            WidthRequest="40"
-            HeightRequest="40"
-            StrokeThickness="0"
-            StrokeShape="RoundRectangle 10"
-            Background="{StaticResource ArtworkPlaceholderGradient}"
-            VerticalOptions="Center">
-            <Grid.GestureRecognizers>
-                <TapGestureRecognizer Tapped="OnMiniPlayerTapped" />
-            </Grid.GestureRecognizers>
-            <Image
-                Source="{Binding CurrentTrackListArtwork, Converter={StaticResource ArtworkToImageSourceConverter}}"
-                Aspect="AspectFill"
-                WidthRequest="40"
-                HeightRequest="40" />
-        </Border>
+                <Button
+                    Grid.Column="3"
+                    Text="{Binding PlayPauseIcon}"
+                    FontFamily="MaterialIcons"
+                    FontSize="21"
+                    WidthRequest="40"
+                    HeightRequest="40"
+                    MinimumWidthRequest="40"
+                    MinimumHeightRequest="40"
+                    Padding="0"
+                    CornerRadius="20"
+                    BackgroundColor="{DynamicResource AccentSoftColor}"
+                    TextColor="{DynamicResource AccentColor}"
+                    VerticalOptions="Center"
+                    Command="{Binding TogglePlayPauseCommand}"
+                    SemanticProperties.Description="Play or pause" />
 
-        <VerticalStackLayout
-            Grid.Column="1"
-            VerticalOptions="Center"
-            Spacing="0"
-            Padding="8,0,0,0">
-            <VerticalStackLayout.GestureRecognizers>
-                <TapGestureRecognizer Tapped="OnMiniPlayerTapped" />
-            </VerticalStackLayout.GestureRecognizers>
-            <Label
-                Text="{Binding CurrentTrackDisplayName}"
-                FontFamily="InterSemiBold"
-                FontSize="14"
-                CharacterSpacing="-0.1"
-                TextColor="{AppThemeBinding Light={StaticResource TextOnLight}, Dark={StaticResource TextOnDark}}"
-                LineBreakMode="TailTruncation" />
-            <Label
-                Text="{Binding CurrentTrackArtist}"
-                FontFamily="Inter"
-                FontSize="12"
-                TextColor="{AppThemeBinding Light={StaticResource MutedOnLight}, Dark={StaticResource MutedOnDark}}"
-                LineBreakMode="TailTruncation" />
-        </VerticalStackLayout>
+                <Button
+                    Grid.Column="4"
+                    Text="&#xe044;"
+                    Style="{StaticResource IconButton}"
+                    FontSize="20"
+                    WidthRequest="34"
+                    HeightRequest="34"
+                    MinimumWidthRequest="34"
+                    MinimumHeightRequest="34"
+                    CornerRadius="17"
+                    TextColor="{AppThemeBinding Light={StaticResource MutedOnLight}, Dark={StaticResource MutedOnDark}}"
+                    VerticalOptions="Center"
+                    Command="{Binding PlayNextCommand}"
+                    SemanticProperties.Description="Next track" />
+            </Grid>
 
-        <Button
-            Grid.Column="2"
-            Text="&#xe045;"
-            Style="{StaticResource IconButton}"
-            FontSize="20"
-            TextColor="{AppThemeBinding Light={StaticResource MutedOnLight}, Dark={StaticResource MutedOnDark}}"
-            VerticalOptions="Center"
-            Command="{Binding PlayPreviousCommand}"
-            SemanticProperties.Description="Previous track or restart" />
+            <!-- Hairline progress: elapsed time, a draggable line, and total time. -->
+            <Grid
+                Grid.Row="1"
+                ColumnDefinitions="38,*,38"
+                ColumnSpacing="6"
+                Padding="14,0,14,0">
 
-        <Button
-            Grid.Column="3"
-            Text="{Binding PlayPauseIcon}"
-            FontFamily="MaterialIcons"
-            FontSize="22"
-            WidthRequest="42"
-            HeightRequest="42"
-            MinimumWidthRequest="42"
-            MinimumHeightRequest="42"
-            Padding="0"
-            CornerRadius="21"
-            BackgroundColor="{DynamicResource AccentSoftColor}"
-            TextColor="{DynamicResource AccentColor}"
-            VerticalOptions="Center"
-            Command="{Binding TogglePlayPauseCommand}"
-            SemanticProperties.Description="Play or pause" />
+                <Label
+                    x:Name="PositionLabel"
+                    Grid.Column="0"
+                    Text="0:00"
+                    FontFamily="InterMedium"
+                    FontSize="10"
+                    VerticalTextAlignment="Center"
+                    TextColor="{AppThemeBinding Light={StaticResource FaintOnLight}, Dark={StaticResource FaintOnDark}}" />
 
-        <Button
-            Grid.Column="4"
-            Text="&#xe044;"
-            Style="{StaticResource IconButton}"
-            FontSize="22"
-            TextColor="{AppThemeBinding Light={StaticResource MutedOnLight}, Dark={StaticResource MutedOnDark}}"
-            VerticalOptions="Center"
-            Command="{Binding PlayNextCommand}"
-            SemanticProperties.Description="Next track" />
-    </Grid>
+                <!-- A native slider: it measures, drags and taps its own track, so the line and
+                     the elapsed time can never drift out of sync with each other. -->
+                <Slider
+                    x:Name="SeekSlider"
+                    Grid.Column="1"
+                    Minimum="0"
+                    Maximum="1"
+                    HeightRequest="26"
+                    Margin="0,-9"
+                    MinimumTrackColor="{DynamicResource AccentColor}"
+                    MaximumTrackColor="{AppThemeBinding Light={StaticResource Gray200}, Dark={StaticResource SurfaceDarkElevated}}"
+                    ThumbColor="{AppThemeBinding Light={DynamicResource Primary}, Dark={StaticResource White}}"
+                    DragStarted="OnSeekDragStarted"
+                    DragCompleted="OnSeekDragCompleted"
+                    ValueChanged="OnSeekValueChanged"
+                    SemanticProperties.Description="Playback position. Tap or drag to seek." />
+
+                <Label
+                    x:Name="DurationLabel"
+                    Grid.Column="2"
+                    Text="0:00"
+                    FontFamily="InterMedium"
+                    FontSize="10"
+                    HorizontalTextAlignment="End"
+                    VerticalTextAlignment="Center"
+                    TextColor="{AppThemeBinding Light={StaticResource FaintOnLight}, Dark={StaticResource FaintOnDark}}" />
+            </Grid>
+        </Grid>
+    </Border>
 </Grid>

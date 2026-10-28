@@ -6,10 +6,11 @@ using MusicPlayer.UI.Services;
 
 namespace MusicPlayer.UI.ViewModels;
 
-public partial class PlaylistDetailViewModel : BaseViewModel, IPlayTrackContext
+public partial class PlaylistDetailViewModel : BaseViewModel, IPlayTrackContext, IPlaylistTrackContext
 {
     System.Windows.Input.ICommand IPlayTrackContext.PlayTrackCommand => PlayTrackCommand;
     System.Windows.Input.ICommand IPlayTrackContext.OpenTrackCommand => OpenTrackCommand;
+    System.Windows.Input.ICommand IPlaylistTrackContext.RemoveTrackCommand => RemoveTrackCommand;
 
     private readonly PlayerService _playerService;
     private readonly LibraryService _library;
@@ -110,6 +111,28 @@ public partial class PlaylistDetailViewModel : BaseViewModel, IPlayTrackContext
         await Shell.Current.GoToAsync(Routes.NowPlaying);
     }
 
+    /// <summary>
+    /// Handles a long-press drag: the dragged song takes the target's position and the new
+    /// order is written to the library immediately.
+    /// </summary>
+    public bool MoveTrack(Music dragged, Music target)
+    {
+        if (Playlist is null || ReferenceEquals(dragged, target))
+        {
+            return false;
+        }
+
+        var from = Tracks.IndexOf(dragged);
+        var to = Tracks.IndexOf(target);
+        if (from < 0 || to < 0 || !_library.MovePlaylistTrack(Playlist, dragged, to))
+        {
+            return false;
+        }
+
+        Tracks.Move(from, to);
+        return true;
+    }
+
     [RelayCommand]
     private void RemoveTrack(Music? track)
     {
@@ -122,6 +145,34 @@ public partial class PlaylistDetailViewModel : BaseViewModel, IPlayTrackContext
             Tracks.Remove(track);
             OnPropertyChanged(nameof(Playlist));
         }
+    }
+
+    public bool RenamePlaylist(string name)
+    {
+        if (Playlist is null || !_library.RenamePlaylist(Playlist, name))
+        {
+            return false;
+        }
+
+        // The model is mutated in place, so the header binding needs a nudge.
+        OnPropertyChanged(nameof(Playlist));
+        Title = Playlist.Name;
+        return true;
+    }
+
+    /// <summary>The cover lives on the model; re-read it after the picker changes it.</summary>
+    public void NotifyArtworkChanged() => OnPropertyChanged(nameof(Playlist));
+
+    public bool DeletePlaylist()
+    {
+        if (Playlist is null || !_library.DeletePlaylist(Playlist))
+        {
+            return false;
+        }
+
+        Playlist = null;
+        Tracks = [];
+        return true;
     }
 
     [RelayCommand]

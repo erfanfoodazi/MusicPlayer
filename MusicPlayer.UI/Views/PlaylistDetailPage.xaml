@@ -27,7 +27,7 @@
             Background="{DynamicResource HeaderWash}" />
 
         <!-- ===== Top bar ===== -->
-        <Grid x:Name="TopBar" Grid.Row="0" ColumnDefinitions="Auto,*,Auto" Padding="8,6,8,0">
+        <Grid x:Name="TopBar" Grid.Row="0" ColumnDefinitions="Auto,*,Auto,Auto" Padding="8,6,8,0">
             <Button
                 Grid.Column="0"
                 Text="&#xe5c4;"
@@ -49,6 +49,13 @@
                 FontSize="22"
                 Command="{Binding AddSongsCommand}"
                 SemanticProperties.Description="Add songs to this playlist" />
+            <Button
+                Grid.Column="3"
+                Text="&#xe5d4;"
+                Style="{StaticResource IconButton}"
+                FontSize="22"
+                Clicked="OnPlaylistMenuClicked"
+                SemanticProperties.Description="Playlist options" />
         </Grid>
 
         <!-- ===== Cover + tracks ===== -->
@@ -68,6 +75,9 @@
                         StrokeThickness="0"
                         StrokeShape="RoundRectangle 18"
                         Background="{StaticResource ArtworkPlaceholderGradient}">
+                        <Border.GestureRecognizers>
+                            <TapGestureRecognizer Tapped="OnCoverTapped" />
+                        </Border.GestureRecognizers>
                         <Border.Shadow>
                             <Shadow Brush="#000000" Offset="0,10" Radius="24" Opacity="0.3" />
                         </Border.Shadow>
@@ -85,6 +95,25 @@
                                 WidthRequest="204"
                                 HeightRequest="204"
                                 IsVisible="{Binding Playlist.ArtworkPath, Converter={StaticResource StringNotEmptyConverter}}" />
+
+                            <!-- Replace the sleeve with any picture from the device. -->
+                            <Button
+                                Text="&#xe412;"
+                                FontFamily="MaterialIcons"
+                                FontSize="18"
+                                WidthRequest="40"
+                                HeightRequest="40"
+                                MinimumWidthRequest="40"
+                                MinimumHeightRequest="40"
+                                Padding="0"
+                                CornerRadius="20"
+                                BackgroundColor="#99000000"
+                                TextColor="White"
+                                HorizontalOptions="End"
+                                VerticalOptions="End"
+                                Margin="10"
+                                Clicked="OnChangeCoverClicked"
+                                SemanticProperties.Description="Change playlist cover" />
                         </Grid>
                     </Border>
 
@@ -125,9 +154,9 @@
                             HeightRequest="44"
                             Padding="18,0"
                             StrokeThickness="1"
-                            Stroke="{AppThemeBinding Light={StaticResource OutlineLight}, Dark={StaticResource OutlineDark}}"
+                            Stroke="{AppThemeBinding Light={StaticResource GlassStrokeLight}, Dark={StaticResource GlassStrokeDark}}"
                             StrokeShape="RoundRectangle 22"
-                            BackgroundColor="Transparent">
+                            Background="{AppThemeBinding Light={StaticResource GlassFillLight}, Dark={StaticResource GlassFillDark}}">
                             <Border.GestureRecognizers>
                                 <TapGestureRecognizer Command="{Binding ShufflePlayCommand}" />
                             </Border.GestureRecognizers>
@@ -173,7 +202,15 @@
                         </Border>
                     </HorizontalStackLayout>
 
-                    <Label Text="TRACKS" Style="{StaticResource SectionLabelText}" Margin="2,18,0,4" />
+                    <Grid ColumnDefinitions="*,Auto" Margin="2,18,2,4">
+                        <Label Text="TRACKS" Style="{StaticResource SectionLabelText}" VerticalOptions="Center" />
+                        <Label
+                            Grid.Column="1"
+                            Text="Hold and drag to reorder"
+                            Style="{StaticResource CaptionText}"
+                            FontSize="10"
+                            VerticalOptions="Center" />
+                    </Grid>
                 </VerticalStackLayout>
             </CollectionView.Header>
 
@@ -197,7 +234,12 @@
             <CollectionView.ItemTemplate>
                 <DataTemplate x:DataType="models:Music">
                     <Grid Margin="14,0">
-                        <controls:TrackItem Track="{Binding .}" />
+                        <controls:TrackItem
+                            Track="{Binding .}"
+                            IsReorderable="True"
+                            RowDragStarting="OnTrackDragStarting"
+                            RowDragCompleted="OnTrackDragCompleted"
+                            RowDrop="OnTrackDrop" />
                     </Grid>
                 </DataTemplate>
             </CollectionView.ItemTemplate>

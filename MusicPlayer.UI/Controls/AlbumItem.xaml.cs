@@ -23,6 +23,9 @@ public partial class AlbumItem : Grid
     {
         if (BindingContext is not Album album) return;
 
+        Haptics.Tap();
+        _ = Motion.PressAsync(this);
+
         await Shell.Current.GoToAsync($"{Routes.AlbumDetail}?albumId={album.Id}");
     }
 

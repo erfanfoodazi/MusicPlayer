@@ -39,6 +39,19 @@ public partial class InputDialogPage : ContentPage
         }
 
         BindingContext = this;
+
+        // The keyboard overlays the centred card on Android instead of resizing the window,
+        // so the dialog has to move up to keep its buttons reachable.
+        InputEntry.Focused += (_, _) => ShiftForKeyboard(true);
+        InputEntry.Unfocused += (_, _) => ShiftForKeyboard(false);
+    }
+
+    private void ShiftForKeyboard(bool keyboardOpen)
+    {
+#if ANDROID
+        var target = keyboardOpen ? -Math.Clamp(Height * 0.16, 90, 190) : 0;
+        _ = Card.TranslateTo(0, target, 180, Easing.CubicOut);
+#endif
     }
 
     /// <summary>Bound to the entry's Return key so Enter confirms like a native dialog.</summary>

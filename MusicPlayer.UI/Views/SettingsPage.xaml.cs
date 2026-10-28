@@ -24,6 +24,14 @@ public partial class SettingsPage : ContentPage
 
         if (_introPlayed)
         {
+            await Motion.ReenterAsync(
+                HeaderBlock,
+                PlaybackSection,
+                LibrarySection,
+                AppearanceSection,
+                StorageSection,
+                FileAccessSection,
+                AdvancedSection);
             return;
         }
 
@@ -49,15 +57,5 @@ public partial class SettingsPage : ContentPage
             StorageSection,
             FileAccessSection,
             AdvancedSection);
-    }
-
-    private async void OnNavLibraryClicked(object? sender, EventArgs e)
-    {
-        await Shell.Current.GoToAsync(Routes.Library);
-    }
-
-    private async void OnNavSearchClicked(object? sender, EventArgs e)
-    {
-        await Shell.Current.GoToAsync(Routes.Search);
     }
 }

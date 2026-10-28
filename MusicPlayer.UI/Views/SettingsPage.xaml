@@ -16,7 +16,7 @@
             <VerticalStackLayout Padding="20,12,20,26" Spacing="22">
 
                 <VerticalStackLayout x:Name="HeaderBlock" Spacing="14">
-                    <VerticalStackLayout Spacing="1">
+                    <VerticalStackLayout Spacing="2">
                         <Label
                             Text="AURALIS"
                             Style="{StaticResource OverlineText}"
@@ -24,29 +24,12 @@
                             CharacterSpacing="2.4"
                             TextColor="{DynamicResource AccentColor}" />
                         <Label Text="Settings" Style="{StaticResource DisplayText}" />
+                        <Label
+                            Text="Playback, library and appearance"
+                            Style="{StaticResource CaptionText}"
+                            FontSize="11.5"
+                            Margin="1,2,0,0" />
                     </VerticalStackLayout>
-
-                    <!-- Top navigation: Library / Search / Settings (replaces the bottom tab bar) -->
-                    <Border Style="{StaticResource SegmentTrack}">
-                        <Grid ColumnDefinitions="*,*,*">
-                            <Button
-                                Grid.Column="0"
-                                Text="Library"
-                                Style="{StaticResource SegmentButton}"
-                                Clicked="OnNavLibraryClicked" />
-                            <Button
-                                Grid.Column="1"
-                                Text="Search"
-                                Style="{StaticResource SegmentButton}"
-                                Clicked="OnNavSearchClicked" />
-                            <Button
-                                Grid.Column="2"
-                                Text="Settings"
-                                Style="{StaticResource SegmentButton}"
-                                BackgroundColor="{AppThemeBinding Light={StaticResource SurfaceLight}, Dark={StaticResource SurfaceDarkElevated}}"
-                                TextColor="{AppThemeBinding Light={StaticResource TextOnLight}, Dark={StaticResource TextOnDark}}" />
-                        </Grid>
-                    </Border>
 
                     <Border
                         IsVisible="{Binding HasStatus}"
@@ -92,7 +75,7 @@
                                         MinimumWidthRequest="34"
                                         MinimumHeightRequest="34"
                                         CornerRadius="17"
-                                        BackgroundColor="{AppThemeBinding Light={StaticResource SurfaceLightAlt}, Dark={StaticResource SurfaceDarkAlt}}"
+                                        Background="{AppThemeBinding Light={StaticResource GlassFillLight}, Dark={StaticResource GlassFillDark}}"
                                         Command="{Binding AdjustCrossfadeCommand}"
                                         CommandParameter="-1"
                                         SemanticProperties.Description="Shorter crossfade" />
@@ -113,7 +96,7 @@
                                         MinimumWidthRequest="34"
                                         MinimumHeightRequest="34"
                                         CornerRadius="17"
-                                        BackgroundColor="{AppThemeBinding Light={StaticResource SurfaceLightAlt}, Dark={StaticResource SurfaceDarkAlt}}"
+                                        Background="{AppThemeBinding Light={StaticResource GlassFillLight}, Dark={StaticResource GlassFillDark}}"
                                         Command="{Binding AdjustCrossfadeCommand}"
                                         CommandParameter="1"
                                         SemanticProperties.Description="Longer crossfade" />
@@ -352,7 +335,7 @@
                                     MinimumHeightRequest="32"
                                     Padding="14,0"
                                     CornerRadius="16"
-                                    BackgroundColor="{AppThemeBinding Light={StaticResource SurfaceLightAlt}, Dark={StaticResource SurfaceDarkAlt}}"
+                                    Background="{AppThemeBinding Light={StaticResource GlassFillLight}, Dark={StaticResource GlassFillDark}}"
                                     TextColor="{AppThemeBinding Light={StaticResource TextOnLight}, Dark={StaticResource TextOnDark}}"
                                     Command="{Binding ClearCacheCommand}" />
                             </Grid>
@@ -373,7 +356,7 @@
                                     Padding="10,4"
                                     StrokeThickness="0"
                                     StrokeShape="RoundRectangle 10"
-                                    BackgroundColor="{AppThemeBinding Light={StaticResource SurfaceLightAlt}, Dark={StaticResource SurfaceDarkAlt}}"
+                                    Background="{AppThemeBinding Light={StaticResource GlassFillLight}, Dark={StaticResource GlassFillDark}}"
                                     VerticalOptions="Center">
                                     <Label
                                         Text="{Binding StorageAccessStateText}"

@@ -15,6 +15,12 @@ public interface IAudioPlayer : IDisposable
     /// <summary>Raised when the current track reaches its end.</summary>
     event EventHandler? PlaybackEnded;
 
+    /// <summary>
+    /// Raised when the engine moved into the track primed with <see cref="SetNextTrack"/>
+    /// without a silent gap. No <see cref="PlaybackEnded"/> is raised for that transition.
+    /// </summary>
+    event EventHandler<GaplessTransitionEventArgs>? GaplessTrackStarted;
+
     /// <summary>Raised when the platform engine cannot load or play the file.</summary>
     event EventHandler<AudioPlayerFailureEventArgs>? Failed;
 
@@ -24,6 +30,17 @@ public interface IAudioPlayer : IDisposable
     /// song does not suddenly blast out of the phone speaker.
     /// </summary>
     event EventHandler? AudioDeviceDisconnected;
+
+    /// <summary>
+    /// Raised when Android hands audio focus to another app. The engine has already paused;
+    /// the owner only has to mirror that state.
+    /// </summary>
+    event EventHandler? AudioFocusLost;
+
+    /// <summary>
+    /// Raised when a transient focus loss ends, after the engine has resumed by itself.
+    /// </summary>
+    event EventHandler? AudioFocusGained;
 
     /// <summary>
     /// Loads a local file. When <paramref name="autoPlay"/> is true the engine starts
@@ -39,6 +56,13 @@ public interface IAudioPlayer : IDisposable
     Task StopAsync();
 
     Task SeekAsync(double seconds);
+
+    /// <summary>
+    /// Primes the engine with the file that should follow the current one at the end of the
+    /// track, so the decoder can cross over without silence. Pass null to clear the priming.
+    /// Platforms without sample-accurate crossfade support ignore this.
+    /// </summary>
+    void SetNextTrack(string? filePath) { }
 
     /// <summary>Sets output volume from 0 to 1.</summary>
     void SetVolume(double volume);
@@ -73,4 +97,12 @@ public sealed class AudioPlayerFailureEventArgs : EventArgs
     public AudioPlayerFailureEventArgs(Exception exception) => Exception = exception;
 
     public Exception Exception { get; }
+}
+
+public sealed class GaplessTransitionEventArgs : EventArgs
+{
+    public GaplessTransitionEventArgs(string filePath) => FilePath = filePath;
+
+    /// <summary>File the engine was primed with when the transition happened.</summary>
+    public string FilePath { get; }
 }

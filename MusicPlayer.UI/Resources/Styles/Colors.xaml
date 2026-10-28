@@ -65,8 +65,10 @@
     <Color x:Key="FaintOnLight">#8A8AA1</Color>
 
     <!-- Transparent overlays used for glassy rows and artwork scrims. -->
-    <Color x:Key="GlassStrokeDark">#1FFFFFFF</Color>
-    <Color x:Key="GlassStrokeLight">#12000000</Color>
+    <Color x:Key="GlassStrokeDark">#2EFFFFFF</Color>
+    <Color x:Key="GlassStrokeLight">#1F000000</Color>
+    <Color x:Key="GlassTintDark">#1FFFFFFF</Color>
+    <Color x:Key="GlassTintLight">#B8FFFFFF</Color>
     <Color x:Key="ArtworkScrim">#B3000000</Color>
     <Color x:Key="Scrim">#CC000000</Color>
 

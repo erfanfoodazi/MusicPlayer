@@ -13,6 +13,7 @@ public partial class NowPlayingPage : ContentPage
     private bool _subscribed;
     private bool _skipNextIntro;
     private CancellationTokenSource? _backdropCancellation;
+    private ArtworkColors.ArtworkTheme? _theme;
 
     private NowPlayingViewModel ViewModel => (NowPlayingViewModel)BindingContext;
 
@@ -21,7 +22,6 @@ public partial class NowPlayingPage : ContentPage
         InitializeComponent();
         BindingContext = ServiceHelper.GetRequiredService<NowPlayingViewModel>();
         Shell.SetNavBarIsVisible(this, false);
-        Shell.SetTabBarIsVisible(this, false);
     }
 
     protected override async void OnAppearing()
@@ -30,12 +30,15 @@ public partial class NowPlayingPage : ContentPage
 
         SystemChrome.ApplyAppTheme();
         ViewModel.Refresh();
+        OutputLabel.Text = AudioOutput.CurrentName();
 
         if (!_subscribed)
         {
             ViewModel.PropertyChanged += OnViewModelPropertyChanged;
             _subscribed = true;
         }
+
+        TrackTitleMarquee.Start();
 
         await ApplyBackdropAsync();
 
@@ -55,6 +58,7 @@ public partial class NowPlayingPage : ContentPage
     {
         base.OnDisappearing();
 
+        TrackTitleMarquee.Stop();
         _backdropCancellation?.Cancel();
 
         if (_subscribed)
@@ -75,15 +79,15 @@ public partial class NowPlayingPage : ContentPage
         try
         {
             PageHeader.CancelAnimations();
-            ContentScroll.CancelAnimations();
+            ContentStack.CancelAnimations();
             TransportRow.CancelAnimations();
             ArtworkCard.CancelAnimations();
             AmbientBackdrop.CancelAnimations();
 
             PageHeader.Opacity = 0;
             PageHeader.TranslationY = -10;
-            ContentScroll.Opacity = 0;
-            ContentScroll.TranslationY = 18;
+            ContentStack.Opacity = 0;
+            ContentStack.TranslationY = 18;
             TransportRow.Opacity = 0;
             TransportRow.TranslationY = 24;
             ArtworkCard.Opacity = 0;
@@ -96,8 +100,8 @@ public partial class NowPlayingPage : ContentPage
             await Task.WhenAll(
                 PageHeader.FadeTo(1, 180, Easing.CubicOut),
                 PageHeader.TranslateTo(0, 0, 220, Easing.CubicOut),
-                ContentScroll.FadeTo(1, 260, Easing.CubicOut),
-                ContentScroll.TranslateTo(0, 0, 300, Easing.CubicOut),
+                ContentStack.FadeTo(1, 260, Easing.CubicOut),
+                ContentStack.TranslateTo(0, 0, 300, Easing.CubicOut),
                 TransportRow.FadeTo(1, 280, Easing.CubicOut),
                 TransportRow.TranslateTo(0, 0, 320, Easing.CubicOut),
                 ArtworkCard.FadeTo(1, 240, Easing.CubicOut),
@@ -115,15 +119,15 @@ public partial class NowPlayingPage : ContentPage
     private void SetIntroComplete()
     {
         PageHeader.CancelAnimations();
-        ContentScroll.CancelAnimations();
+        ContentStack.CancelAnimations();
         TransportRow.CancelAnimations();
         ArtworkCard.CancelAnimations();
         AmbientBackdrop.CancelAnimations();
 
         PageHeader.Opacity = 1;
         PageHeader.TranslationY = 0;
-        ContentScroll.Opacity = 1;
-        ContentScroll.TranslationY = 0;
+        ContentStack.Opacity = 1;
+        ContentStack.TranslationY = 0;
         TransportRow.Opacity = 1;
         TransportRow.TranslationY = 0;
         ArtworkCard.Opacity = 1;
@@ -202,8 +206,7 @@ public partial class NowPlayingPage : ContentPage
         }
 
         var dark = (Microsoft.Maui.Controls.Application.Current?.RequestedTheme ?? AppTheme.Dark) != AppTheme.Light;
-        AmbientBackdrop.Background = ArtworkColors.CreateBackdropBrush(accent, dark);
-        BackgroundColor = ArtworkColors.BackdropBase(dark);
+        ApplyTheme(ArtworkColors.CreateTheme(accent, dark));
 
         if (!animate)
         {
@@ -222,6 +225,41 @@ public partial class NowPlayingPage : ContentPage
         }
     }
 
+    private void ApplyTheme(ArtworkColors.ArtworkTheme theme)
+    {
+        _theme = theme;
+
+        AmbientBackdrop.Background = theme.Backdrop;
+        BackgroundColor = theme.Base;
+
+        // Because these keys are declared in the page's own resource dictionary, the
+        // DynamicResource references on this page resolve to the cover palette instead of the
+        // app-wide accent. The rest of the app keeps its chosen accent.
+        Resources["AccentColor"] = theme.Accent;
+        Resources["AccentSoftColor"] = theme.AccentSoft;
+        Resources["AccentMutedColor"] = theme.AccentMuted;
+        Resources["AccentBorderColor"] = theme.AccentBorder;
+        Resources["AccentGradient"] = theme.AccentGradient;
+        Resources["PanelColor"] = theme.Panel;
+        Resources["PlayButtonColor"] = theme.PlayButton;
+
+        SystemChrome.ApplyPlayerChrome(theme.BackdropTop, theme.BackdropBottom);
+    }
+
+    /// <summary>
+    /// Re-paints the system bars after a modal (the lock player) is dismissed above this page.
+    /// </summary>
+    public void RefreshChrome()
+    {
+        if (_theme is null)
+        {
+            _ = ApplyBackdropAsync();
+            return;
+        }
+
+        SystemChrome.ApplyPlayerChrome(_theme.BackdropTop, _theme.BackdropBottom);
+    }
+
     private async void OnCloseClicked(object? sender, EventArgs e)
     {
         if (_queueOpen)
@@ -238,6 +276,71 @@ public partial class NowPlayingPage : ContentPage
         if (sender is Slider slider)
         {
             ViewModel.SeekCommand.Execute(slider.Value);
+        }
+    }
+
+    private void OnQueueTapped(object? sender, TappedEventArgs e)
+        => OnQueueClicked(sender, EventArgs.Empty);
+
+    private void OnLyricsTapped(object? sender, TappedEventArgs e)
+        => OnLyricsClicked(sender, EventArgs.Empty);
+
+    private void OnSleepTapped(object? sender, TappedEventArgs e)
+        => OnSleepClicked(sender, EventArgs.Empty);
+
+    /// <summary>
+    /// The three-dot header button and the tune tile both open the pro tools; each option
+    /// hands off to the existing picker.
+    /// </summary>
+    private async void OnAudioToolsClicked(object? sender, EventArgs e)
+    {
+        var player = PlayerService.Instance;
+
+        var choice = await AppDialogs.ShowActionsAsync(
+            this,
+            "Audio tools",
+            [
+                new AppSheetAction
+                {
+                    Label = "Playback speed",
+                    Glyph = "\ue9e4",
+                    Description = player.SupportsPlaybackRate ? $"Current · {player.PlaybackSpeed:0.##}×" : "Not available on this device",
+                },
+                new AppSheetAction
+                {
+                    Label = "Pitch",
+                    Glyph = "\ue405",
+                    Description = player.SupportsPitch ? $"Current · {player.PitchSemitones:+0;-0;0} semitones" : "Not available on this device",
+                },
+                new AppSheetAction
+                {
+                    Label = "Equalizer",
+                    Glyph = "\ue429",
+                    Description = player.IsEqualizerEnabled ? $"On · {player.EqualizerPreset}" : "Off",
+                },
+                new AppSheetAction
+                {
+                    Label = "Sleep timer",
+                    Glyph = "\ue8b2",
+                    Description = player.SleepTimerDisplay,
+                },
+            ],
+            "PRO · tune the sound");
+
+        switch (choice)
+        {
+            case 0:
+                OnSpeedClicked(this, EventArgs.Empty);
+                break;
+            case 1:
+                OnPitchClicked(this, EventArgs.Empty);
+                break;
+            case 2:
+                OnEqualizerClicked(this, EventArgs.Empty);
+                break;
+            case 3:
+                OnSleepClicked(this, EventArgs.Empty);
+                break;
         }
     }
 
@@ -457,42 +560,18 @@ public partial class NowPlayingPage : ContentPage
         QueueScrim.Opacity = 0;
         QueueSheet.TranslationY = Math.Max(QueueSheet.Height, 620);
 
-        // The sheet always opens at the top of the session (previously played first), while
-        // the current song stays visible in the pinned card above the list.
-        ScrollQueueToTop();
+        // The sheet covers the player down to the bottom edge, so the system bar continues the
+        // sheet's surface instead of leaving a strip of the cover wash under it.
+        var sheetColor = (Microsoft.Maui.Controls.Application.Current?.RequestedTheme ?? AppTheme.Dark) == AppTheme.Light
+            ? Color.FromArgb("#FFFFFF")
+            : Color.FromArgb("#0B0B12");
+        SystemChrome.ApplyPlayerChrome(sheetColor, sheetColor);
 
         await Task.WhenAll(
             QueueScrim.FadeTo(1, 160, Easing.CubicOut),
             QueueSheet.TranslateTo(0, 0, 280, Easing.CubicOut));
 
         _queueAnimating = false;
-    }
-
-    /// <summary>Opens the queue at the first row of the first group.</summary>
-    private void ScrollQueueToTop()
-    {
-        if (ViewModel.QueueSections.Count == 0)
-        {
-            return;
-        }
-
-        try
-        {
-            // Grouped lists want both indexes; the item index on its own throws on some
-            // platforms, so fall back to the plain overload.
-            QueueList.ScrollTo(0, 0, ScrollToPosition.Start, animate: false);
-        }
-        catch
-        {
-            try
-            {
-                QueueList.ScrollTo(0, position: ScrollToPosition.Start, animate: false);
-            }
-            catch
-            {
-                // Scrolling is cosmetic; never let it block the sheet.
-            }
-        }
     }
 
     private async Task CloseQueueAsync()
@@ -512,6 +591,8 @@ public partial class NowPlayingPage : ContentPage
         QueueOverlay.IsVisible = false;
         QueueSheet.TranslationY = 0;
         _queueAnimating = false;
+
+        RefreshChrome();
     }
 
     private async void OnQueueScrimTapped(object? sender, TappedEventArgs e) => await CloseQueueAsync();

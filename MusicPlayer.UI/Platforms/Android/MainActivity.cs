@@ -55,8 +55,9 @@ public class MainActivity : MauiAppCompatActivity
     }
 
     /// <summary>
-    /// The notification's Lyrics action opens this activity over the keyguard. Keeping the
-    /// flag scoped to that launch means a normal notification tap still behaves like the app.
+    /// Draws the lock player over the keyguard. It is reached two ways: the notification's
+    /// Lyrics action, or the display coming up while the phone is locked and a track is
+    /// loaded. Neither path turns the screen on or keeps it awake.
     /// </summary>
     private void HandleLockScreenIntent(Intent? intent)
     {
@@ -67,19 +68,13 @@ public class MainActivity : MauiAppCompatActivity
 
         intent.RemoveExtra(ExtraOpenLockScreen);
 
-        // The window flags have to be in place before the page is shown: the app can be
-        // launched straight from a locked, screen-off phone. The wake lock also covers the
-        // case where the activity already exists: changing window flags alone does not always
-        // wake a display that the power button has just turned off.
-        WakeDisplay();
         PrepareLockScreenWindow();
-        MediaPlaybackService.Instance?.DismissLockPageNotification();
 
         Microsoft.Maui.ApplicationModel.MainThread.BeginInvokeOnMainThread(
             async () =>
             {
                 // A cold start builds the Shell a few hundred milliseconds later; retrying a
-                // couple of times is what makes the automatic lock-screen launch reliable.
+                // couple of times is what makes the notification launch reliable.
                 for (var attempt = 0; attempt < 4; attempt++)
                 {
                     await Task.Delay(attempt == 0 ? 420 : 360);
@@ -90,14 +85,18 @@ public class MainActivity : MauiAppCompatActivity
                         continue;
                     }
 
-                    if (shell.CurrentPage is LockScreenPage)
+                    // The lock player is a plain modal instead of a Shell route: pushing it as a
+                    // route while Now Playing is presented leaves Shell with an empty container
+                    // once both are dismissed, which shows up as a blank page.
+                    var navigation = shell.Navigation;
+                    if (navigation.ModalStack.OfType<LockScreenPage>().Any())
                     {
                         return;
                     }
 
                     try
                     {
-                        await shell.GoToAsync(Routes.LockScreen);
+                        await navigation.PushModalAsync(new LockScreenPage(), false);
                         return;
                     }
                     catch
@@ -109,59 +108,10 @@ public class MainActivity : MauiAppCompatActivity
     }
 
     /// <summary>
-    /// Lets the activity sit above the keyguard and wakes the display. Applied as soon as the
-    /// lock-screen intent arrives so the page never flashes behind the system lock screen.
+    /// Lets the activity sit above the keyguard while the lock player is open. The screen is
+    /// never turned on or kept awake from here: a locked, sleeping phone stays that way until
+    /// the user acts.
     /// </summary>
-    private void WakeDisplay()
-    {
-        try
-        {
-            var power = (PowerManager?)GetSystemService(PowerService);
-            if (power is null || power.IsInteractive)
-            {
-                return;
-            }
-
-#pragma warning disable CA1422 // The screen wake lock is the only API that works on all supported releases.
-            var wakeLock = power.NewWakeLock(
-                WakeLockFlags.ScreenDim | WakeLockFlags.AcquireCausesWakeup,
-                "Auralis:LockScreen");
-#pragma warning restore CA1422
-
-            if (wakeLock is null)
-            {
-                return;
-            }
-
-            wakeLock.Acquire(3000);
-            _ = ReleaseWakeLockAsync(wakeLock);
-        }
-        catch
-        {
-            // The full-screen notification and turnScreenOn flag remain as fallbacks.
-        }
-    }
-
-    private static async Task ReleaseWakeLockAsync(PowerManager.WakeLock wakeLock)
-    {
-        try
-        {
-            await Task.Delay(3000);
-            if (wakeLock.IsHeld)
-            {
-                wakeLock.Release();
-            }
-        }
-        catch
-        {
-            // The system can release a timed wake lock first.
-        }
-        finally
-        {
-            wakeLock.Dispose();
-        }
-    }
-
     private void PrepareLockScreenWindow()
     {
         if (Window is null)
@@ -174,15 +124,11 @@ public class MainActivity : MauiAppCompatActivity
             if (OperatingSystem.IsAndroidVersionAtLeast(27))
             {
                 SetShowWhenLocked(true);
-                SetTurnScreenOn(true);
                 return;
             }
 
 #pragma warning disable CA1422 // Required on API 21-26.
-            Window.AddFlags(
-                WindowManagerFlags.ShowWhenLocked |
-                WindowManagerFlags.TurnScreenOn |
-                WindowManagerFlags.KeepScreenOn);
+            Window.AddFlags(WindowManagerFlags.ShowWhenLocked);
 #pragma warning restore CA1422
         }
         catch

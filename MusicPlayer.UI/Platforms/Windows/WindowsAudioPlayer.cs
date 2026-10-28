@@ -20,6 +20,16 @@ public sealed class WindowsAudioPlayer : IAudioPlayer
 
     public bool SupportsPlaybackRate => true;
 
+    // Audio focus is an OS-managed concept on Android; the Windows media stack pauses
+    // playback itself when another session takes over.
+#pragma warning disable CS0067
+    public event EventHandler? AudioFocusLost;
+    public event EventHandler? AudioFocusGained;
+
+    // Windows playback runs on MediaPlayer without a primed successor for now.
+    public event EventHandler<GaplessTransitionEventArgs>? GaplessTrackStarted;
+#pragma warning restore CS0067
+
     public void SetPlaybackRate(double rate)
     {
         if (_disposed)

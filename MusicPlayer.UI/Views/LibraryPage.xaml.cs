@@ -1,4 +1,5 @@
 using System.ComponentModel;
+using Domain.Models;
 using MusicPlayer.UI.Services;
 using MusicPlayer.UI.ViewModels;
 
@@ -35,6 +36,10 @@ public partial class LibraryPage : ContentPage
             {
                 _introPlayed = true;
                 await RunIntroAsync(viewModel.SelectedTabIndex);
+            }
+            else
+            {
+                await Motion.ReenterAsync(HeaderBlock, GetTabView(viewModel.SelectedTabIndex));
             }
         }
     }
@@ -78,22 +83,17 @@ public partial class LibraryPage : ContentPage
         base.OnDisappearing();
     }
 
-    private async void OnSettingsClicked(object? sender, EventArgs e)
+    /// <summary>Shelves play immediately; the full track list keeps its context queue.</summary>
+    private void OnRecentTrackTapped(object? sender, TappedEventArgs e)
     {
-        Haptics.Tap();
-        await Shell.Current.GoToAsync(Routes.Settings);
-    }
+        if ((sender as Element)?.BindingContext is not Music track ||
+            BindingContext is not LibraryViewModel viewModel)
+        {
+            return;
+        }
 
-    private async void OnNavSearchClicked(object? sender, EventArgs e)
-    {
         Haptics.Tap();
-        await Shell.Current.GoToAsync(Routes.Search);
-    }
-
-    private async void OnNavSettingsClicked(object? sender, EventArgs e)
-    {
-        Haptics.Tap();
-        await Shell.Current.GoToAsync(Routes.Settings);
+        viewModel.PlayTrackCommand.Execute(track);
     }
 
     private void OnViewModelPropertyChanged(object? sender, PropertyChangedEventArgs e)

@@ -70,31 +70,105 @@ public static class ArtworkColors
 
     /// <summary>The page colour the gradient fades into.</summary>
     public static Color BackdropBase(bool darkTheme) =>
-        Color.FromArgb(darkTheme ? "#08080C" : "#F7F7FA");
+        Color.FromArgb(darkTheme ? "#07070C" : "#F4F4F9");
 
     /// <summary>
-    /// Vertical wash built from the cover colour: strong behind the artwork, fading into the
-    /// app background by the transport bar so titles and controls keep their contrast.
+    /// One cover-derived palette shared by every player surface. The backdrop keeps the cover
+    /// colour all the way to the bottom of the page instead of washing out to black, so the
+    /// transport row reads as part of the same surface.
     /// </summary>
-    public static Brush CreateBackdropBrush(Color? accent, bool darkTheme)
+    public static ArtworkTheme CreateTheme(Color? accent, bool darkTheme)
     {
         var baseColor = BackdropBase(darkTheme);
-        accent ??= ThemeAccent(darkTheme);
+        var vivid = NormalizeAccent(accent, darkTheme);
 
-        var top = Mix(accent, baseColor, darkTheme ? 0.42 : 0.78);
-        var middle = Mix(accent, baseColor, darkTheme ? 0.74 : 0.9);
+        var soft = darkTheme
+            ? Mix(vivid, baseColor, 0.82)
+            : Mix(vivid, Color.FromArgb("#FFFFFF"), 0.86);
+        var panel = darkTheme
+            ? Mix(vivid, baseColor, 0.88)
+            : Mix(vivid, Color.FromArgb("#FFFFFF"), 0.93);
 
-        return new LinearGradientBrush(
+        var top = Mix(vivid, baseColor, darkTheme ? 0.34 : 0.76);
+        var middle = Mix(vivid, baseColor, darkTheme ? 0.48 : 0.83);
+        var bottom = Mix(vivid, baseColor, darkTheme ? 0.4 : 0.8);
+
+        var backdrop = new LinearGradientBrush(
             new GradientStopCollection
             {
                 new(top, 0f),
-                new(top, 0.18f),
-                new(middle, 0.52f),
-                new(baseColor, 0.88f),
-                new(baseColor, 1f),
+                new(middle, 0.55f),
+                new(bottom, 1f),
             },
             new Point(0, 0),
             new Point(0, 1));
+
+        var buttonGradient = new LinearGradientBrush(
+            new GradientStopCollection
+            {
+                new(ShiftLightness(vivid, darkTheme ? 0.06 : -0.02), 0f),
+                new(ShiftLightness(vivid, darkTheme ? -0.08 : -0.14), 1f),
+            },
+            new Point(0, 0),
+            new Point(1, 1));
+
+        // The main play tile is a pale version of the cover colour with a near-black glyph,
+        // matching the soft button modern players use instead of a saturated accent.
+        var playButton = Mix(vivid, Color.FromArgb("#FFFFFF"), 0.58);
+
+        return new ArtworkTheme(
+            vivid,
+            soft,
+            panel,
+            vivid.WithAlpha(darkTheme ? 0.78f : 0.72f),
+            vivid.WithAlpha(darkTheme ? 0.3f : 0.26f),
+            buttonGradient,
+            backdrop,
+            top,
+            bottom,
+            baseColor,
+            playButton);
+    }
+
+    public sealed record ArtworkTheme(
+        Color Accent,
+        Color AccentSoft,
+        Color Panel,
+        Color AccentMuted,
+        Color AccentBorder,
+        Brush AccentGradient,
+        Brush Backdrop,
+        Color BackdropTop,
+        Color BackdropBottom,
+        Color Base,
+        Color PlayButton);
+
+    private static Color NormalizeAccent(Color? accent, bool darkTheme)
+    {
+        if (accent is null)
+        {
+            return ThemeAccent(darkTheme);
+        }
+
+        ToHsl(accent.Red, accent.Green, accent.Blue, out var hue, out var saturation, out var lightness);
+        if (saturation < 0.1)
+        {
+            // Nearly grey artwork has no usable hue; the app accent is a better button colour.
+            return ThemeAccent(darkTheme);
+        }
+
+        saturation = Math.Clamp(saturation, 0.52, 0.9);
+        lightness = darkTheme
+            ? Math.Clamp(lightness, 0.58, 0.72)
+            : Math.Clamp(lightness, 0.38, 0.52);
+
+        return FromHsl(hue, saturation, lightness);
+    }
+
+    private static Color ShiftLightness(Color color, double amount)
+    {
+        ToHsl(color.Red, color.Green, color.Blue, out var hue, out var saturation, out var lightness);
+        return FromHsl(hue, saturation, Math.Clamp(lightness + amount, 0.05, 0.95));
     }
 
     private static Color ThemeAccent(bool darkTheme)

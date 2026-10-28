@@ -30,7 +30,21 @@ public class TagLibMetadataReader : IMetadataReader
     {
         // FileShare.Read lets us read files that another process (e.g. a sync tool) has open.
         using var stream = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.Read);
-        return ReadCore(stream, Path.GetFileName(filePath), filePath);
+        var music = ReadCore(stream, Path.GetFileName(filePath), filePath);
+
+        if (music is not null)
+        {
+            try
+            {
+                music.DateModified = File.GetLastWriteTimeUtc(filePath);
+            }
+            catch
+            {
+                // A stat failure only costs the "date modified" sort for this file.
+            }
+        }
+
+        return music;
     }
 
     public Music? Read(Stream stream, string nameHint)

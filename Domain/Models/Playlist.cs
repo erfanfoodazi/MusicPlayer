@@ -16,5 +16,7 @@ namespace Domain.Models
         public List<PlaylistTrack> Tracks { get; set; } = [];
 
         public int TrackCount => Tracks?.Count ?? 0;
+
+        public string TrackCountText => TrackCount == 1 ? "1 song" : $"{TrackCount} songs";
     }
 }

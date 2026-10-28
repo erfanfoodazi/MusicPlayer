@@ -15,11 +15,19 @@ namespace MusicPlayer.UI.Services.Playback;
 public sealed class AndroidAudioPlayer : IAudioPlayer
 {
     private MediaPlayer? _player;
+    private MediaPlayer? _nextPlayer;
+    private string? _nextPath;
+    private bool _gaplessPromotionPending;
     private Equalizer? _equalizer;
     private readonly List<string> _equalizerPresets = [];
     private AudioManager? _audioManager;
     private BecomingNoisyReceiver? _noisyReceiver;
     private OutputDeviceCallback? _deviceCallback;
+    private FocusChangeListener? _focusListener;
+    private bool _hasAudioFocus;
+    private bool _pausedForFocus;
+    private bool _duckedForFocus;
+    private double _volume = 1;
     private bool _disconnectMonitoring;
     private bool _disposed;
     private bool _equalizerEnabled;
@@ -28,6 +36,8 @@ public sealed class AndroidAudioPlayer : IAudioPlayer
     private double _pitch = 1;
 
     public event EventHandler? AudioDeviceDisconnected;
+    public event EventHandler? AudioFocusLost;
+    public event EventHandler? AudioFocusGained;
 
     public AndroidAudioPlayer()
     {
@@ -70,6 +80,8 @@ public sealed class AndroidAudioPlayer : IAudioPlayer
     {
         get
         {
+            CheckGaplessTransition();
+
             try
             {
                 return (_player?.CurrentPosition ?? 0) / 1000.0;
@@ -85,6 +97,8 @@ public sealed class AndroidAudioPlayer : IAudioPlayer
     {
         get
         {
+            CheckGaplessTransition();
+
             try
             {
                 return (_player?.Duration ?? 0) / 1000.0;
@@ -97,6 +111,7 @@ public sealed class AndroidAudioPlayer : IAudioPlayer
     }
 
     public event EventHandler? PlaybackEnded;
+    public event EventHandler<GaplessTransitionEventArgs>? GaplessTrackStarted;
     public event EventHandler<AudioPlayerFailureEventArgs>? Failed;
 
     public async Task<TimeSpan> LoadAsync(
@@ -125,12 +140,7 @@ public sealed class AndroidAudioPlayer : IAudioPlayer
 
             try
             {
-                var attributes = new AudioAttributes.Builder()!
-                    .SetUsage(AudioUsageKind.Media)!
-                    .SetContentType(AudioContentType.Music)!
-                    .Build()!;
-
-                player.SetAudioAttributes(attributes);
+                player.SetAudioAttributes(CreateAudioAttributes());
 
                 player.Prepared += (_, _) =>
                 {
@@ -145,8 +155,16 @@ public sealed class AndroidAudioPlayer : IAudioPlayer
                     {
                         try
                         {
-                            player.Start();
-                            ApplyPlaybackParams();
+                            if (TryRequestAudioFocus())
+                            {
+                                player.Start();
+                                ApplyPlaybackParams();
+                            }
+                            else
+                            {
+                                // Another app (call, voice assistant) currently owns audio.
+                                AudioFocusLost?.Invoke(this, EventArgs.Empty);
+                            }
                         }
                         catch (Exception ex)
                         {
@@ -158,7 +176,9 @@ public sealed class AndroidAudioPlayer : IAudioPlayer
 
                 player.Completion += (_, _) =>
                 {
-                    if (ReferenceEquals(_player, player))
+                    // With a gapless successor primed the platform switches players itself;
+                    // reporting the end here would make PlayerService reload the track.
+                    if (ReferenceEquals(_player, player) && _nextPlayer is null)
                     {
                         PlaybackEnded?.Invoke(this, EventArgs.Empty);
                     }
@@ -210,8 +230,17 @@ public sealed class AndroidAudioPlayer : IAudioPlayer
         MainThread.InvokeOnMainThreadAsync(() =>
         {
             ObjectDisposedException.ThrowIf(_disposed, this);
+            CheckGaplessTransition();
             var player = _player ?? throw new InvalidOperationException("No audio is loaded.");
+
+            if (!TryRequestAudioFocus())
+            {
+                AudioFocusLost?.Invoke(this, EventArgs.Empty);
+                return;
+            }
+
             player.Start();
+            ApplyPlaybackParams();
         });
 
     public Task PauseAsync() =>
@@ -219,6 +248,8 @@ public sealed class AndroidAudioPlayer : IAudioPlayer
         {
             if (!_disposed)
             {
+                AbandonAudioFocus();
+                CheckGaplessTransition();
                 _player?.Pause();
             }
         });
@@ -228,6 +259,7 @@ public sealed class AndroidAudioPlayer : IAudioPlayer
         {
             if (!_disposed)
             {
+                AbandonAudioFocus();
                 ReleasePlayer();
             }
         });
@@ -239,6 +271,8 @@ public sealed class AndroidAudioPlayer : IAudioPlayer
             {
                 return;
             }
+
+            CheckGaplessTransition();
 
             var player = _player;
             if (player is not null)
@@ -254,10 +288,261 @@ public sealed class AndroidAudioPlayer : IAudioPlayer
             return;
         }
 
-        var level = (float)Math.Clamp(volume, 0, 1);
+        _volume = Math.Clamp(volume, 0, 1);
+        RestoreVolume();
+    }
+
+    /// <summary>
+    /// Primes a second prepared player. Android starts it at the exact end of the current
+    /// track, which removes the decoder restart (the silent gap) between songs that flow
+    /// into each other.
+    /// </summary>
+    public void SetNextTrack(string? filePath)
+    {
+        if (_disposed)
+        {
+            return;
+        }
+
+        if (MainThread.IsMainThread)
+        {
+            PrepareNextPlayer(filePath);
+        }
+        else
+        {
+            MainThread.BeginInvokeOnMainThread(() => PrepareNextPlayer(filePath));
+        }
+    }
+
+    private void PrepareNextPlayer(string? filePath)
+    {
+        if (_disposed)
+        {
+            return;
+        }
+
+        if (_player is null || string.IsNullOrWhiteSpace(filePath) || !File.Exists(filePath))
+        {
+            ClearNextPlayer();
+            return;
+        }
+
+        if (_nextPlayer is not null && string.Equals(_nextPath, filePath, StringComparison.Ordinal))
+        {
+            return;
+        }
+
+        // A successor that is already playing means the crossover started before this call.
+        // Releasing it here would cut the song; the poll adopts it and PlayerService arms the
+        // new successor right after.
+        if (_nextPlayer is { } playing && IsPlayingSafe(playing))
+        {
+            return;
+        }
+
+        ClearNextPlayer();
+
         try
         {
+            var next = new MediaPlayer();
+            next.SetAudioAttributes(CreateAudioAttributes());
+
+            next.Prepared += (_, _) =>
+            {
+                if (!ReferenceEquals(_nextPlayer, next))
+                {
+                    return;
+                }
+
+                try
+                {
+                    // Never apply PlaybackParams here: setting them on a prepared player starts
+                    // it, and SetNextMediaPlayer rejects a started successor. The rate and pitch
+                    // are applied again once this player is promoted to current.
+                    var level = (float)_volume;
+                    next.SetVolume(level, level);
+
+                    var current = _player;
+                    if (current is null)
+                    {
+                        ClearNextPlayer();
+                        return;
+                    }
+
+                    current.SetNextMediaPlayer(next);
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine(ex);
+                    ClearNextPlayer();
+                }
+            };
+
+            next.Completion += (_, _) =>
+            {
+                // Only reached when this player finishes without a successor primed.
+                if (ReferenceEquals(_player, next) && _nextPlayer is null)
+                {
+                    PlaybackEnded?.Invoke(this, EventArgs.Empty);
+                }
+            };
+
+            next.Error += (_, args) =>
+            {
+                args.Handled = true;
+                System.Diagnostics.Debug.WriteLine(
+                    $"Gapless successor failed (what={args.What}, extra={args.Extra}).");
+
+                MainThread.BeginInvokeOnMainThread(() =>
+                {
+                    // A refused file simply keeps the normal end-of-track path.
+                    if (ReferenceEquals(_nextPlayer, next))
+                    {
+                        ClearNextPlayer();
+                    }
+                });
+            };
+
+            next.SetDataSource(filePath);
+            _nextPlayer = next;
+            _nextPath = filePath;
+            next.PrepareAsync();
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine(ex);
+            ClearNextPlayer();
+        }
+    }
+
+    private void ClearNextPlayer()
+    {
+        var next = _nextPlayer;
+        _nextPlayer = null;
+        _nextPath = null;
+        _gaplessPromotionPending = false;
+
+        if (next is null)
+        {
+            return;
+        }
+
+        try
+        {
+            _player?.SetNextMediaPlayer(null);
+        }
+        catch
+        {
+            // The current player may already be reset after a transition.
+        }
+
+        ReleasePlayerInstance(next);
+    }
+
+    /// <summary>
+    /// The primed player reports playback only once Android has switched to it, so this is
+    /// the signal to adopt it as the current player. Cheap enough to poll from the position
+    /// timer that already runs four times a second.
+    /// </summary>
+    private void CheckGaplessTransition()
+    {
+        if (_gaplessPromotionPending || _disposed)
+        {
+            return;
+        }
+
+        var next = _nextPlayer;
+        if (next is null || _player is null || !IsPlayingSafe(next))
+        {
+            return;
+        }
+
+        _gaplessPromotionPending = true;
+
+        // Transports and the position timer already run on the main thread; adopting the
+        // new player right here keeps pause/seek from touching the reset old one.
+        if (MainThread.IsMainThread)
+        {
+            PromoteNextPlayer();
+        }
+        else
+        {
+            MainThread.BeginInvokeOnMainThread(PromoteNextPlayer);
+        }
+    }
+
+    private static bool IsPlayingSafe(MediaPlayer player)
+    {
+        try
+        {
+            return player.IsPlaying;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    private void PromoteNextPlayer()
+    {
+        _gaplessPromotionPending = false;
+
+        var next = _nextPlayer;
+        var previous = _player;
+        var path = _nextPath;
+
+        if (next is null || previous is null || ReferenceEquals(next, previous))
+        {
+            return;
+        }
+
+        _nextPlayer = null;
+        _nextPath = null;
+        _player = next;
+
+        try
+        {
+            previous.SetNextMediaPlayer(null);
+        }
+        catch
+        {
+            // Android already detached the finished player.
+        }
+
+        ReleasePlayerInstance(previous);
+
+        try
+        {
+            var level = (float)_volume;
+            next.SetVolume(level, level);
+        }
+        catch
+        {
+            // Volume was applied when the successor was prepared.
+        }
+
+        // The equalizer is bound to the old audio session, so it has to follow the new player.
+        ReleaseEqualizer();
+        EnsureEqualizer(next);
+        ApplyPlaybackParams();
+        ApplyEqualizerState();
+
+        GaplessTrackStarted?.Invoke(this, new GaplessTransitionEventArgs(path ?? string.Empty));
+    }
+
+    private static AudioAttributes CreateAudioAttributes() =>
+        new AudioAttributes.Builder()!
+            .SetUsage(AudioUsageKind.Media)!
+            .SetContentType(AudioContentType.Music)!
+            .Build()!;
+
+    private void RestoreVolume()
+    {
+        try
+        {
+            var level = (float)_volume;
             _player?.SetVolume(level, level);
+            _nextPlayer?.SetVolume(level, level);
         }
         catch
         {
@@ -267,7 +552,22 @@ public sealed class AndroidAudioPlayer : IAudioPlayer
 
     private void ApplyPlaybackParams()
     {
-        if (_disposed || _player is null || !OperatingSystem.IsAndroidVersionAtLeast(23))
+        if (_disposed)
+        {
+            return;
+        }
+
+        // Only the current player: PlaybackParams would start a primed successor, which
+        // breaks SetNextMediaPlayer. The successor picks the params up when it is promoted.
+        if (_player is { } player)
+        {
+            ApplyPlaybackParamsTo(player);
+        }
+    }
+
+    private void ApplyPlaybackParamsTo(MediaPlayer player)
+    {
+        if (!OperatingSystem.IsAndroidVersionAtLeast(23))
         {
             return;
         }
@@ -277,7 +577,7 @@ public sealed class AndroidAudioPlayer : IAudioPlayer
             var parameters = new PlaybackParams();
             parameters.SetSpeed((float)_playbackRate);
             parameters.SetPitch((float)_pitch);
-            _player.PlaybackParams = parameters;
+            player.PlaybackParams = parameters;
         }
         catch (Exception ex)
         {
@@ -395,6 +695,7 @@ public sealed class AndroidAudioPlayer : IAudioPlayer
 
     private void ReleasePlayer()
     {
+        ClearNextPlayer();
         ReleaseEqualizer();
 
         var player = _player;
@@ -405,6 +706,11 @@ public sealed class AndroidAudioPlayer : IAudioPlayer
             return;
         }
 
+        ReleasePlayerInstance(player);
+    }
+
+    private static void ReleasePlayerInstance(MediaPlayer player)
+    {
         try
         {
             player.Reset();
@@ -424,6 +730,155 @@ public sealed class AndroidAudioPlayer : IAudioPlayer
         }
 
         player.Dispose();
+    }
+
+    // ------------------------------------------------- audio focus
+
+    /// <summary>
+    /// Asks Android for music focus before every start. When another app currently owns
+    /// audio (call, assistant, another player) the request is refused and playback does not
+    /// begin, instead of two apps talking over each other.
+    /// </summary>
+    private bool TryRequestAudioFocus()
+    {
+        var manager = _audioManager;
+        if (manager is null)
+        {
+            return true;
+        }
+
+        if (_hasAudioFocus)
+        {
+            return true;
+        }
+
+        _focusListener ??= new FocusChangeListener(this);
+
+        try
+        {
+#pragma warning disable CA1422 // The legacy overload still works and is honoured on all supported releases.
+            var result = manager.RequestAudioFocus(_focusListener, Android.Media.Stream.Music, AudioFocus.Gain);
+#pragma warning restore CA1422
+            _hasAudioFocus = result == AudioFocusRequest.Granted;
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine(ex);
+            _hasAudioFocus = false;
+        }
+
+        return _hasAudioFocus;
+    }
+
+    private void AbandonAudioFocus()
+    {
+        _pausedForFocus = false;
+        _duckedForFocus = false;
+
+        var manager = _audioManager;
+        if (manager is null || !_hasAudioFocus)
+        {
+            return;
+        }
+
+        _hasAudioFocus = false;
+
+        try
+        {
+#pragma warning disable CA1422
+            manager.AbandonAudioFocus(_focusListener);
+#pragma warning restore CA1422
+        }
+        catch
+        {
+            // Focus is already gone with the audio session.
+        }
+    }
+
+    /// <summary>Runs on the main thread from <see cref="FocusChangeListener"/>.</summary>
+    private void OnAudioFocusChanged(AudioFocus change)
+    {
+        if (_disposed)
+        {
+            return;
+        }
+
+        switch (change)
+        {
+            case AudioFocus.Loss:
+                // A call or another player took audio for good; do not resume by itself.
+                _hasAudioFocus = false;
+                _pausedForFocus = false;
+                _duckedForFocus = false;
+                PauseForFocus();
+                break;
+
+            case AudioFocus.LossTransient:
+                // Navigation prompt, Reels, a short clip elsewhere: pause, then continue the
+                // same song from the same spot when focus returns.
+                _hasAudioFocus = false;
+                _pausedForFocus = true;
+                _duckedForFocus = false;
+                PauseForFocus();
+                break;
+
+            case AudioFocus.LossTransientCanDuck:
+                _hasAudioFocus = false;
+                _duckedForFocus = true;
+                try
+                {
+                    _player?.SetVolume(0.2f, 0.2f);
+                }
+                catch
+                {
+                    // Some decoders reject volume changes mid-stream.
+                }
+
+                break;
+
+            case AudioFocus.Gain:
+                _hasAudioFocus = true;
+
+                if (_duckedForFocus)
+                {
+                    _duckedForFocus = false;
+                    RestoreVolume();
+                }
+
+                if (!_pausedForFocus)
+                {
+                    break;
+                }
+
+                _pausedForFocus = false;
+
+                try
+                {
+                    _player?.Start();
+                    ApplyPlaybackParams();
+                    AudioFocusGained?.Invoke(this, EventArgs.Empty);
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine(ex);
+                }
+
+                break;
+        }
+    }
+
+    private void PauseForFocus()
+    {
+        try
+        {
+            _player?.Pause();
+        }
+        catch
+        {
+            // The media may still be preparing.
+        }
+
+        AudioFocusLost?.Invoke(this, EventArgs.Empty);
     }
 
     // ------------------------------------------------- headset / band disconnect
@@ -521,15 +976,59 @@ public sealed class AndroidAudioPlayer : IAudioPlayer
     }
 
     /// <summary>Called from the platform receiver/callback on a binder thread.</summary>
-    private void NotifyAudioDeviceDisconnected()
+    private void NotifyAudioDeviceDisconnected(bool waitForRouteChange)
     {
-        MainThread.BeginInvokeOnMainThread(() =>
+        MainThread.BeginInvokeOnMainThread(async () =>
         {
-            if (!_disposed)
+            if (waitForRouteChange)
             {
-                AudioDeviceDisconnected?.Invoke(this, EventArgs.Empty);
+                // Audio routes settle a moment after the noisy broadcast; checking right away
+                // would still see the old device and pause during a normal output switch.
+                await Task.Delay(350);
             }
+
+            if (_disposed || HasPeripheralOutput())
+            {
+                return;
+            }
+
+            AudioDeviceDisconnected?.Invoke(this, EventArgs.Empty);
         });
+    }
+
+    /// <summary>
+    /// True while any wired headset, Bluetooth speaker/headset or USB output is still
+    /// connected, so switching between two accessories never interrupts the song.
+    /// </summary>
+    private bool HasPeripheralOutput()
+    {
+        if (!OperatingSystem.IsAndroidVersionAtLeast(23))
+        {
+            return false;
+        }
+
+        try
+        {
+            var devices = _audioManager?.GetDevices(GetDevicesTargets.Outputs);
+            if (devices is null)
+            {
+                return false;
+            }
+
+            foreach (var device in devices)
+            {
+                if (IsPeripheralOutput(device.Type))
+                {
+                    return true;
+                }
+            }
+        }
+        catch
+        {
+            // Audio service may be restarting; assume nothing is left.
+        }
+
+        return false;
     }
 
     private static bool IsPeripheralOutput(AudioDeviceType type)
@@ -553,20 +1052,21 @@ public sealed class AndroidAudioPlayer : IAudioPlayer
             return true;
         }
 
-        if (OperatingSystem.IsAndroidVersionAtLeast(26) &&
-            type is AudioDeviceType.UsbHeadset)
-        {
-            return true;
-        }
+        // Hearing aids and LE audio devices connect/disconnect on their own schedule and
+        // must never stop the song; they are deliberately not treated as removable output.
+        return OperatingSystem.IsAndroidVersionAtLeast(26) &&
+               type is AudioDeviceType.UsbHeadset;
+    }
 
-        if (OperatingSystem.IsAndroidVersionAtLeast(28) &&
-            type is AudioDeviceType.HearingAid)
-        {
-            return true;
-        }
+    /// <summary>Receives Android's focus decisions and forwards them to the player thread.</summary>
+    private sealed class FocusChangeListener : Java.Lang.Object, AudioManager.IOnAudioFocusChangeListener
+    {
+        private readonly AndroidAudioPlayer _owner;
 
-        return OperatingSystem.IsAndroidVersionAtLeast(31) &&
-               type is AudioDeviceType.BleHeadset or AudioDeviceType.BleSpeaker;
+        public FocusChangeListener(AndroidAudioPlayer owner) => _owner = owner;
+
+        public void OnAudioFocusChange(AudioFocus focusChange) =>
+            MainThread.BeginInvokeOnMainThread(() => _owner.OnAudioFocusChanged(focusChange));
     }
 
     private sealed class BecomingNoisyReceiver : BroadcastReceiver
@@ -582,7 +1082,7 @@ public sealed class AndroidAudioPlayer : IAudioPlayer
                     AudioManager.ActionAudioBecomingNoisy,
                     StringComparison.Ordinal))
             {
-                _owner.NotifyAudioDeviceDisconnected();
+                _owner.NotifyAudioDeviceDisconnected(waitForRouteChange: true);
             }
         }
     }
@@ -605,7 +1105,7 @@ public sealed class AndroidAudioPlayer : IAudioPlayer
             {
                 if (IsPeripheralOutput(device.Type))
                 {
-                    _owner.NotifyAudioDeviceDisconnected();
+                    _owner.NotifyAudioDeviceDisconnected(waitForRouteChange: false);
                     return;
                 }
             }
@@ -620,6 +1120,7 @@ public sealed class AndroidAudioPlayer : IAudioPlayer
         }
 
         _disposed = true;
+        AbandonAudioFocus();
         StopDisconnectMonitoring();
         ReleasePlayer();
     }

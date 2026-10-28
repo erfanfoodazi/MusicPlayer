@@ -278,9 +278,11 @@ public partial class MiniPlayer : Grid
         _playerService.Seek(SeekSlider.Value);
     }
 
-    private void OnMiniPlayerTapped(object? sender, TappedEventArgs e)
+    private async void OnMiniPlayerTapped(object? sender, TappedEventArgs e)
     {
-        _ = Shell.Current.GoToAsync(Routes.NowPlaying);
+        Haptics.Tap();
+        await Motion.PressAsync(this);
+        await Shell.Current.GoToAsync(Routes.NowPlaying);
     }
 
     private static string FormatTime(double seconds)

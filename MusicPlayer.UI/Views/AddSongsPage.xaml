@@ -252,8 +252,9 @@
             Grid.Row="1"
             VerticalOptions="End"
             Padding="18,10,18,14"
-            StrokeThickness="0"
-            BackgroundColor="{AppThemeBinding Light={StaticResource SurfaceLight}, Dark={StaticResource SurfaceDark}}">
+            StrokeThickness="1"
+            Stroke="{AppThemeBinding Light={StaticResource GlassStrokeLight}, Dark={StaticResource GlassStrokeDark}}"
+            Background="{AppThemeBinding Light={StaticResource GlassFillStrongLight}, Dark={StaticResource GlassFillStrongDark}}">
             <Border.Shadow>
                 <Shadow Brush="#000000" Offset="0,-6" Radius="18" Opacity="0.24" />
             </Border.Shadow>

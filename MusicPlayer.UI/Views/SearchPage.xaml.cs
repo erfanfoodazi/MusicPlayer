@@ -29,6 +29,7 @@ public partial class SearchPage : ContentPage
 
         if (_introPlayed)
         {
+            await Motion.ReenterAsync(HeaderBlock, ResultsContent);
             return;
         }
 
@@ -74,15 +75,5 @@ public partial class SearchPage : ContentPage
         }
 
         QueryEntry.Unfocus();
-    }
-
-    private async void OnNavLibraryClicked(object? sender, EventArgs e)
-    {
-        await Shell.Current.GoToAsync(Routes.Library);
-    }
-
-    private async void OnNavSettingsClicked(object? sender, EventArgs e)
-    {
-        await Shell.Current.GoToAsync(Routes.Settings);
     }
 }

@@ -28,30 +28,21 @@
                 Background="{DynamicResource HeaderWash}" />
 
             <!-- ===== Header ===== -->
-            <VerticalStackLayout x:Name="HeaderBlock" Grid.Row="0" Padding="20,10,20,8" Spacing="12">
-                <Label Text="Search" Style="{StaticResource DisplayText}" />
-
-                <!-- Top navigation: Library / Search / Settings (replaces the bottom tab bar) -->
-                <Border Style="{StaticResource SegmentTrack}">
-                    <Grid ColumnDefinitions="*,*,*">
-                        <Button
-                            Grid.Column="0"
-                            Text="Library"
-                            Style="{StaticResource SegmentButton}"
-                            Clicked="OnNavLibraryClicked" />
-                        <Button
-                            Grid.Column="1"
-                            Text="Search"
-                            Style="{StaticResource SegmentButton}"
-                            BackgroundColor="{AppThemeBinding Light={StaticResource SurfaceLight}, Dark={StaticResource SurfaceDarkElevated}}"
-                            TextColor="{AppThemeBinding Light={StaticResource TextOnLight}, Dark={StaticResource TextOnDark}}" />
-                        <Button
-                            Grid.Column="2"
-                            Text="Settings"
-                            Style="{StaticResource SegmentButton}"
-                            Clicked="OnNavSettingsClicked" />
-                    </Grid>
-                </Border>
+            <VerticalStackLayout x:Name="HeaderBlock" Grid.Row="0" Padding="20,12,20,8" Spacing="14">
+                <VerticalStackLayout Spacing="2">
+                    <Label
+                        Text="AURALIS"
+                        Style="{StaticResource OverlineText}"
+                        FontSize="9"
+                        CharacterSpacing="2.4"
+                        TextColor="{DynamicResource AccentColor}" />
+                    <Label Text="Search" Style="{StaticResource DisplayText}" />
+                    <Label
+                        Text="Find any song, album, artist or list"
+                        Style="{StaticResource CaptionText}"
+                        FontSize="11.5"
+                        Margin="1,2,0,0" />
+                </VerticalStackLayout>
 
                 <Border Style="{StaticResource SearchPillBorder}">
                     <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="8">

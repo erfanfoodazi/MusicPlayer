@@ -94,6 +94,7 @@ public class LibraryJsonStore
                     {
                         Id = GetInt(element, "id") ?? 0,
                         Name = name,
+                        ArtworkPath = GetString(element, "artworkPath"),
                         CreatedAt = GetDate(element, "createdAtUtc") ?? DateTime.UtcNow,
                         UpdatedAt = GetDate(element, "updatedAtUtc") ?? DateTime.UtcNow,
                     };
@@ -102,10 +103,12 @@ public class LibraryJsonStore
                         playlistTracks.ValueKind == JsonValueKind.Array)
                     {
                         var order = 0;
+                        var knownPaths = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
                         foreach (var trackElement in playlistTracks.EnumerateArray())
                         {
                             var path = GetString(trackElement, "filePath");
-                            if (string.IsNullOrWhiteSpace(path))
+                            if (string.IsNullOrWhiteSpace(path) || !knownPaths.Add(path))
                             {
                                 continue;
                             }
@@ -200,6 +203,7 @@ public class LibraryJsonStore
                 writer.WriteStartObject();
                 writer.WriteNumber("id", playlist.Id);
                 writer.WriteString("name", playlist.Name);
+                writer.WriteString("artworkPath", playlist.ArtworkPath);
                 writer.WriteString("createdAtUtc", playlist.CreatedAt.ToString("O", CultureInfo.InvariantCulture));
                 writer.WriteString("updatedAtUtc", playlist.UpdatedAt.ToString("O", CultureInfo.InvariantCulture));
 
@@ -311,6 +315,15 @@ public class LibraryJsonStore
 
         writer.WriteString("dateAddedUtc", track.DateAdded.ToString("O", CultureInfo.InvariantCulture));
 
+        if (track.DateModified is { } modified)
+        {
+            writer.WriteString("dateModifiedUtc", modified.ToString("O", CultureInfo.InvariantCulture));
+        }
+        else
+        {
+            writer.WriteNull("dateModifiedUtc");
+        }
+
         if (track.LastPlayedAt is { } lastPlayed)
         {
             writer.WriteString("lastPlayedAtUtc", lastPlayed.ToString("O", CultureInfo.InvariantCulture));
@@ -332,10 +345,12 @@ public class LibraryJsonStore
             return null;
         }
 
+        var filePath = GetString(element, "filePath") ?? string.Empty;
+
         var track = new Music
         {
             Id = GetInt(element, "id") ?? 0,
-            FilePath = GetString(element, "filePath") ?? string.Empty,
+            FilePath = filePath,
             Format = GetString(element, "format") ?? string.Empty,
             FileSize = GetLong(element, "fileSize") ?? 0,
             Duration = TimeSpan.FromMilliseconds(GetLong(element, "durationMillis") ?? 0),
@@ -345,6 +360,10 @@ public class LibraryJsonStore
             TrackNumber = GetInt(element, "trackNumber"),
             DiscNumber = GetInt(element, "discNumber"),
             DateAdded = GetDate(element, "dateAddedUtc") ?? DateTime.UtcNow,
+
+            // Snapshots written before "date modified" existed carry no value; a single stat
+            // recovers it so the sort works without forcing a full rescan.
+            DateModified = GetDate(element, "dateModifiedUtc") ?? ReadFileModifiedUtc(filePath),
             LastPlayedAt = GetDate(element, "lastPlayedAtUtc"),
         };
 
@@ -456,6 +475,23 @@ public class LibraryJsonStore
         return DateTime.TryParse(text, CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind, out var date)
             ? date
             : null;
+    }
+
+    private static DateTime? ReadFileModifiedUtc(string filePath)
+    {
+        if (string.IsNullOrWhiteSpace(filePath))
+        {
+            return null;
+        }
+
+        try
+        {
+            return File.Exists(filePath) ? File.GetLastWriteTimeUtc(filePath) : null;
+        }
+        catch
+        {
+            return null;
+        }
     }
 
     private static TEnum ParseEnum<TEnum>(string? value, TEnum fallback) where TEnum : struct

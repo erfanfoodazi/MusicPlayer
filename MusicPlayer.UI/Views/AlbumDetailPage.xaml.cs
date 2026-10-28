@@ -42,11 +42,11 @@ public partial class AlbumDetailPage : ContentPage, IQueryAttributable
 
     private async Task RunIntroAsync()
     {
-        Motion.Prepare(HeaderBlock, offsetY: -10);
+        Motion.Prepare(PageHeader, offsetY: -10);
         Motion.Prepare(TracksList, offsetY: 18);
 
         await Task.Delay(16);
-        await Motion.IntroAsync(initialDelay: 10, step: 80, HeaderBlock, TracksList);
+        await Motion.IntroAsync(initialDelay: 10, step: 80, PageHeader, TracksList);
     }
 
     private async void OnBackClicked(object? sender, EventArgs e)

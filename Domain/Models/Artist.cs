@@ -10,4 +10,6 @@ public class Artist
     public List<Music> Tracks { get; set; } = [];
 
     public int TrackCount => Tracks.Count;
+
+    public string TrackCountText => TrackCount == 1 ? "1 track" : $"{TrackCount} tracks";
 }

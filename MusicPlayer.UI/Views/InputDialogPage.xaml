@@ -15,8 +15,8 @@
             VerticalOptions="Center"
             StrokeThickness="1"
             StrokeShape="RoundRectangle 24"
-            BackgroundColor="{AppThemeBinding Light={StaticResource SurfaceLight}, Dark={StaticResource SurfaceDark}}"
-            Stroke="{AppThemeBinding Light={StaticResource OutlineLight}, Dark={StaticResource OutlineDark}}">
+            Background="{AppThemeBinding Light={StaticResource GlassFillStrongLight}, Dark={StaticResource GlassFillStrongDark}}"
+            Stroke="{AppThemeBinding Light={StaticResource GlassStrokeLight}, Dark={StaticResource GlassStrokeDark}}">
             <Border.Shadow>
                 <Shadow Brush="#000000" Offset="0,12" Radius="30" Opacity="0.5" />
             </Border.Shadow>

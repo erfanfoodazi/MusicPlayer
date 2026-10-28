@@ -7,8 +7,8 @@
     xmlns:converters="clr-namespace:MusicPlayer.UI.Converters"
     x:DataType="models:Artist"
     ColumnDefinitions="Auto,*,Auto"
-    ColumnSpacing="12"
-    HeightRequest="60"
+    ColumnSpacing="14"
+    HeightRequest="66"
     BackgroundColor="Transparent">
 
     <Grid.Resources>
@@ -21,10 +21,10 @@
 
     <Border
         Grid.Column="0"
-        WidthRequest="44"
-        HeightRequest="44"
+        WidthRequest="48"
+        HeightRequest="48"
         StrokeThickness="0"
-        StrokeShape="RoundRectangle 22"
+        StrokeShape="RoundRectangle 24"
         BackgroundColor="{DynamicResource AccentSoftColor}"
         VerticalOptions="Center">
         <Label
@@ -45,7 +45,7 @@
             TextColor="{AppThemeBinding Light={StaticResource TextOnLight}, Dark={StaticResource TextOnDark}}"
             LineBreakMode="TailTruncation" />
         <Label
-            Text="{Binding TrackCount, StringFormat='{0} tracks'}"
+            Text="{Binding TrackCountText}"
             FontFamily="Inter"
             FontSize="12"
             TextColor="{AppThemeBinding Light={StaticResource MutedOnLight}, Dark={StaticResource MutedOnDark}}"
